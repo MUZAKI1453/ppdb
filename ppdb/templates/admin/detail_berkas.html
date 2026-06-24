@@ -1,0 +1,298 @@
+{% extends 'layouts/base_dashboard.html' %}
+
+{% block title %}
+Detail Berkas
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet"
+      href="{{ url_for('static', filename='css/detail_berkas.css') }}">
+{% endblock %}
+
+{% block content %}
+
+<div class="detail-page">
+
+    <!-- HEADER -->
+    <div class="detail-header">
+
+        <div>
+
+            <h2>Detail Berkas Siswa</h2>
+
+            <div class="student-info">
+
+            <span>
+                <i class="bi bi-person-fill"></i>
+                {{ berkas.calon_siswa.nama_lengkap }}
+            </span>
+
+                <span>
+                <i class="bi bi-folder-fill"></i>
+                Dokumen Pendaftaran
+            </span>
+
+            </div>
+
+        </div>
+
+        {% set status = berkas.status_verifikasi|string|lower %}
+
+        {% if status == 'diverifikasi' %}
+
+        <span class="status-success">
+            <i class="bi bi-check-circle-fill"></i>
+            Diverifikasi
+        </span>
+
+        {% elif status == 'ditolak' %}
+
+        <span class="status-danger">
+            <i class="bi bi-x-circle-fill"></i>
+            Ditolak
+        </span>
+
+        {% elif status == 'revisi' %}
+
+        <span class="status-warning">
+            <i class="bi bi-arrow-repeat"></i>
+            Revisi
+        </span>
+
+        {% else %}
+
+        <span class="status-secondary">
+            <i class="bi bi-clock-fill"></i>
+            Belum Diverifikasi
+        </span>
+
+        {% endif %}
+
+    </div>
+
+    <!-- CATATAN ADMIN -->
+
+    {% if berkas.catatan_verifikasi %}
+
+    <div class="alert alert-warning mt-3">
+
+        <strong>Catatan Admin:</strong>
+
+        <hr>
+
+        {{ berkas.catatan_verifikasi }}
+
+    </div>
+
+    {% endif %}
+
+    <!-- DOKUMEN -->
+    <div class="document-section">
+
+        <h5 class="section-title">
+            <i class="bi bi-images"></i>
+            Preview Dokumen
+        </h5>
+
+        <div class="berkas-grid">
+
+            {% if berkas.pas_foto %}
+            <div class="document-card"
+                 onclick="showPreview('{{ url_for('admin.uploaded_file', filename=berkas.pas_foto) }}')">
+
+                <img src="{{ url_for('admin.uploaded_file', filename=berkas.pas_foto) }}"
+                     class="document-thumb">
+
+                <div class="document-info">
+                    <h6>Pas Foto</h6>
+                    <small>Klik untuk melihat</small>
+                </div>
+
+            </div>
+            {% endif %}
+
+            {% if berkas.kartu_keluarga %}
+            <div class="document-card"
+                 onclick="showPreview('{{ url_for('admin.uploaded_file', filename=berkas.kartu_keluarga) }}')">
+
+                <img src="{{ url_for('admin.uploaded_file', filename=berkas.kartu_keluarga) }}"
+                     class="document-thumb">
+
+                <div class="document-info">
+                    <h6>Kartu Keluarga</h6>
+                    <small>Klik untuk melihat</small>
+                </div>
+
+            </div>
+            {% endif %}
+
+            {% if berkas.akta_lahir %}
+            <div class="document-card"
+                 onclick="showPreview('{{ url_for('admin.uploaded_file', filename=berkas.akta_lahir) }}')">
+
+                <img src="{{ url_for('admin.uploaded_file', filename=berkas.akta_lahir) }}"
+                     class="document-thumb">
+
+                <div class="document-info">
+                    <h6>Akta Lahir</h6>
+                    <small>Klik untuk melihat</small>
+                </div>
+
+            </div>
+            {% endif %}
+
+            {% if berkas.ijazah %}
+            <div class="document-card"
+                 onclick="showPreview('{{ url_for('admin.uploaded_file', filename=berkas.ijazah) }}')">
+
+                <img src="{{ url_for('admin.uploaded_file', filename=berkas.ijazah) }}"
+                     class="document-thumb">
+
+                <div class="document-info">
+                    <h6>Ijazah</h6>
+                    <small>Klik untuk melihat</small>
+                </div>
+
+            </div>
+            {% endif %}
+
+        </div>
+
+    </div>
+
+    <!-- ACTION -->
+
+    <div class="action-area">
+
+        {% if status == 'belum diverifikasi' or status == 'revisi' %}
+
+        <a href="{{ url_for('admin.verifikasi_berkas', id=berkas.id) }}"
+           class="btn btn-success">
+
+            <i class="bi bi-check-circle-fill"></i>
+            Terima Berkas
+
+        </a>
+
+        <button
+                type="button"
+                class="btn btn-danger"
+                data-bs-toggle="modal"
+                data-bs-target="#tolakModal">
+
+            <i class="bi bi-x-circle-fill"></i>
+            Tolak Berkas
+
+        </button>
+
+        {% endif %}
+
+        <a href="{{ url_for('admin.data_berkas') }}"
+           class="btn btn-outline-secondary">
+
+            <i class="bi bi-arrow-left"></i>
+            Kembali
+
+        </a>
+
+    </div>
+
+</div>
+
+<!-- VIEWER -->
+<div class="viewer" id="viewer">
+
+    <button class="viewer-close" onclick="closePreview()">
+        <i class="bi bi-x-lg"></i>
+    </button>
+
+    <img id="previewImage" class="viewer-image">
+
+</div>
+
+<!-- MODAL TOLAK BERKAS -->
+
+<div class="modal fade"
+     id="tolakModal"
+     tabindex="-1">
+
+    <div class="modal-dialog">
+
+        <div class="modal-content">
+
+            <form
+                    method="POST"
+                    action="{{ url_for('admin.tolak_berkas', id=berkas.id) }}">
+
+                <div class="modal-header">
+
+                    <h5 class="modal-title">
+                        Tolak Berkas
+                    </h5>
+
+                    <button
+                            type="button"
+                            class="btn-close"
+                            data-bs-dismiss="modal">
+                    </button>
+
+                </div>
+
+                <div class="modal-body">
+
+                    <label class="form-label">
+                        Alasan Penolakan
+                    </label>
+
+                    <textarea
+                            name="catatan_verifikasi"
+                            class="form-control"
+                            rows="4"
+                            required
+                            placeholder="Contoh: Pas foto buram, upload ulang dengan kualitas lebih baik."></textarea>
+
+                </div>
+
+                <div class="modal-footer">
+
+                    <button
+                            type="button"
+                            class="btn btn-secondary"
+                            data-bs-dismiss="modal">
+
+                        Batal
+
+                    </button>
+
+                    <button
+                            type="submit"
+                            class="btn btn-danger">
+
+                        Tolak Berkas
+
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+
+    function showPreview(url) {
+        document.getElementById("previewImage").src = url;
+        document.getElementById("viewer").classList.add("show");
+    }
+
+    function closePreview() {
+        document.getElementById("viewer").classList.remove("show");
+    }
+
+</script>
+
+{% endblock %}

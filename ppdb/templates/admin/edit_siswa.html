@@ -1,0 +1,333 @@
+{% extends 'layouts/base_dashboard.html' %}
+
+{% block title %}
+Edit Data Siswa
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/formulir.css') }}">
+{% endblock %}
+
+{% block content %}
+
+<div class="ppdb-form-card">
+
+    <!-- ===================================== -->
+    <!-- HEADER -->
+    <!-- ===================================== -->
+
+    <div class="form-header">
+
+        <h2>
+            EDIT DATA PESERTA DIDIK
+        </h2>
+
+        <p>
+            Perbarui data peserta didik dengan benar sesuai dokumen resmi yang valid.
+        </p>
+
+        {% if siswa.status_verifikasi == 'Diverifikasi' %}
+
+            <div class="alert alert-success mt-3">
+                Status: <strong>Sudah Diverifikasi</strong>
+            </div>
+
+        {% else %}
+
+            <div class="alert alert-warning mt-3">
+                Status: <strong>Belum Diverifikasi</strong>
+            </div>
+
+        {% endif %}
+
+    </div>
+
+    <form method="POST">
+
+        <!-- ===================================== -->
+        <!-- A. DATA PRIBADI -->
+        <!-- ===================================== -->
+
+        <div class="section-title">
+            A. DATA PRIBADI
+        </div>
+
+        <div class="row">
+
+            <div class="col-md-6 mb-3">
+
+                <label class="form-label">Nama Lengkap *</label>
+                <input type="text"
+                    name="nama_lengkap"
+                    class="form-control"
+                    required
+                    value="{{ siswa.nama_lengkap }}">
+
+            </div>
+
+            <div class="col-md-6 mb-3">
+
+                <label class="form-label">NISN *</label>
+                <input type="text"
+                    name="nisn"
+                    class="form-control"
+                    required
+                    value="{{ siswa.nisn }}">
+
+            </div>
+
+            <div class="col-md-6 mb-3">
+
+                <label class="form-label">NIK *</label>
+                <input type="text"
+                    name="nik"
+                    class="form-control"
+                    required
+                    value="{{ siswa.nik }}">
+
+            </div>
+
+            <div class="col-md-6 mb-3">
+
+                <label class="form-label">Tempat Lahir *</label>
+                <input type="text"
+                    name="tempat_lahir"
+                    class="form-control"
+                    required
+                    value="{{ siswa.tempat_lahir }}">
+
+            </div>
+
+            <div class="col-md-6 mb-3">
+
+                <label class="form-label">Tanggal Lahir *</label>
+                <input type="date"
+                    name="tanggal_lahir"
+                    class="form-control"
+                    required
+                    value="{{ siswa.tanggal_lahir.strftime('%Y-%m-%d') if siswa.tanggal_lahir else '' }}">
+
+            </div>
+
+            <div class="col-md-6 mb-3">
+
+                <label class="form-label">Jenis Kelamin *</label>
+
+                <select name="jenis_kelamin" class="form-select" required>
+
+                    <option value="Laki-Laki"
+                        {% if siswa.jenis_kelamin == 'Laki-Laki' %}selected{% endif %}>
+                        Laki-Laki
+                    </option>
+
+                    <option value="Perempuan"
+                        {% if siswa.jenis_kelamin == 'Perempuan' %}selected{% endif %}>
+                        Perempuan
+                    </option>
+
+                </select>
+
+            </div>
+
+            <!-- ================= FIX: AGAMA DROPDOWN ================= -->
+            <div class="col-md-6 mb-3">
+
+                <label class="form-label">Agama *</label>
+
+                <select name="agama" class="form-select" required>
+
+                    <option value="">Pilih Agama</option>
+
+                    <option value="Islam"
+                        {% if siswa.agama == 'Islam' %}selected{% endif %}>
+                        Islam
+                    </option>
+
+                    <option value="Kristen"
+                        {% if siswa.agama == 'Kristen' %}selected{% endif %}>
+                        Kristen
+                    </option>
+
+                    <option value="Katolik"
+                        {% if siswa.agama == 'Katolik' %}selected{% endif %}>
+                        Katolik
+                    </option>
+
+                    <option value="Hindu"
+                        {% if siswa.agama == 'Hindu' %}selected{% endif %}>
+                        Hindu
+                    </option>
+
+                    <option value="Buddha"
+                        {% if siswa.agama == 'Buddha' %}selected{% endif %}>
+                        Buddha
+                    </option>
+
+                    <option value="Konghucu"
+                        {% if siswa.agama == 'Konghucu' %}selected{% endif %}>
+                        Konghucu
+                    </option>
+
+                </select>
+
+            </div>
+
+        </div>
+
+        <!-- ===================================== -->
+        <!-- B. DATA KONTAK -->
+        <!-- ===================================== -->
+
+        <div class="section-title mt-4">
+            B. DATA KONTAK
+        </div>
+
+        <div class="mb-3">
+
+            <label class="form-label">Alamat Lengkap *</label>
+
+            <textarea name="alamat"
+                rows="4"
+                class="form-control"
+                required>{{ siswa.alamat }}</textarea>
+
+        </div>
+
+        <div class="row">
+
+            <div class="col-md-6 mb-3">
+
+                <label class="form-label">Nomor HP *</label>
+                <input type="text"
+                    name="no_hp"
+                    class="form-control"
+                    required
+                    value="{{ siswa.no_hp }}">
+
+            </div>
+
+            <div class="col-md-6 mb-3">
+
+                <label class="form-label">Email</label>
+                <input type="email"
+                    name="email"
+                    class="form-control"
+                    value="{{ siswa.email }}">
+
+            </div>
+
+        </div>
+
+        <!-- ===================================== -->
+        <!-- C. DATA ORANG TUA -->
+        <!-- ===================================== -->
+
+        <div class="section-title mt-4">
+            C. DATA ORANG TUA / WALI
+        </div>
+
+        <div class="row">
+
+            <div class="col-md-6 mb-3">
+
+                <label class="form-label">Nama Ayah *</label>
+                <input type="text"
+                    name="nama_ayah"
+                    class="form-control"
+                    required
+                    value="{{ siswa.nama_ayah }}">
+
+            </div>
+
+            <div class="col-md-6 mb-3">
+
+                <label class="form-label">Pekerjaan Ayah</label>
+                <input type="text"
+                    name="pekerjaan_ayah"
+                    class="form-control"
+                    value="{{ siswa.pekerjaan_ayah }}">
+
+            </div>
+
+            <div class="col-md-6 mb-3">
+
+                <label class="form-label">Nama Ibu *</label>
+                <input type="text"
+                    name="nama_ibu"
+                    class="form-control"
+                    required
+                    value="{{ siswa.nama_ibu }}">
+
+            </div>
+
+            <div class="col-md-6 mb-3">
+
+                <label class="form-label">Pekerjaan Ibu</label>
+                <input type="text"
+                    name="pekerjaan_ibu"
+                    class="form-control"
+                    value="{{ siswa.pekerjaan_ibu }}">
+
+            </div>
+
+            <div class="col-md-6 mb-3">
+
+                <label class="form-label">Nomor HP Orang Tua</label>
+                <input type="text"
+                    name="no_hp_ortu"
+                    class="form-control"
+                    value="{{ siswa.no_hp_ortu }}">
+
+            </div>
+
+        </div>
+
+        <!-- ===================================== -->
+        <!-- D. DATA SEKOLAH ASAL -->
+        <!-- ===================================== -->
+
+        <div class="section-title mt-4">
+            D. DATA SEKOLAH ASAL
+        </div>
+
+        <div class="row">
+
+            <div class="col-md-6 mb-3">
+
+                <label class="form-label">Asal Sekolah *</label>
+                <input type="text"
+                    name="asal_sekolah"
+                    class="form-control"
+                    required
+                    value="{{ siswa.asal_sekolah }}">
+
+            </div>
+
+            <div class="col-md-6 mb-3">
+
+                <label class="form-label">Tahun Lulus *</label>
+                <input type="number"
+                    name="tahun_lulus"
+                    class="form-control"
+                    required
+                    value="{{ siswa.tahun_lulus }}">
+
+            </div>
+
+        </div>
+
+        <hr class="my-4">
+
+        <div class="text-end">
+
+            <button type="submit" class="btn btn-primary btn-lg">
+                Update Data Siswa
+            </button>
+
+        </div>
+
+    </form>
+
+</div>
+
+{% endblock %}

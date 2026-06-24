@@ -1,0 +1,58 @@
+/* =====================================
+   FORMULIR PPDB
+===================================== */
+
+.ppdb-form-card{
+    background:#FFFFFF;
+    border-radius:20px;
+    padding:35px;
+    box-shadow:0 5px 25px rgba(0,0,0,.06);
+}
+
+.form-header{
+    text-align:center;
+    margin-bottom:30px;
+}
+
+.form-header h2{
+    font-size:28px;
+    font-weight:700;
+    color:#0F172A;
+}
+
+.form-header p{
+    color:#64748B;
+}
+
+.section-title{
+    background:#EFF6FF;
+    color:#2563EB;
+    padding:12px 18px;
+    border-left:5px solid #2563EB;
+    border-radius:10px;
+    font-weight:700;
+    margin-bottom:20px;
+}
+
+.form-control,
+.form-select{
+    border-radius:12px;
+    padding:12px;
+}
+
+.form-control:focus,
+.form-select:focus{
+    box-shadow:none;
+    border-color:#2563EB;
+}
+
+.btn-primary{
+    background:#2563EB;
+    border:none;
+    padding:12px 25px;
+    border-radius:12px;
+}
+
+.btn-primary:hover{
+    background:#1D4ED8;
+}

@@ -1,0 +1,197 @@
+{% extends 'layouts/base_dashboard.html' %}
+
+{% block title %}
+Dashboard Admin
+{% endblock %}
+
+{% block page_title %}
+Dashboard Admin
+{% endblock %}
+
+{% block content %}
+
+<div class="welcome-card">
+
+    <h3>
+        Selamat Datang, {{ current_user.username }}
+    </h3>
+
+    <p>
+        Kelola seluruh proses PPDB melalui dashboard admin.
+    </p>
+
+</div>
+
+<div class="row g-4">
+
+    <!-- TOTAL PENDAFTAR -->
+
+    <div class="col-md-6 col-xl-4">
+
+        <div class="stat-card stat-blue">
+
+            <div>
+
+                <h2>
+                    {{ total_pendaftar }}
+                </h2>
+
+                <p>
+                    Total Pendaftar
+                </p>
+
+            </div>
+
+            <i class="bi bi-people-fill"></i>
+
+        </div>
+
+    </div>
+
+    <!-- DATA DIVERIFIKASI -->
+
+    <div class="col-md-6 col-xl-4">
+
+        <div class="stat-card stat-green">
+
+            <div>
+
+                <h2>
+                    {{ data_diverifikasi }}
+                </h2>
+
+                <p>
+                    Data Diverifikasi
+                </p>
+
+            </div>
+
+            <i class="bi bi-patch-check-fill"></i>
+
+        </div>
+
+    </div>
+
+    <!-- BERKAS DIVERIFIKASI -->
+
+    <div class="col-md-6 col-xl-4">
+
+        <div class="stat-card stat-purple">
+
+            <div>
+
+                <h2>
+                    {{ berkas_diverifikasi }}
+                </h2>
+
+                <p>
+                    Berkas Diverifikasi
+                </p>
+
+            </div>
+
+            <i class="bi bi-file-earmark-check-fill"></i>
+
+        </div>
+
+    </div>
+
+    <!-- MENUNGGU VERIFIKASI -->
+
+    <div class="col-md-6 col-xl-4">
+
+        <div class="stat-card stat-orange">
+
+            <div>
+
+                <h2>
+                    {{ menunggu_verifikasi }}
+                </h2>
+
+                <p>
+                    Menunggu Verifikasi
+                </p>
+
+            </div>
+
+            <i class="bi bi-hourglass-split"></i>
+
+        </div>
+
+    </div>
+
+    <!-- PERIODE PPDB -->
+
+    <div class="col-md-6 col-xl-4">
+
+        <div class="stat-card stat-blue">
+
+            <div>
+
+                <h2>
+                    {{ periode_ppdb }}
+                </h2>
+
+                <p>
+                    Periode PPDB Aktif
+                </p>
+
+            </div>
+
+            <i class="bi bi-calendar-event-fill"></i>
+
+        </div>
+
+    </div>
+
+    <!-- BERKAS DITOLAK -->
+
+<div class="col-md-6 col-xl-4">
+
+    <div class="stat-card stat-red">
+
+        <div>
+
+            <h2>
+                {{ berkas_ditolak }}
+            </h2>
+
+            <p>
+                Berkas Ditolak
+            </p>
+
+        </div>
+
+        <i class="bi bi-file-earmark-x-fill"></i>
+
+    </div>
+
+</div>
+
+    <!-- TOTAL BERKAS MASUK -->
+
+    <div class="col-md-6 col-xl-4">
+
+        <div class="stat-card stat-green">
+
+            <div>
+
+                <h2>
+                    {{ total_berkas_masuk }}
+                </h2>
+
+                <p>
+                    Total Berkas Masuk
+                </p>
+
+            </div>
+
+            <i class="bi bi-folder-fill"></i>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

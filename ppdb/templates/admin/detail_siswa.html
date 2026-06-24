@@ -1,0 +1,201 @@
+{% extends 'layouts/base_dashboard.html' %}
+
+{% block title %}
+Detail Calon Siswa
+{% endblock %}
+
+{% block content %}
+
+<div class="content-card">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+
+        <h3>
+            Detail Calon Siswa
+        </h3>
+
+        <a
+            href="{{ url_for('admin.calon_siswa') }}"
+            class="btn btn-secondary">
+
+            Kembali
+
+        </a>
+
+    </div>
+
+    <!-- DATA PRIBADI -->
+
+    <div class="section-title">
+        A. DATA PRIBADI
+    </div>
+
+    <table class="table table-bordered">
+
+        <tr>
+            <th width="250">Nama Lengkap</th>
+            <td>{{ siswa.nama_lengkap }}</td>
+        </tr>
+
+        <tr>
+            <th>NISN</th>
+            <td>{{ siswa.nisn }}</td>
+        </tr>
+
+        <tr>
+            <th>NIK</th>
+            <td>{{ siswa.nik }}</td>
+        </tr>
+
+        <tr>
+            <th>Tempat Lahir</th>
+            <td>{{ siswa.tempat_lahir }}</td>
+        </tr>
+
+        <tr>
+            <th>Tanggal Lahir</th>
+            <td>{{ siswa.tanggal_lahir }}</td>
+        </tr>
+
+        <tr>
+            <th>Jenis Kelamin</th>
+            <td>{{ siswa.jenis_kelamin }}</td>
+        </tr>
+
+        <tr>
+            <th>Agama</th>
+            <td>{{ siswa.agama }}</td>
+        </tr>
+
+    </table>
+
+    <!-- DATA KONTAK -->
+
+    <div class="section-title mt-4">
+        B. DATA KONTAK
+    </div>
+
+    <table class="table table-bordered">
+
+        <tr>
+            <th width="250">Alamat</th>
+            <td>{{ siswa.alamat }}</td>
+        </tr>
+
+        <tr>
+            <th>No HP</th>
+            <td>{{ siswa.no_hp }}</td>
+        </tr>
+
+        <tr>
+            <th>Email</th>
+            <td>{{ siswa.email }}</td>
+        </tr>
+
+    </table>
+
+    <!-- DATA ORANG TUA -->
+
+    <div class="section-title mt-4">
+        C. DATA ORANG TUA
+    </div>
+
+    <table class="table table-bordered">
+
+        <tr>
+            <th width="250">Nama Ayah</th>
+            <td>{{ siswa.nama_ayah }}</td>
+        </tr>
+
+        <tr>
+            <th>Pekerjaan Ayah</th>
+            <td>{{ siswa.pekerjaan_ayah }}</td>
+        </tr>
+
+        <tr>
+            <th>Nama Ibu</th>
+            <td>{{ siswa.nama_ibu }}</td>
+        </tr>
+
+        <tr>
+            <th>Pekerjaan Ibu</th>
+            <td>{{ siswa.pekerjaan_ibu }}</td>
+        </tr>
+
+        <tr>
+            <th>No HP Orang Tua</th>
+            <td>{{ siswa.no_hp_ortu }}</td>
+        </tr>
+
+    </table>
+
+    <!-- DATA SEKOLAH -->
+
+    <div class="section-title mt-4">
+        D. DATA SEKOLAH ASAL
+    </div>
+
+    <table class="table table-bordered">
+
+        <tr>
+            <th width="250">Asal Sekolah</th>
+            <td>{{ siswa.asal_sekolah }}</td>
+        </tr>
+
+        <tr>
+            <th>Tahun Lulus</th>
+            <td>{{ siswa.tahun_lulus }}</td>
+        </tr>
+
+    </table>
+
+    <!-- STATUS -->
+
+    <div class="section-title mt-4">
+        E. STATUS PENDAFTARAN
+    </div>
+
+    <table class="table table-bordered">
+
+        <tr>
+            <th width="250">Status Verifikasi</th>
+            <td>
+
+                {% if siswa.status_verifikasi == 'Diverifikasi' %}
+
+                    <span class="badge bg-success">
+                        Diverifikasi
+                    </span>
+
+                {% else %}
+
+                    <span class="badge bg-warning text-dark">
+                        Belum Diverifikasi
+                    </span>
+
+                {% endif %}
+
+            </td>
+
+        </tr>
+
+    </table>
+
+    <div class="mt-4">
+
+        <a
+            href="{{ url_for(
+                'admin.verifikasi_siswa',
+                id=siswa.id
+            ) }}"
+            class="btn btn-success">
+
+            Verifikasi Pendaftaran
+
+        </a>
+
+    </div>
+
+</div>
+
+{% endblock %}

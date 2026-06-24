@@ -1,0 +1,582 @@
+{% extends 'layouts/base_public.html' %}
+
+{% block title %}
+PPDB Online Tahun Ajaran 2026/2027
+{% endblock %}
+
+{% block content %}
+
+<!-- =====================================
+     HERO
+===================================== -->
+
+<section class="hero-section"
+         id="beranda">
+
+    <div class="container">
+
+        <div class="row align-items-center">
+
+            <div class="col-lg-7">
+
+                <span class="hero-badge">
+
+                    PPDB ONLINE TAHUN AJARAN 2026/2027
+
+                </span>
+
+                <h1 class="hero-title mt-4">
+
+                    Penerimaan Peserta Didik Baru
+                    Secara Online
+
+                </h1>
+
+                <p class="hero-subtitle mt-4">
+
+                    Bergabunglah bersama sekolah unggulan
+                    dengan fasilitas modern, tenaga pendidik
+                    profesional, serta lingkungan belajar yang
+                    mendukung perkembangan akademik dan karakter siswa.
+
+                </p>
+
+                <div class="hero-info mt-4">
+
+                    <span>
+                        <i class="bi bi-patch-check-fill"></i>
+                        Akreditasi A
+                    </span>
+
+                    <span>
+                        <i class="bi bi-mortarboard-fill"></i>
+                        Sekolah Unggulan
+                    </span>
+
+                    <span>
+                        <i class="bi bi-laptop-fill"></i>
+                        Berbasis Teknologi
+                    </span>
+
+                </div>
+
+                <div class="mt-5">
+
+                    <a href="{{ url_for('auth.register') }}"
+                       class="btn btn-primary btn-lg me-2">
+
+                        Daftar Sekarang
+
+                    </a>
+
+                    <a href="{{ url_for('auth.login') }}"
+                       class="btn btn-outline-primary btn-lg">
+
+                        Login
+
+                    </a>
+
+                </div>
+
+            </div>
+
+            <div class="col-lg-5">
+
+                <div class="hero-card">
+
+                    <h4 class="mb-4">
+
+                        Informasi PPDB
+
+                    </h4>
+
+                    <div class="flow-item">
+                        Kuota Penerimaan : 500 Siswa
+                    </div>
+
+                    <div class="flow-item">
+                        Pendaftaran Online
+                    </div>
+
+                    <div class="flow-item">
+                        Seleksi Transparan
+                    </div>
+
+                    <div class="flow-item">
+                        Ujian Berbasis Komputer
+                    </div>
+
+                    <div class="flow-item">
+                        Pengumuman Online
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- =====================================
+     PROFIL SEKOLAH
+===================================== -->
+
+<section id="profil"
+         class="section section-divider">
+
+    <div class="container">
+
+        <div class="row align-items-center">
+
+            <div class="col-lg-6">
+
+                <h2 class="section-title-left">
+
+                    Tentang Sekolah Kami
+
+                </h2>
+
+                <p class="profile-text">
+
+                    Sekolah kami berkomitmen mencetak
+                    generasi yang unggul, berkarakter,
+                    berprestasi dan siap menghadapi
+                    tantangan masa depan.
+
+                </p>
+
+                <p class="profile-text">
+
+                    Dengan dukungan tenaga pendidik
+                    profesional, fasilitas modern,
+                    serta kurikulum yang adaptif,
+                    kami menghadirkan pendidikan
+                    yang berkualitas bagi seluruh siswa.
+
+                </p>
+
+            </div>
+
+            <div class="col-lg-6">
+
+                <div class="profile-card">
+
+                    <i class="bi bi-building"></i>
+
+                    <h4>
+
+                        Sekolah Unggulan
+
+                    </h4>
+
+                    <p>
+
+                        Menjadi tempat berkembangnya
+                        generasi masa depan yang
+                        cerdas, berprestasi,
+                        dan berakhlak mulia.
+
+                    </p>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- =====================================
+     KEUNGGULAN SEKOLAH
+===================================== -->
+
+<section id="keunggulan"
+         class="section section-divider bg-light">
+
+    <div class="container">
+
+        <div class="section-header">
+
+            <h2>
+                Keunggulan Sekolah Kami
+            </h2>
+
+            <p>
+
+                Sekolah unggulan dengan fasilitas modern,
+                tenaga pendidik profesional,
+                serta berbagai prestasi akademik
+                dan non akademik.
+
+            </p>
+
+        </div>
+
+        <!-- KEUNGGULAN -->
+
+        <div class="row g-4 mb-5">
+
+            <div class="col-md-3">
+
+                <div class="feature-card">
+
+                    <i class="bi bi-award-fill"></i>
+
+                    <h5>
+                        Akreditasi A
+                    </h5>
+
+                    <p>
+                        Mutu pendidikan terjamin dan
+                        diakui secara nasional.
+                    </p>
+
+                </div>
+
+            </div>
+
+            <div class="col-md-3">
+
+                <div class="feature-card">
+
+                    <i class="bi bi-person-workspace"></i>
+
+                    <h5>
+                        Guru Profesional
+                    </h5>
+
+                    <p>
+                        Didukung tenaga pendidik
+                        berpengalaman dan kompeten.
+                    </p>
+
+                </div>
+
+            </div>
+
+            <div class="col-md-3">
+
+                <div class="feature-card">
+
+                    <i class="bi bi-laptop"></i>
+
+                    <h5>
+                        Fasilitas Modern
+                    </h5>
+
+                    <p>
+                        Laboratorium dan sarana belajar
+                        berbasis teknologi.
+                    </p>
+
+                </div>
+
+            </div>
+
+            <div class="col-md-3">
+
+                <div class="feature-card">
+
+                    <i class="bi bi-trophy-fill"></i>
+
+                    <h5>
+                        Banyak Prestasi
+                    </h5>
+
+                    <p>
+                        Prestasi akademik maupun
+                        non akademik tingkat nasional.
+                    </p>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- STATISTIK -->
+
+        <div class="row g-4">
+
+            <div class="col-md-3">
+
+                <div class="stat-box">
+
+                    <h3>
+                        1500+
+                    </h3>
+
+                    <p>
+                        Siswa Aktif
+                    </p>
+
+                </div>
+
+            </div>
+
+            <div class="col-md-3">
+
+                <div class="stat-box">
+
+                    <h3>
+                        80+
+                    </h3>
+
+                    <p>
+                        Guru Profesional
+                    </p>
+
+                </div>
+
+            </div>
+
+            <div class="col-md-3">
+
+                <div class="stat-box">
+
+                    <h3>
+                        30+
+                    </h3>
+
+                    <p>
+                        Prestasi Nasional
+                    </p>
+
+                </div>
+
+            </div>
+
+            <div class="col-md-3">
+
+                <div class="stat-box">
+
+                    <h3>
+                        A
+                    </h3>
+
+                    <p>
+                        Akreditasi
+                    </p>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- =====================================
+     ALUR PPDB
+===================================== -->
+
+<section id="alur"
+         class="section section-divider bg-white">
+
+    <div class="container">
+
+        <div class="section-header">
+
+            <h2>
+                Alur Pendaftaran PPDB
+            </h2>
+
+            <p>
+
+                Ikuti tahapan berikut untuk menjadi
+                peserta didik baru.
+
+            </p>
+
+        </div>
+
+        <div class="row g-4">
+
+            <div class="col-md-2">
+
+                <div class="feature-card">
+
+                    <i class="bi bi-person-plus-fill"></i>
+
+                    <h6>
+                        Registrasi
+                    </h6>
+
+                </div>
+
+            </div>
+
+            <div class="col-md-2">
+
+                <div class="feature-card">
+
+                    <i class="bi bi-file-earmark-text-fill"></i>
+
+                    <h6>
+                        Formulir
+                    </h6>
+
+                </div>
+
+            </div>
+
+            <div class="col-md-2">
+
+                <div class="feature-card">
+
+                    <i class="bi bi-cloud-upload-fill"></i>
+
+                    <h6>
+                        Upload Berkas
+                    </h6>
+
+                </div>
+
+            </div>
+
+            <div class="col-md-2">
+
+                <div class="feature-card">
+
+                    <i class="bi bi-pencil-square"></i>
+
+                    <h6>
+                        Ujian
+                    </h6>
+
+                </div>
+
+            </div>
+
+            <div class="col-md-2">
+
+                <div class="feature-card">
+
+                    <i class="bi bi-patch-check-fill"></i>
+
+                    <h6>
+                        Verifikasi
+                    </h6>
+
+                </div>
+
+            </div>
+
+            <div class="col-md-2">
+
+                <div class="feature-card">
+
+                    <i class="bi bi-trophy-fill"></i>
+
+                    <h6>
+                        Pengumuman
+                    </h6>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- =====================================
+     JADWAL PPDB
+===================================== -->
+
+<section id="jadwal"
+         class="section section-divider">
+
+    <div class="container">
+
+        <div class="section-header">
+
+            <h2>
+                Jadwal PPDB
+            </h2>
+
+        </div>
+
+        <div class="schedule-card">
+
+            <table class="table mb-0">
+
+                <tbody>
+
+                    <tr>
+                        <td>Pendaftaran</td>
+                        <td>01 Mei - 30 Juni 2026</td>
+                    </tr>
+
+                    <tr>
+                        <td>Verifikasi Berkas</td>
+                        <td>01 Juli - 05 Juli 2026</td>
+                    </tr>
+
+                    <tr>
+                        <td>Ujian Online</td>
+                        <td>10 Juli 2026</td>
+                    </tr>
+
+                    <tr>
+                        <td>Pengumuman</td>
+                        <td>15 Juli 2026</td>
+                    </tr>
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- =====================================
+     CTA
+===================================== -->
+
+<section class="cta-section">
+
+    <div class="container text-center">
+
+        <h2>
+
+            Siap Menjadi Bagian Dari Sekolah Kami?
+
+        </h2>
+
+        <p class="mt-3">
+
+            Daftarkan diri Anda sekarang dan
+            raih masa depan yang lebih baik.
+
+        </p>
+
+        <a href="{{ url_for('auth.register') }}"
+           class="btn btn-light btn-lg mt-3">
+
+            Daftar Sekarang
+
+        </a>
+
+    </div>
+
+</section>
+
+{% endblock %}
