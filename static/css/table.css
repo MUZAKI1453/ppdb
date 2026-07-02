@@ -1,0 +1,84 @@
+/* =====================================
+   TABLE PPDB MODERN - Zebra
+===================================== */
+
+.ppdb-table {
+    width: 100%;
+    border-collapse: collapse;
+    overflow: hidden;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.ppdb-table thead th {
+    background: #2563eb;
+    color: white;
+    font-size: 14px;
+    font-weight: 600;
+    padding: 16px 14px;
+    border: none;
+    text-align: left;
+}
+
+.ppdb-table thead th:first-child { border-top-left-radius: 12px; }
+.ppdb-table thead th:last-child { border-top-right-radius: 12px; }
+
+.ppdb-table tbody td {
+    padding: 15px 14px;
+    vertical-align: middle;
+    border-bottom: 1px solid #e9ecef;
+}
+
+/* Zebra Stripes - Lebih Menonjol */
+.ppdb-table tbody tr:nth-child(even) {
+    background: #f1f3f5;
+}
+
+.ppdb-table tbody tr:nth-child(odd) {
+    background: #ffffff;
+}
+
+.ppdb-table tbody tr:hover {
+    background: #e2e8f0;
+    transition: background 0.2s ease;
+}
+
+.ppdb-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* Student Info */
+.student-name {
+    font-weight: 600;
+    color: #212529;
+}
+
+.student-subtitle {
+    font-size: 13px;
+    color: #6c757d;
+}
+
+/* Status */
+.status-success { color: #198754; font-weight: 600; }
+.status-warning { color: #d97706; font-weight: 600; }
+
+/* Action Buttons */
+.action-buttons {
+    display: flex;
+    gap: 6px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.action-buttons .btn {
+    width: 36px;
+    height: 36px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 0;
+    border-radius: 8px;
+}
+
+/* Search */
+.search-wrapper { max-width: 480px; }

@@ -1,0 +1,655 @@
+{% extends 'layouts/base_dashboard.html' %}
+
+{% block page_title %}
+    Formulir PPDB
+{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/formulir.css') }}">
+{% endblock %}
+
+{% block content %}
+
+    <div class="wizard-progress">
+        <div class="wizard-step active"><span>1</span><small>Siswa</small></div>
+        <div class="wizard-step"><span>2</span><small>Alamat</small></div>
+        <div class="wizard-step"><span>3</span><small>Sekolah</small></div>
+        <div class="wizard-step"><span>4</span><small>Ayah</small></div>
+        <div class="wizard-step"><span>5</span><small>Ibu</small></div>
+        <div class="wizard-step"><span>6</span><small>Wali</small></div>
+        <div class="wizard-step"><span>7</span><small>Simpan</small></div>
+    </div>
+
+    <div class="ppdb-form-card">
+
+        <!-- Header + tombol edit, hanya muncul jika data sudah ada dan belum terkunci -->
+        <div class="form-header">
+            <div class="header-top">
+                <div>
+                    <h2>Formulir Pendaftaran PPDB</h2>
+                    <p>Lengkapi seluruh data calon peserta didik dengan benar.</p>
+                </div>
+
+                {% if calon_siswa and not is_locked %}
+                    <div class="header-actions">
+                        {% if edit_mode %}
+                            <span class="edit-mode-badge"><i class="bi bi-pencil-square"></i> Mode Edit</span>
+                            <a href="{{ url_for('siswa.formulir') }}" class="btn btn-outline-secondary btn-sm">
+                                <i class="bi bi-x-circle"></i> Batal
+                            </a>
+                        {% else %}
+                            <a href="{{ url_for('siswa.formulir', edit='true') }}" class="btn btn-primary btn-sm">
+                                <i class="bi bi-pencil-square"></i> Edit Data Saya
+                            </a>
+                        {% endif %}
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages[-3:] %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <!-- Alasan penolakan, muncul hanya jika status Ditolak -->
+        {% if calon_siswa and calon_siswa.status_verifikasi == 'Ditolak' %}
+            <div class="alert alert-rejected">
+                <i class="bi bi-exclamation-circle-fill"></i>
+                <div>
+                    <strong>Pendaftaran Anda ditolak.</strong>
+                    <p class="mb-0">{{ calon_siswa.catatan_verifikasi or 'Admin tidak menyertakan alasan spesifik. Silakan periksa kembali seluruh data Anda.' }}</p>
+                    {% if calon_siswa.tanggal_verifikasi %}
+                        <small class="rejected-date">Ditolak pada {{ calon_siswa.tanggal_verifikasi.strftime('%d %B %Y, %H:%M') }}</small>
+                    {% endif %}
+                    <p class="mb-0 mt-2">Silakan perbaiki data yang sesuai, lalu kirim ulang formulir ini untuk diverifikasi kembali.</p>
+                </div>
+            </div>
+        {% endif %}
+
+        <!-- Info data terkunci karena sudah diverifikasi -->
+        {% if is_locked %}
+            <div class="alert alert-locked">
+                <i class="bi bi-shield-check"></i>
+                <div>
+                    <strong>Data Anda sudah diverifikasi.</strong>
+                    <p class="mb-0">Anda masih dapat melihat data yang sudah disimpan, namun tidak dapat mengubahnya lagi. Hubungi pihak sekolah jika ada kesalahan data.</p>
+                </div>
+            </div>
+        {% endif %}
+
+        <form method="POST"
+              action="{{ url_for('siswa.formulir', edit='true') if edit_mode else url_for('siswa.formulir') }}">
+
+            <fieldset class="{{ 'is-locked' if is_locked else '' }}">
+
+                <!-- Data Pribadi Siswa -->
+                <div class="form-step active">
+
+                    <div class="section-title"><i class="bi bi-person-vcard"></i> Data Pribadi Siswa</div>
+
+                    <div class="row">
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Nama Lengkap</label>
+                            <input type="text" name="nama_lengkap" class="form-control" required
+                                   value="{{ calon_siswa.nama_lengkap if calon_siswa else '' }}">
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">NISN</label>
+                            <input type="text" name="nisn" class="form-control" required
+                                   value="{{ calon_siswa.nisn if calon_siswa else '' }}">
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">NIK</label>
+                            <input type="text" name="nik" class="form-control" required
+                                   value="{{ calon_siswa.nik if calon_siswa else '' }}">
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Nomor Registrasi Akta</label>
+                            <input type="text" name="no_registrasi_akta" class="form-control" required
+                                   value="{{ calon_siswa.no_registrasi_akta if calon_siswa else '' }}">
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Tempat Lahir</label>
+                            <input type="text" name="tempat_lahir" class="form-control" required
+                                   value="{{ calon_siswa.tempat_lahir if calon_siswa else '' }}">
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Tanggal Lahir</label>
+                            <input type="date" name="tanggal_lahir" class="form-control" required
+                                   value="{{ calon_siswa.tanggal_lahir if calon_siswa and calon_siswa.tanggal_lahir else '' }}">
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Jenis Kelamin</label>
+                            <select name="jenis_kelamin" class="form-select" required>
+                                <option value="">Pilih Jenis Kelamin</option>
+                                <option value="Laki-Laki" {% if calon_siswa and calon_siswa.jenis_kelamin == 'Laki-Laki' %}selected{% endif %}>Laki-Laki</option>
+                                <option value="Perempuan" {% if calon_siswa and calon_siswa.jenis_kelamin == 'Perempuan' %}selected{% endif %}>Perempuan</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Agama</label>
+                            <input type="text" name="agama" class="form-control" required
+                                   value="{{ calon_siswa.agama if calon_siswa else '' }}">
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Kewarganegaraan</label>
+                            <input type="text" name="kewarganegaraan" class="form-control" required
+                                   value="{{ calon_siswa.kewarganegaraan if calon_siswa else '' }}">
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Berkebutuhan Khusus</label>
+                            <input type="text" name="kebutuhan_khusus" class="form-control" required
+                                   value="{{ calon_siswa.kebutuhan_khusus if calon_siswa else '' }}">
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Nomor HP</label>
+                            <input type="text" name="no_hp" class="form-control" placeholder="08xxxxxxxxxx" required
+                                   value="{{ calon_siswa.no_hp if calon_siswa else '' }}">
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Email</label>
+                            <input type="email" name="email" class="form-control" placeholder="nama@email.com" required
+                                   value="{{ calon_siswa.email if calon_siswa else '' }}">
+                        </div>
+
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Status Tinggal</label>
+                            <input type="text" name="status_tinggal" class="form-control" required
+                                   value="{{ calon_siswa.status_tinggal if calon_siswa else '' }}">
+                        </div>
+
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Moda Transportasi</label>
+                            <input type="text" name="moda_transportasi" class="form-control" required
+                                   value="{{ calon_siswa.moda_transportasi if calon_siswa else '' }}">
+                        </div>
+
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Anak Ke</label>
+                            <input type="number" name="anak_ke" class="form-control" required
+                                   value="{{ calon_siswa.anak_ke if calon_siswa else '' }}">
+                        </div>
+
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Tinggi Badan (cm)</label>
+                            <input type="number" name="tinggi_badan" class="form-control" required
+                                   value="{{ calon_siswa.tinggi_badan if calon_siswa else '' }}">
+                        </div>
+
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Berat Badan (kg)</label>
+                            <input type="number" name="berat_badan" class="form-control" required
+                                   value="{{ calon_siswa.berat_badan if calon_siswa else '' }}">
+                        </div>
+
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Jumlah Saudara Kandung</label>
+                            <input type="number" name="jumlah_saudara_kandung" class="form-control" required
+                                   value="{{ calon_siswa.jumlah_saudara_kandung if calon_siswa else '' }}">
+                        </div>
+
+                    </div>
+
+                    <div class="wizard-buttons">
+                        <button type="button" class="btn btn-outline-secondary prev-btn">Sebelumnya</button>
+                        <button type="button" class="btn btn-primary next-btn">Selanjutnya</button>
+                    </div>
+
+                </div>
+
+                <!-- Data Alamat -->
+                <div class="form-step">
+
+                    <div class="section-title"><i class="bi bi-geo-alt-fill"></i> Data Alamat</div>
+
+                    <div class="row">
+
+                        <div class="col-12 mb-3">
+                            <label class="form-label">Alamat Jalan</label>
+                            <textarea name="alamat_jalan" class="form-control" rows="3" required>{{ calon_siswa.alamat.alamat_jalan if calon_siswa and calon_siswa.alamat else '' }}</textarea>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Dusun / Blok</label>
+                            <input type="text" name="dusun" class="form-control" required
+                                   value="{{ calon_siswa.alamat.dusun if calon_siswa and calon_siswa.alamat else '' }}">
+                        </div>
+
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">RT</label>
+                            <input type="text" name="rt" class="form-control" required
+                                   value="{{ calon_siswa.alamat.rt if calon_siswa and calon_siswa.alamat else '' }}">
+                        </div>
+
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">RW</label>
+                            <input type="text" name="rw" class="form-control" required
+                                   value="{{ calon_siswa.alamat.rw if calon_siswa and calon_siswa.alamat else '' }}">
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Desa / Kelurahan</label>
+                            <input type="text" name="desa_kelurahan" class="form-control" required
+                                   value="{{ calon_siswa.alamat.desa_kelurahan if calon_siswa and calon_siswa.alamat else '' }}">
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Kecamatan</label>
+                            <input type="text" name="kecamatan" class="form-control" required
+                                   value="{{ calon_siswa.alamat.kecamatan if calon_siswa and calon_siswa.alamat else '' }}">
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Kabupaten / Kota</label>
+                            <input type="text" name="kabupaten" class="form-control" required
+                                   value="{{ calon_siswa.alamat.kabupaten if calon_siswa and calon_siswa.alamat else '' }}">
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Kode Pos</label>
+                            <input type="text" name="kode_pos" class="form-control" required
+                                   value="{{ calon_siswa.alamat.kode_pos if calon_siswa and calon_siswa.alamat else '' }}">
+                        </div>
+
+                    </div>
+
+                    <div class="wizard-buttons">
+                        <button type="button" class="btn btn-outline-secondary prev-btn">Sebelumnya</button>
+                        <button type="button" class="btn btn-primary next-btn">Selanjutnya</button>
+                    </div>
+
+                </div>
+
+                <!-- Data Sekolah Asal -->
+                <div class="form-step">
+
+                    <div class="section-title"><i class="bi bi-building"></i> Data Sekolah Asal</div>
+
+                    <div class="row">
+
+                        <div class="col-md-8 mb-3">
+                            <label class="form-label">Asal Sekolah</label>
+                            <input type="text" name="asal_sekolah" class="form-control" required
+                                   value="{{ calon_siswa.asal_sekolah if calon_siswa else '' }}">
+                        </div>
+
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Tahun Lulus</label>
+                            <input type="text" name="tahun_lulus" class="form-control" required
+                                   value="{{ calon_siswa.tahun_lulus if calon_siswa else '' }}">
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Jarak Tempat Tinggal ke Sekolah</label>
+                            <input type="text" name="jarak_ke_sekolah" class="form-control" required
+                                   value="{{ calon_siswa.jarak_ke_sekolah if calon_siswa else '' }}">
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Waktu Tempuh ke Sekolah</label>
+                            <input type="text" name="waktu_tempuh" class="form-control" required
+                                   value="{{ calon_siswa.waktu_tempuh if calon_siswa else '' }}">
+                        </div>
+
+                    </div>
+
+                    <div class="wizard-buttons">
+                        <button type="button" class="btn btn-outline-secondary prev-btn">Sebelumnya</button>
+                        <button type="button" class="btn btn-primary next-btn">Selanjutnya</button>
+                    </div>
+
+                </div>
+
+                <!-- Data Ayah Kandung -->
+                <div class="form-step">
+
+                    <div class="section-title"><i class="bi bi-person-badge-fill"></i> Data Ayah Kandung</div>
+
+                    <div class="row">
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Nama Lengkap Ayah</label>
+                            <input type="text" name="ayah_nama" class="form-control" required
+                                   value="{{ calon_siswa.ayah.nama if calon_siswa and calon_siswa.ayah else '' }}">
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">NIK Ayah</label>
+                            <input type="text" name="ayah_nik" class="form-control" required
+                                   value="{{ calon_siswa.ayah.nik if calon_siswa and calon_siswa.ayah else '' }}">
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Tempat Lahir</label>
+                            <input type="text" name="ayah_tempat_lahir" class="form-control" required
+                                   value="{{ calon_siswa.ayah.tempat_lahir if calon_siswa and calon_siswa.ayah else '' }}">
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Tanggal Lahir</label>
+                            <input type="date" name="ayah_tanggal_lahir" class="form-control" required
+                                   value="{{ calon_siswa.ayah.tanggal_lahir if calon_siswa and calon_siswa.ayah and calon_siswa.ayah.tanggal_lahir else '' }}">
+                        </div>
+
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Pendidikan Terakhir</label>
+                            <input type="text" name="ayah_pendidikan" class="form-control" required
+                                   value="{{ calon_siswa.ayah.pendidikan if calon_siswa and calon_siswa.ayah else '' }}">
+                        </div>
+
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Pekerjaan</label>
+                            <input type="text" name="ayah_pekerjaan" class="form-control" required
+                                   value="{{ calon_siswa.ayah.pekerjaan if calon_siswa and calon_siswa.ayah else '' }}">
+                        </div>
+
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Penghasilan Bulanan</label>
+                            <input type="text" name="ayah_penghasilan" class="form-control" required
+                                   value="{{ calon_siswa.ayah.penghasilan if calon_siswa and calon_siswa.ayah else '' }}">
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Berkebutuhan Khusus</label>
+                            <input type="text" name="ayah_kebutuhan_khusus" class="form-control" required
+                                   value="{{ calon_siswa.ayah.kebutuhan_khusus if calon_siswa and calon_siswa.ayah else '' }}">
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Nomor HP</label>
+                            <input type="text" name="ayah_no_hp" class="form-control" required
+                                   value="{{ calon_siswa.ayah.no_hp if calon_siswa and calon_siswa.ayah else '' }}">
+                        </div>
+
+                    </div>
+
+                    <div class="wizard-buttons">
+                        <button type="button" class="btn btn-outline-secondary prev-btn">Sebelumnya</button>
+                        <button type="button" class="btn btn-primary next-btn">Selanjutnya</button>
+                    </div>
+
+                </div>
+
+                <!-- Data Ibu Kandung -->
+                <div class="form-step">
+
+                    <div class="section-title"><i class="bi bi-person-heart"></i> Data Ibu Kandung</div>
+
+                    <div class="row">
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Nama Lengkap Ibu</label>
+                            <input type="text" name="ibu_nama" class="form-control" required
+                                   value="{{ calon_siswa.ibu.nama if calon_siswa and calon_siswa.ibu else '' }}">
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">NIK Ibu</label>
+                            <input type="text" name="ibu_nik" class="form-control" required
+                                   value="{{ calon_siswa.ibu.nik if calon_siswa and calon_siswa.ibu else '' }}">
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Tempat Lahir</label>
+                            <input type="text" name="ibu_tempat_lahir" class="form-control" required
+                                   value="{{ calon_siswa.ibu.tempat_lahir if calon_siswa and calon_siswa.ibu else '' }}">
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Tanggal Lahir</label>
+                            <input type="date" name="ibu_tanggal_lahir" class="form-control" required
+                                   value="{{ calon_siswa.ibu.tanggal_lahir if calon_siswa and calon_siswa.ibu and calon_siswa.ibu.tanggal_lahir else '' }}">
+                        </div>
+
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Pendidikan Terakhir</label>
+                            <input type="text" name="ibu_pendidikan" class="form-control" required
+                                   value="{{ calon_siswa.ibu.pendidikan if calon_siswa and calon_siswa.ibu else '' }}">
+                        </div>
+
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Pekerjaan</label>
+                            <input type="text" name="ibu_pekerjaan" class="form-control" required
+                                   value="{{ calon_siswa.ibu.pekerjaan if calon_siswa and calon_siswa.ibu else '' }}">
+                        </div>
+
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Penghasilan Bulanan</label>
+                            <input type="text" name="ibu_penghasilan" class="form-control" required
+                                   value="{{ calon_siswa.ibu.penghasilan if calon_siswa and calon_siswa.ibu else '' }}">
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Berkebutuhan Khusus</label>
+                            <input type="text" name="ibu_kebutuhan_khusus" class="form-control" required
+                                   value="{{ calon_siswa.ibu.kebutuhan_khusus if calon_siswa and calon_siswa.ibu else '' }}">
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Nomor HP</label>
+                            <input type="text" name="ibu_no_hp" class="form-control" required
+                                   value="{{ calon_siswa.ibu.no_hp if calon_siswa and calon_siswa.ibu else '' }}">
+                        </div>
+
+                    </div>
+
+                    <div class="wizard-buttons">
+                        <button type="button" class="btn btn-outline-secondary prev-btn">Sebelumnya</button>
+                        <button type="button" class="btn btn-primary next-btn">Selanjutnya</button>
+                    </div>
+
+                </div>
+
+                <!-- Data Wali (opsional) -->
+                <div class="form-step">
+
+                    <div class="section-title"><i class="bi bi-people-fill"></i> Data Wali (Opsional)</div>
+
+                    <div class="alert alert-info">Isi bagian ini hanya jika siswa tidak tinggal bersama ayah atau ibu kandung.</div>
+
+                    <div class="row">
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Nama Lengkap Wali</label>
+                            <input type="text" name="wali_nama" class="form-control"
+                                   value="{{ calon_siswa.wali.nama if calon_siswa and calon_siswa.wali else '' }}">
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">NIK Wali</label>
+                            <input type="text" name="wali_nik" class="form-control"
+                                   value="{{ calon_siswa.wali.nik if calon_siswa and calon_siswa.wali else '' }}">
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Tempat Lahir</label>
+                            <input type="text" name="wali_tempat_lahir" class="form-control"
+                                   value="{{ calon_siswa.wali.tempat_lahir if calon_siswa and calon_siswa.wali else '' }}">
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Tanggal Lahir</label>
+                            <input type="date" name="wali_tanggal_lahir" class="form-control"
+                                   value="{{ calon_siswa.wali.tanggal_lahir if calon_siswa and calon_siswa.wali and calon_siswa.wali.tanggal_lahir else '' }}">
+                        </div>
+
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Pendidikan Terakhir</label>
+                            <input type="text" name="wali_pendidikan" class="form-control"
+                                   value="{{ calon_siswa.wali.pendidikan if calon_siswa and calon_siswa.wali else '' }}">
+                        </div>
+
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Pekerjaan</label>
+                            <input type="text" name="wali_pekerjaan" class="form-control"
+                                   value="{{ calon_siswa.wali.pekerjaan if calon_siswa and calon_siswa.wali else '' }}">
+                        </div>
+
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Penghasilan Bulanan</label>
+                            <input type="text" name="wali_penghasilan" class="form-control"
+                                   value="{{ calon_siswa.wali.penghasilan if calon_siswa and calon_siswa.wali else '' }}">
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Berkebutuhan Khusus</label>
+                            <input type="text" name="wali_kebutuhan_khusus" class="form-control"
+                                   value="{{ calon_siswa.wali.kebutuhan_khusus if calon_siswa and calon_siswa.wali else '' }}">
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Nomor HP</label>
+                            <input type="text" name="wali_no_hp" class="form-control"
+                                   value="{{ calon_siswa.wali.no_hp if calon_siswa and calon_siswa.wali else '' }}">
+                        </div>
+
+                    </div>
+
+                    <div class="wizard-buttons">
+                        <button type="button" class="btn btn-outline-secondary prev-btn">Sebelumnya</button>
+                        <button type="button" class="btn btn-primary next-btn">Selanjutnya</button>
+                    </div>
+
+                </div>
+
+                <!-- Konfirmasi & Simpan -->
+                <div class="form-step">
+
+                    <div class="section-title"><i class="bi bi-check2-circle"></i> Konfirmasi &amp; Simpan</div>
+
+                    {% if is_locked %}
+                        <p class="text-muted">Data ini sudah diverifikasi oleh sekolah dan tidak dapat diubah lagi.</p>
+                    {% elif calon_siswa and calon_siswa.status_verifikasi == 'Ditolak' %}
+                        <p class="text-muted">Periksa kembali seluruh data, pastikan bagian yang disebutkan dalam alasan penolakan sudah diperbaiki.</p>
+                    {% else %}
+                        <p class="text-muted">Periksa kembali seluruh data sebelum menyimpan.</p>
+                    {% endif %}
+
+                    <div class="wizard-buttons">
+                        <button type="button" class="btn btn-outline-secondary prev-btn">Sebelumnya</button>
+
+                        {% if is_locked %}
+                            <span class="locked-pill"><i class="bi bi-lock-fill"></i> Data Terverifikasi</span>
+                        {% elif calon_siswa and calon_siswa.status_verifikasi == 'Ditolak' %}
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="bi bi-arrow-repeat"></i> Perbarui &amp; Kirim Ulang
+                            </button>
+                        {% else %}
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="bi bi-floppy-fill"></i> Simpan Data PPDB
+                            </button>
+                        {% endif %}
+                    </div>
+
+                </div>
+
+            </fieldset>
+
+        </form>
+
+    </div>
+
+    <script>
+
+        const editMode = {{ edit_mode|tojson|default(false) }};
+        const isLocked = {{ is_locked|tojson }};
+
+        // Kunci field jadi readonly/disabled hanya jika bukan mode edit dan bukan locked
+        if (!editMode && !isLocked) {
+            document.querySelectorAll("input, select, textarea").forEach(function (field) {
+                if (field.tagName === "SELECT") field.disabled = true;
+                else field.readOnly = true;
+            });
+        }
+
+        const steps = document.querySelectorAll(".form-step");
+        const indicators = document.querySelectorAll(".wizard-step");
+        let currentStep = 0;
+
+        const lockedFieldset = document.querySelector("fieldset.is-locked");
+        if (lockedFieldset) {
+            lockedFieldset.querySelectorAll("input, select, textarea").forEach(function (field) {
+                if (field.tagName === "SELECT") field.disabled = true;
+                else field.readOnly = true;
+            });
+        }
+
+        function showStep(index) {
+            steps.forEach(step => step.classList.remove("active"));
+            indicators.forEach(step => step.classList.remove("active"));
+            steps[index].classList.add("active");
+            indicators[index].classList.add("active");
+            steps[index].scrollIntoView({behavior: "smooth", block: "start"});
+        }
+
+        function validasiStepAktif(index) {
+            const fieldsInStep = steps[index].querySelectorAll("input, select, textarea");
+            let semuaValid = true;
+            fieldsInStep.forEach(function (field) {
+                if (!field.checkValidity()) {
+                    semuaValid = false;
+                    field.reportValidity();
+                }
+            });
+            return semuaValid;
+        }
+
+        document.addEventListener("click", function (e) {
+            if (e.target.classList.contains("next-btn")) {
+                if (!validasiStepAktif(currentStep)) return;
+                if (currentStep < steps.length - 1) {
+                    currentStep++;
+                    showStep(currentStep);
+                }
+            }
+
+            if (e.target.classList.contains("prev-btn")) {
+                if (currentStep > 0) {
+                    currentStep--;
+                    showStep(currentStep);
+                }
+            }
+        });
+
+        const formEl = document.querySelector("form");
+        if (formEl) {
+            formEl.addEventListener("submit", function (e) {
+                for (let i = 0; i < steps.length; i++) {
+                    const fieldsInStep = steps[i].querySelectorAll("input, select, textarea");
+                    let stepValid = true;
+                    fieldsInStep.forEach(function (field) {
+                        if (!field.checkValidity()) stepValid = false;
+                    });
+                    if (!stepValid) {
+                        e.preventDefault();
+                        currentStep = i;
+                        showStep(i);
+                        validasiStepAktif(i);
+                        return;
+                    }
+                }
+            });
+        }
+
+        showStep(0);
+
+    </script>
+
+{% endblock %}

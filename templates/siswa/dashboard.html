@@ -1,0 +1,122 @@
+{% extends 'layouts/base_dashboard.html' %}
+
+{% block title %}
+    Dashboard Siswa
+{% endblock %}
+
+{% block page_title %}
+    Dashboard Siswa
+{% endblock %}
+
+{% block content %}
+
+    <div class="welcome-card">
+
+        <h3>
+            Halo, {{ current_user.username }}
+        </h3>
+
+        <p>
+            Pantau proses pendaftaran PPDB Anda secara realtime.
+        </p>
+
+    </div>
+
+    <div class="row g-4 mb-4">
+
+        <!-- PROGRESS -->
+        <div class="col-6 col-xl-3">
+            <div class="stat-card stat-blue">
+                <div>
+                    <h2>{{ progress }}%</h2>
+                    <p>Progress Pendaftaran</p>
+                </div>
+                <i class="bi bi-bar-chart-fill"></i>
+            </div>
+        </div>
+
+        <!-- STATUS DATA -->
+        <div class="col-6 col-xl-3">
+            <div class="stat-card stat-green">
+                <div>
+                    <h2>{{ status_data }}</h2>
+                    <p>Status Data</p>
+                </div>
+                <i class="bi bi-person-check-fill"></i>
+            </div>
+        </div>
+
+        <!-- STATUS BERKAS (INI YANG DINAMIS) -->
+        <div class="col-6 col-xl-3">
+            <div class="stat-card
+            {% if berkas and berkas.status_verifikasi == 'Ditolak' %}
+                stat-red
+            {% elif berkas and berkas.status_verifikasi == 'Diverifikasi' %}
+                stat-green
+            {% else %}
+                stat-purple
+            {% endif %}
+        ">
+
+                <div>
+                    <h2>
+                        {% if berkas and berkas.status_verifikasi == 'Ditolak' %}
+                            Ditolak
+                        {% elif berkas and berkas.status_verifikasi == 'Diverifikasi' %}
+                            Diverifikasi
+                        {% else %}
+                            Menunggu
+                        {% endif %}
+                    </h2>
+                    <p>Status Berkas</p>
+                </div>
+                <i class="bi bi-file-earmark-check-fill"></i>
+            </div>
+        </div>
+
+        <!-- STATUS SELEKSI -->
+        <div class="col-6 col-xl-3">
+            <div class="stat-card stat-orange">
+                <div>
+                    <h2>Menunggu</h2>
+                    <p>Status Seleksi</p>
+                </div>
+                <i class="bi bi-award-fill"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- TAHAPAN PPDB -->
+    <div class="content-card">
+
+        <h5 class="mb-4">
+            Tahapan PPDB
+        </h5>
+
+        <div class="progress-item active">
+            ✓ Akun Berhasil Dibuat
+        </div>
+
+        <div class="progress-item {% if progress >= 50 %}active{% endif %}">
+            ✓ Formulir PPDB
+        </div>
+
+        <div class="progress-item {% if progress >= 75 %}active{% endif %}">
+            ✓ Upload Berkas
+        </div>
+
+        <div class="progress-item {% if progress >= 100 %}active{% endif %}">
+            ✓ Verifikasi Administrasi
+        </div>
+
+        <div class="progress-item">
+            ○ Seleksi / Ujian
+        </div>
+
+        <div class="progress-item">
+            ○ Pengumuman
+        </div>
+
+    </div>
+
+{% endblock %}

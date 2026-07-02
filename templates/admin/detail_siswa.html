@@ -1,0 +1,895 @@
+{% extends 'layouts/base_dashboard.html' %}
+
+{% block title %}
+    Detail Calon Siswa
+{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/detail_siswa.css') }}">
+{% endblock %}
+
+{% block content %}
+
+    <div class="ppdb-form-card detail-shell">
+
+        <!-- ===================================== -->
+        <!-- HEADER (selalu terlihat, tidak ikut tab) -->
+        <!-- ===================================== -->
+
+        <div class="detail-top">
+
+            <div>
+                <a href="{{ url_for('admin.calon_siswa') }}" class="detail-back-link">
+                    <i class="bi bi-arrow-left"></i>
+                    Kembali ke Daftar
+                </a>
+
+                <div class="form-header" style="text-align:left; margin-bottom:0;">
+                    <h2 style="font-size:24px;">
+                        {{ siswa.nama_lengkap or 'Calon Siswa' }}
+                    </h2>
+                    <p>
+                        NISN: {{ siswa.nisn or '-' }}
+                    </p>
+                </div>
+            </div>
+
+            <div>
+                {% if siswa.status_verifikasi == 'Diverifikasi' %}
+
+                    <span class="status-pill status-pill-success">
+                        <i class="bi bi-check-circle-fill"></i>
+                        Diverifikasi
+                    </span>
+
+                {% elif siswa.status_verifikasi == 'Ditolak' %}
+
+                    <span class="status-pill status-pill-danger">
+                        <i class="bi bi-x-circle-fill"></i>
+                        Ditolak
+                    </span>
+
+                {% else %}
+
+                    <span class="status-pill status-pill-warning">
+                        <i class="bi bi-hourglass-split"></i>
+                        Belum Diverifikasi
+                    </span>
+
+                {% endif %}
+            </div>
+
+        </div>
+
+        {% if siswa.status_verifikasi == 'Ditolak' and siswa.catatan_verifikasi %}
+
+            <div class="alert alert-danger-soft">
+                <i class="bi bi-exclamation-circle-fill"></i>
+                <div>
+                    <strong>Alasan penolakan:</strong>
+                    {{ siswa.catatan_verifikasi }}
+                    {% if siswa.tanggal_verifikasi %}
+                        <div class="text-muted" style="font-size:12.5px; margin-top:4px;">
+                            Ditolak pada {{ siswa.tanggal_verifikasi.strftime('%d %B %Y, %H:%M') }}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+        {% endif %}
+
+        <!-- ===================================== -->
+        <!-- SELECTOR MOBILE (tampil hanya di layar kecil) -->
+        <!-- ===================================== -->
+
+        <div class="detail-nav-mobile">
+
+            <label class="form-label" for="detailNavSelect">
+                Pilih bagian data
+            </label>
+
+            <select id="detailNavSelect" class="form-select detail-nav-select">
+
+                <option value="pribadi">
+                    Data Pribadi
+                </option>
+
+                <option value="alamat">
+                    Alamat{{ ' — Belum lengkap' if not siswa.alamat else '' }}
+                </option>
+
+                <option value="sekolah">
+                    Sekolah Asal
+                </option>
+
+                <option value="ayah">
+                    Data Ayah{{ ' — Belum lengkap' if not siswa.ayah else '' }}
+                </option>
+
+                <option value="ibu">
+                    Data Ibu{{ ' — Belum lengkap' if not siswa.ibu else '' }}
+                </option>
+
+                {% if siswa.wali %}
+                    <option value="wali">
+                        Data Wali
+                    </option>
+                {% endif %}
+
+                {% if siswa.berkas %}
+                    <option value="berkas">
+                        Berkas
+                    </option>
+                {% endif %}
+
+            </select>
+
+        </div>
+
+        <!-- ===================================== -->
+        <!-- LAYOUT: SIDEBAR TAB + KONTEN -->
+        <!-- ===================================== -->
+
+        <div class="detail-layout">
+
+            <!-- ============== SIDEBAR (desktop) ============== -->
+
+            <nav class="detail-nav">
+
+                <button type="button" class="detail-nav-item active" data-target="pribadi">
+                    <i class="bi bi-person-vcard"></i>
+                    <span>Data Pribadi</span>
+                </button>
+
+                <button type="button" class="detail-nav-item" data-target="alamat">
+                    <i class="bi bi-geo-alt-fill"></i>
+                    <span>Alamat</span>
+                    {% if not siswa.alamat %}<i class="bi bi-dot nav-flag"></i>{% endif %}
+                </button>
+
+                <button type="button" class="detail-nav-item" data-target="sekolah">
+                    <i class="bi bi-building"></i>
+                    <span>Sekolah Asal</span>
+                </button>
+
+                <button type="button" class="detail-nav-item" data-target="ayah">
+                    <i class="bi bi-person-badge-fill"></i>
+                    <span>Data Ayah</span>
+                    {% if not siswa.ayah %}<i class="bi bi-dot nav-flag"></i>{% endif %}
+                </button>
+
+                <button type="button" class="detail-nav-item" data-target="ibu">
+                    <i class="bi bi-person-heart"></i>
+                    <span>Data Ibu</span>
+                    {% if not siswa.ibu %}<i class="bi bi-dot nav-flag"></i>{% endif %}
+                </button>
+
+                {% if siswa.wali %}
+                    <button type="button" class="detail-nav-item" data-target="wali">
+                        <i class="bi bi-people-fill"></i>
+                        <span>Data Wali</span>
+                    </button>
+                {% endif %}
+
+                {% if siswa.berkas %}
+                    <button type="button" class="detail-nav-item" data-target="berkas">
+                        <i class="bi bi-paperclip"></i>
+                        <span>Berkas</span>
+                    </button>
+                {% endif %}
+
+            </nav>
+
+            <!-- ============== KONTEN TAB ============== -->
+
+            <div class="detail-panes">
+
+                <!-- ===================================== -->
+                <!-- DATA PRIBADI -->
+                <!-- ===================================== -->
+
+                <div class="tab-pane active" data-pane="pribadi">
+
+                    <div class="section-title">
+                        <i class="bi bi-person-vcard"></i>
+                        Data Pribadi Siswa
+                    </div>
+
+                    <div class="row">
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Nama Lengkap</label>
+                            <div class="detail-value {{ 'is-empty' if not siswa.nama_lengkap }}">
+                                {{ siswa.nama_lengkap or 'Belum diisi' }}
+                            </div>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">NISN</label>
+                            <div class="detail-value {{ 'is-empty' if not siswa.nisn }}">
+                                {{ siswa.nisn or 'Belum diisi' }}
+                            </div>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">NIK</label>
+                            <div class="detail-value {{ 'is-empty' if not siswa.nik }}">
+                                {{ siswa.nik or 'Belum diisi' }}
+                            </div>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Nomor Registrasi Akta</label>
+                            <div class="detail-value {{ 'is-empty' if not siswa.no_registrasi_akta }}">
+                                {{ siswa.no_registrasi_akta or 'Belum diisi' }}
+                            </div>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Tempat, Tanggal Lahir</label>
+                            <div class="detail-value">
+                                {{ siswa.tempat_lahir or '-' }},
+                                {{ siswa.tanggal_lahir.strftime('%d %B %Y') if siswa.tanggal_lahir else '-' }}
+                            </div>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Jenis Kelamin</label>
+                            <div class="detail-value {{ 'is-empty' if not siswa.jenis_kelamin }}">
+                                {{ siswa.jenis_kelamin or 'Belum diisi' }}
+                            </div>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Agama</label>
+                            <div class="detail-value {{ 'is-empty' if not siswa.agama }}">
+                                {{ siswa.agama or 'Belum diisi' }}
+                            </div>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Kewarganegaraan</label>
+                            <div class="detail-value {{ 'is-empty' if not siswa.kewarganegaraan }}">
+                                {{ siswa.kewarganegaraan or 'Belum diisi' }}
+                            </div>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Nomor HP</label>
+                            <div class="detail-value {{ 'is-empty' if not siswa.no_hp }}">
+                                {{ siswa.no_hp or 'Belum diisi' }}
+                            </div>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Email</label>
+                            <div class="detail-value {{ 'is-empty' if not siswa.email }}">
+                                {{ siswa.email or 'Belum diisi' }}
+                            </div>
+                        </div>
+
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Status Tinggal</label>
+                            <div class="detail-value {{ 'is-empty' if not siswa.status_tinggal }}">
+                                {{ siswa.status_tinggal or 'Belum diisi' }}
+                            </div>
+                        </div>
+
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Moda Transportasi</label>
+                            <div class="detail-value {{ 'is-empty' if not siswa.moda_transportasi }}">
+                                {{ siswa.moda_transportasi or 'Belum diisi' }}
+                            </div>
+                        </div>
+
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Anak Ke</label>
+                            <div class="detail-value {{ 'is-empty' if not siswa.anak_ke }}">
+                                {% if siswa.anak_ke %}
+                                    {{ siswa.anak_ke }}
+                                    {% if siswa.jumlah_saudara_kandung %}
+                                        dari {{ siswa.jumlah_saudara_kandung }} bersaudara
+                                    {% endif %}
+                                {% else %}
+                                    Belum diisi
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Tinggi Badan</label>
+                            <div class="detail-value">
+                                {{ (siswa.tinggi_badan|string + ' cm') if siswa.tinggi_badan else '-' }}
+                            </div>
+                        </div>
+
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Berat Badan</label>
+                            <div class="detail-value">
+                                {{ (siswa.berat_badan|string + ' kg') if siswa.berat_badan else '-' }}
+                            </div>
+                        </div>
+
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Jumlah Saudara Kandung</label>
+                            <div class="detail-value {{ 'is-empty' if not siswa.jumlah_saudara_kandung }}">
+                                {{ siswa.jumlah_saudara_kandung or 'Belum diisi' }}
+                            </div>
+                        </div>
+
+                        <div class="col-12 mb-3">
+                            <label class="form-label">Berkebutuhan Khusus</label>
+                            <div class="detail-value {{ 'is-empty' if not siswa.kebutuhan_khusus }}">
+                                {{ siswa.kebutuhan_khusus or 'Tidak ada' }}
+                            </div>
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <!-- ===================================== -->
+                <!-- DATA ALAMAT -->
+                <!-- ===================================== -->
+
+                <div class="tab-pane" data-pane="alamat">
+
+                    <div class="section-title">
+                        <i class="bi bi-geo-alt-fill"></i>
+                        Data Alamat
+                    </div>
+
+                    {% if siswa.alamat %}
+
+                        <div class="row">
+
+                            <div class="col-12 mb-3">
+                                <label class="form-label">Alamat Jalan</label>
+                                <div class="detail-value {{ 'is-empty' if not siswa.alamat.alamat_jalan }}">
+                                    {{ siswa.alamat.alamat_jalan or 'Belum diisi' }}
+                                </div>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Dusun / Blok</label>
+                                <div class="detail-value {{ 'is-empty' if not siswa.alamat.dusun }}">
+                                    {{ siswa.alamat.dusun or 'Belum diisi' }}
+                                </div>
+                            </div>
+
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label">RT</label>
+                                <div class="detail-value {{ 'is-empty' if not siswa.alamat.rt }}">
+                                    {{ siswa.alamat.rt or '-' }}
+                                </div>
+                            </div>
+
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label">RW</label>
+                                <div class="detail-value {{ 'is-empty' if not siswa.alamat.rw }}">
+                                    {{ siswa.alamat.rw or '-' }}
+                                </div>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Desa / Kelurahan</label>
+                                <div class="detail-value {{ 'is-empty' if not siswa.alamat.desa_kelurahan }}">
+                                    {{ siswa.alamat.desa_kelurahan or 'Belum diisi' }}
+                                </div>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Kecamatan</label>
+                                <div class="detail-value {{ 'is-empty' if not siswa.alamat.kecamatan }}">
+                                    {{ siswa.alamat.kecamatan or 'Belum diisi' }}
+                                </div>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Kabupaten / Kota</label>
+                                <div class="detail-value {{ 'is-empty' if not siswa.alamat.kabupaten }}">
+                                    {{ siswa.alamat.kabupaten or 'Belum diisi' }}
+                                </div>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Kode Pos</label>
+                                <div class="detail-value {{ 'is-empty' if not siswa.alamat.kode_pos }}">
+                                    {{ siswa.alamat.kode_pos or 'Belum diisi' }}
+                                </div>
+                            </div>
+
+                        </div>
+
+                    {% else %}
+
+                        <span class="detail-empty-note">
+                            Data alamat belum dilengkapi oleh siswa.
+                        </span>
+
+                    {% endif %}
+
+                </div>
+
+                <!-- ===================================== -->
+                <!-- DATA SEKOLAH ASAL -->
+                <!-- ===================================== -->
+
+                <div class="tab-pane" data-pane="sekolah">
+
+                    <div class="section-title">
+                        <i class="bi bi-building"></i>
+                        Data Sekolah Asal
+                    </div>
+
+                    <div class="row">
+
+                        <div class="col-md-8 mb-3">
+                            <label class="form-label">Asal Sekolah</label>
+                            <div class="detail-value {{ 'is-empty' if not siswa.asal_sekolah }}">
+                                {{ siswa.asal_sekolah or 'Belum diisi' }}
+                            </div>
+                        </div>
+
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Tahun Lulus</label>
+                            <div class="detail-value {{ 'is-empty' if not siswa.tahun_lulus }}">
+                                {{ siswa.tahun_lulus or 'Belum diisi' }}
+                            </div>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Jarak Tempat Tinggal ke Sekolah</label>
+                            <div class="detail-value {{ 'is-empty' if not siswa.jarak_ke_sekolah }}">
+                                {{ siswa.jarak_ke_sekolah or 'Belum diisi' }}
+                            </div>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Waktu Tempuh ke Sekolah</label>
+                            <div class="detail-value {{ 'is-empty' if not siswa.waktu_tempuh }}">
+                                {{ siswa.waktu_tempuh or 'Belum diisi' }}
+                            </div>
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <!-- ===================================== -->
+                <!-- DATA AYAH KANDUNG -->
+                <!-- ===================================== -->
+
+                <div class="tab-pane" data-pane="ayah">
+
+                    <div class="section-title">
+                        <i class="bi bi-person-badge-fill"></i>
+                        Data Ayah Kandung
+                    </div>
+
+                    {% if siswa.ayah %}
+
+                        <div class="row">
+
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Nama Lengkap Ayah</label>
+                                <div class="detail-value {{ 'is-empty' if not siswa.ayah.nama }}">
+                                    {{ siswa.ayah.nama or 'Belum diisi' }}
+                                </div>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">NIK Ayah</label>
+                                <div class="detail-value {{ 'is-empty' if not siswa.ayah.nik }}">
+                                    {{ siswa.ayah.nik or 'Belum diisi' }}
+                                </div>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Tempat Lahir</label>
+                                <div class="detail-value {{ 'is-empty' if not siswa.ayah.tempat_lahir }}">
+                                    {{ siswa.ayah.tempat_lahir or 'Belum diisi' }}
+                                </div>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Tanggal Lahir</label>
+                                <div class="detail-value">
+                                    {{ siswa.ayah.tanggal_lahir.strftime('%d %B %Y') if siswa.ayah.tanggal_lahir else '-' }}
+                                </div>
+                            </div>
+
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Pendidikan Terakhir</label>
+                                <div class="detail-value {{ 'is-empty' if not siswa.ayah.pendidikan }}">
+                                    {{ siswa.ayah.pendidikan or 'Belum diisi' }}
+                                </div>
+                            </div>
+
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Pekerjaan</label>
+                                <div class="detail-value {{ 'is-empty' if not siswa.ayah.pekerjaan }}">
+                                    {{ siswa.ayah.pekerjaan or 'Belum diisi' }}
+                                </div>
+                            </div>
+
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Penghasilan Bulanan</label>
+                                <div class="detail-value {{ 'is-empty' if not siswa.ayah.penghasilan }}">
+                                    {{ siswa.ayah.penghasilan or 'Belum diisi' }}
+                                </div>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Berkebutuhan Khusus</label>
+                                <div class="detail-value {{ 'is-empty' if not siswa.ayah.kebutuhan_khusus }}">
+                                    {{ siswa.ayah.kebutuhan_khusus or 'Tidak ada' }}
+                                </div>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Nomor HP</label>
+                                <div class="detail-value {{ 'is-empty' if not siswa.ayah.no_hp }}">
+                                    {{ siswa.ayah.no_hp or 'Belum diisi' }}
+                                </div>
+                            </div>
+
+                        </div>
+
+                    {% else %}
+
+                        <span class="detail-empty-note">
+                            Data ayah belum dilengkapi oleh siswa.
+                        </span>
+
+                    {% endif %}
+
+                </div>
+
+                <!-- ===================================== -->
+                <!-- DATA IBU KANDUNG -->
+                <!-- ===================================== -->
+
+                <div class="tab-pane" data-pane="ibu">
+
+                    <div class="section-title">
+                        <i class="bi bi-person-heart"></i>
+                        Data Ibu Kandung
+                    </div>
+
+                    {% if siswa.ibu %}
+
+                        <div class="row">
+
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Nama Lengkap Ibu</label>
+                                <div class="detail-value {{ 'is-empty' if not siswa.ibu.nama }}">
+                                    {{ siswa.ibu.nama or 'Belum diisi' }}
+                                </div>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">NIK Ibu</label>
+                                <div class="detail-value {{ 'is-empty' if not siswa.ibu.nik }}">
+                                    {{ siswa.ibu.nik or 'Belum diisi' }}
+                                </div>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Tempat Lahir</label>
+                                <div class="detail-value {{ 'is-empty' if not siswa.ibu.tempat_lahir }}">
+                                    {{ siswa.ibu.tempat_lahir or 'Belum diisi' }}
+                                </div>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Tanggal Lahir</label>
+                                <div class="detail-value">
+                                    {{ siswa.ibu.tanggal_lahir.strftime('%d %B %Y') if siswa.ibu.tanggal_lahir else '-' }}
+                                </div>
+                            </div>
+
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Pendidikan Terakhir</label>
+                                <div class="detail-value {{ 'is-empty' if not siswa.ibu.pendidikan }}">
+                                    {{ siswa.ibu.pendidikan or 'Belum diisi' }}
+                                </div>
+                            </div>
+
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Pekerjaan</label>
+                                <div class="detail-value {{ 'is-empty' if not siswa.ibu.pekerjaan }}">
+                                    {{ siswa.ibu.pekerjaan or 'Belum diisi' }}
+                                </div>
+                            </div>
+
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Penghasilan Bulanan</label>
+                                <div class="detail-value {{ 'is-empty' if not siswa.ibu.penghasilan }}">
+                                    {{ siswa.ibu.penghasilan or 'Belum diisi' }}
+                                </div>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Berkebutuhan Khusus</label>
+                                <div class="detail-value {{ 'is-empty' if not siswa.ibu.kebutuhan_khusus }}">
+                                    {{ siswa.ibu.kebutuhan_khusus or 'Tidak ada' }}
+                                </div>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Nomor HP</label>
+                                <div class="detail-value {{ 'is-empty' if not siswa.ibu.no_hp }}">
+                                    {{ siswa.ibu.no_hp or 'Belum diisi' }}
+                                </div>
+                            </div>
+
+                        </div>
+
+                    {% else %}
+
+                        <span class="detail-empty-note">
+                            Data ibu belum dilengkapi oleh siswa.
+                        </span>
+
+                    {% endif %}
+
+                </div>
+
+                <!-- ===================================== -->
+                <!-- DATA WALI (HANYA TAMPIL JIKA ADA) -->
+                <!-- ===================================== -->
+
+                {% if siswa.wali %}
+
+                    <div class="tab-pane" data-pane="wali">
+
+                        <div class="section-title">
+                            <i class="bi bi-people-fill"></i>
+                            Data Wali
+                        </div>
+
+                        <div class="row">
+
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Nama Lengkap Wali</label>
+                                <div class="detail-value {{ 'is-empty' if not siswa.wali.nama }}">
+                                    {{ siswa.wali.nama or 'Belum diisi' }}
+                                </div>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">NIK Wali</label>
+                                <div class="detail-value {{ 'is-empty' if not siswa.wali.nik }}">
+                                    {{ siswa.wali.nik or 'Belum diisi' }}
+                                </div>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Tempat Lahir</label>
+                                <div class="detail-value {{ 'is-empty' if not siswa.wali.tempat_lahir }}">
+                                    {{ siswa.wali.tempat_lahir or 'Belum diisi' }}
+                                </div>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Tanggal Lahir</label>
+                                <div class="detail-value">
+                                    {{ siswa.wali.tanggal_lahir.strftime('%d %B %Y') if siswa.wali.tanggal_lahir else '-' }}
+                                </div>
+                            </div>
+
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Pendidikan Terakhir</label>
+                                <div class="detail-value {{ 'is-empty' if not siswa.wali.pendidikan }}">
+                                    {{ siswa.wali.pendidikan or 'Belum diisi' }}
+                                </div>
+                            </div>
+
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Pekerjaan</label>
+                                <div class="detail-value {{ 'is-empty' if not siswa.wali.pekerjaan }}">
+                                    {{ siswa.wali.pekerjaan or 'Belum diisi' }}
+                                </div>
+                            </div>
+
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Penghasilan Bulanan</label>
+                                <div class="detail-value {{ 'is-empty' if not siswa.wali.penghasilan }}">
+                                    {{ siswa.wali.penghasilan or 'Belum diisi' }}
+                                </div>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Berkebutuhan Khusus</label>
+                                <div class="detail-value {{ 'is-empty' if not siswa.wali.kebutuhan_khusus }}">
+                                    {{ siswa.wali.kebutuhan_khusus or 'Tidak ada' }}
+                                </div>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Nomor HP</label>
+                                <div class="detail-value {{ 'is-empty' if not siswa.wali.no_hp }}">
+                                    {{ siswa.wali.no_hp or 'Belum diisi' }}
+                                </div>
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                {% endif %}
+
+                <!-- ===================================== -->
+                <!-- BERKAS PENDUKUNG (jika ada) -->
+                <!-- ===================================== -->
+
+                {% if siswa.berkas %}
+
+                    <div class="tab-pane" data-pane="berkas">
+
+                        <div class="section-title">
+                            <i class="bi bi-paperclip"></i>
+                            Berkas Pendukung
+                        </div>
+
+                        <p class="text-muted mb-3">
+                            Periksa kelengkapan dan keabsahan berkas sebelum
+                            melakukan verifikasi.
+                        </p>
+
+                        <a href="{{ url_for('admin.detail_berkas', id=siswa.berkas.id) }}"
+                           class="btn btn-outline-secondary">
+                            <i class="bi bi-file-earmark-text"></i>
+                            Lihat Detail Berkas
+                        </a>
+
+                    </div>
+
+                {% endif %}
+
+            </div>
+
+        </div>
+
+        <!-- ===================================== -->
+        <!-- AKSI VERIFIKASI (selalu terlihat, tidak ikut tab) -->
+        <!-- ===================================== -->
+
+        <div class="form-submit-area">
+
+            <div class="detail-actions">
+
+                <a href="{{ url_for('admin.edit_siswa', id=siswa.id) }}"
+                   class="btn btn-outline-secondary"
+                   title="Gunakan hanya jika siswa tidak bisa mengedit sendiri">
+                    <i class="bi bi-pencil-square"></i>
+                    Edit Data
+                </a>
+
+                {% if siswa.status_verifikasi == 'Diverifikasi' %}
+
+                    <span style="color:#15803D; font-weight:600; font-size:14px; display:inline-flex; align-items:center; gap:6px;">
+                        <i class="bi bi-check-circle-fill"></i>
+                        Pendaftaran ini sudah diverifikasi
+                    </span>
+
+                {% else %}
+
+                    <button type="button" class="btn btn-danger-outline" id="btnShowTolak">
+                        <i class="bi bi-x-circle"></i>
+                        Tolak Pendaftaran
+                    </button>
+
+                    <form method="GET"
+                          action="{{ url_for('admin.verifikasi_siswa', id=siswa.id) }}"
+                          onsubmit="return confirm('Verifikasi pendaftaran siswa ini? Pastikan seluruh data dan berkas sudah diperiksa.');">
+
+                        <button type="submit" class="btn btn-success">
+                            <i class="bi bi-check-circle"></i>
+                            Verifikasi Pendaftaran
+                        </button>
+
+                    </form>
+
+                {% endif %}
+
+            </div>
+
+            {% if siswa.status_verifikasi != 'Diverifikasi' %}
+
+                <form method="POST"
+                      action="{{ url_for('admin.tolak_siswa', id=siswa.id) }}"
+                      id="formTolak"
+                      class="reject-box"
+                      style="display:none;">
+
+                    <label class="form-label">
+                        Alasan Penolakan
+                        <span class="text-muted" style="font-weight:400;">
+                            (akan ditampilkan ke siswa)
+                        </span>
+                    </label>
+
+                    <textarea
+                            name="catatan_verifikasi"
+                            class="form-control"
+                            rows="3"
+                            required
+                            placeholder="Contoh: NIK tidak sesuai dengan Kartu Keluarga, mohon periksa kembali."></textarea>
+
+                    <div class="reject-box-actions">
+
+                        <button type="button" class="btn btn-outline-secondary" id="btnCancelTolak">
+                            Batal
+                        </button>
+
+                        <button type="submit" class="btn btn-danger-solid"
+                                onclick="return confirm('Tolak pendaftaran siswa ini? Siswa akan diminta memperbaiki datanya.');">
+                            <i class="bi bi-send-fill"></i>
+                            Kirim Penolakan
+                        </button>
+
+                    </div>
+
+                </form>
+
+            {% endif %}
+
+        </div>
+
+    </div>
+
+    <script>
+
+        const btnShowTolak = document.getElementById('btnShowTolak');
+        const btnCancelTolak = document.getElementById('btnCancelTolak');
+        const formTolak = document.getElementById('formTolak');
+
+        if (btnShowTolak) {
+            btnShowTolak.addEventListener('click', function () {
+                formTolak.style.display = 'block';
+                formTolak.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            });
+        }
+
+        if (btnCancelTolak) {
+            btnCancelTolak.addEventListener('click', function () {
+                formTolak.style.display = 'none';
+            });
+        }
+
+        const navItems = document.querySelectorAll('.detail-nav-item');
+        const navSelect = document.getElementById('detailNavSelect');
+
+        function activateTab(target) {
+
+            navItems.forEach(function (b) {
+                b.classList.toggle('active', b.dataset.target === target);
+            });
+
+
+            document.querySelectorAll('.tab-pane').forEach(function (p) {
+                p.classList.toggle('active', p.dataset.pane === target);
+            });
+
+            if (navSelect.value !== target) {
+                navSelect.value = target;
+            }
+
+        }
+
+        navItems.forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                activateTab(btn.dataset.target);
+            });
+        });
+
+        navSelect.addEventListener('change', function () {
+            activateTab(navSelect.value);
+        });
+
+    </script>
+
+{% endblock %}

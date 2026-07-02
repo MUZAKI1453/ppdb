@@ -1,0 +1,268 @@
+/* ==================================================
+   TOPBAR
+================================================== */
+.topbar {
+    height: 72px;
+    background: #FFFFFF;
+    border-bottom: 1px solid #E2E8F0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px;
+    position: sticky;
+    top: 0;
+    z-index: 900;
+    box-shadow: 0 1px 8px rgba(0,0,0,.05);
+    gap: 16px;
+}
+
+/* ==================================================
+   LEFT
+================================================== */
+.topbar-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+    flex: 1;
+}
+
+.page-title {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 700;
+    color: #0F172A;
+    line-height: 1.2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.page-subtitle {
+    color: #94A3B8;
+    font-size: 12px;
+    white-space: nowrap;
+}
+
+/* ==================================================
+   RIGHT
+================================================== */
+.topbar-right {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+/* ==================================================
+   USER DROPDOWN — wrapper
+================================================== */
+.user-dropdown {
+    position: relative;
+}
+
+/* Trigger button */
+.user-dropdown-trigger {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 10px;
+    border-radius: 12px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.user-dropdown-trigger:hover,
+.user-dropdown-trigger.active {
+    background: #F8FAFC;
+}
+
+/* Avatar */
+.user-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 9px;
+    background: linear-gradient(135deg, #2563EB, #1D4ED8);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 14px;
+    flex-shrink: 0;
+}
+
+/* Nama & role */
+.user-info {
+    display: flex;
+    flex-direction: column;
+    text-align: left;
+}
+
+.user-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: #0F172A;
+    line-height: 1.2;
+    white-space: nowrap;
+}
+
+.user-role {
+    font-size: 11px;
+    color: #94A3B8;
+    white-space: nowrap;
+}
+
+/* Chevron */
+.user-chevron {
+    font-size: 13px;
+    color: #94A3B8;
+    transition: transform 0.2s ease;
+    flex-shrink: 0;
+}
+
+.user-dropdown-trigger.active .user-chevron {
+    transform: rotate(180deg);
+}
+
+/* ==================================================
+   DROPDOWN MENU
+================================================== */
+.user-dropdown-menu {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    width: 210px;
+    background: #FFFFFF;
+    border: 0.5px solid #E2E8F0;
+    border-radius: 14px;
+    box-shadow: 0 8px 24px rgba(0,0,0,.10), 0 2px 6px rgba(0,0,0,.06);
+    padding: 6px;
+    z-index: 9999;
+    /* Animasi muncul */
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-6px);
+    transition: opacity 0.18s ease, transform 0.18s ease, visibility 0.18s;
+}
+
+.user-dropdown-menu.show {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+/* Header: nama + role di atas menu */
+.dropdown-header {
+    padding: 8px 10px 10px;
+}
+
+.dropdown-header-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: #0F172A;
+}
+
+.dropdown-header-role {
+    font-size: 12px;
+    color: #94A3B8;
+    margin-top: 2px;
+}
+
+/* Divider */
+.dropdown-divider {
+    height: 0.5px;
+    background: #F1F5F9;
+    margin: 2px 0;
+}
+
+/* Item menu */
+.dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 10px;
+    border-radius: 9px;
+    font-size: 13px;
+    font-weight: 500;
+    color: #334155;
+    text-decoration: none;
+    transition: background 0.15s;
+    cursor: pointer;
+    width: 100%;
+}
+
+.dropdown-item i {
+    font-size: 16px;
+    width: 18px;
+    text-align: center;
+    flex-shrink: 0;
+    color: #94A3B8;
+}
+
+.dropdown-item:hover {
+    background: #F8FAFC;
+    color: #0F172A;
+}
+
+.dropdown-item:hover i {
+    color: #2563EB;
+}
+
+/* Item danger (logout) */
+.dropdown-item-danger {
+    color: #64748B;
+}
+
+.dropdown-item-danger i {
+    color: #94A3B8;
+}
+
+.dropdown-item-danger:hover {
+    background: #FEF2F2;
+    color: #EF4444;
+}
+
+.dropdown-item-danger:hover i {
+    color: #EF4444;
+}
+
+/* ==================================================
+   RESPONSIVE — Tablet
+================================================== */
+@media (max-width: 992px) {
+    .topbar {
+        padding: 0 16px;
+        height: 64px;
+    }
+
+    .page-title { font-size: 18px; }
+}
+
+/* ==================================================
+   RESPONSIVE — Mobile
+   Sembunyikan user-info (nama+role), sisakan avatar+chevron
+================================================== */
+@media (max-width: 768px) {
+    .topbar {
+        height: 60px;
+        padding: 0 14px;
+    }
+
+    .page-subtitle { display: none; }
+    .user-info     { display: none; }
+
+    .user-dropdown-trigger {
+        padding: 6px 8px;
+        gap: 6px;
+    }
+}
+
+/* ==================================================
+   RESPONSIVE — Extra small
+================================================== */
+@media (max-width: 480px) {
+    .page-title { font-size: 16px; }
+    .user-chevron { display: none; }
+}

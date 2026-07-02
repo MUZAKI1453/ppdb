@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>
+        {% block title %}{% endblock %}
+    </title>
+
+    <meta name="description"
+          content="PPDB Online Tahun Ajaran 2026/2027. Sistem Penerimaan Peserta Didik Baru secara online, cepat, mudah dan transparan.">
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+          rel="stylesheet">
+
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/app.css') }}">
+
+</head>
+
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-custom sticky-top">
+
+    <div class="container">
+
+        <a class="navbar-brand d-flex align-items-center"
+           href="#beranda">
+
+            <div class="logo-box">
+
+                <i class="bi bi-mortarboard-fill"></i>
+
+            </div>
+
+            <div class="ms-3">
+
+                <div class="brand-title">
+                    PPDB Online
+                </div>
+
+                <div class="brand-subtitle">
+                    Tahun Ajaran 2026/2027
+                </div>
+
+            </div>
+
+        </a>
+
+        <button class="navbar-toggler"
+                type="button"
+                data-bs-toggle="collapse"
+                data-bs-target="#navbarMenu">
+
+            <span class="navbar-toggler-icon"></span>
+
+        </button>
+
+        <div class="collapse navbar-collapse"
+             id="navbarMenu">
+
+            <ul class="navbar-nav mx-auto">
+
+                <li class="nav-item">
+                    <a class="nav-link" href="#beranda">
+                        Beranda
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link" href="#profil">
+                        Profil Sekolah
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link" href="#keunggulan">
+                        Keunggulan
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link" href="#alur">
+                        Alur PPDB
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link" href="#jadwal">
+                        Jadwal
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link" href="#kontak">
+                        Kontak
+                    </a>
+                </li>
+
+            </ul>
+
+            <div class="d-flex">
+
+                <a href="{{ url_for('auth.login') }}"
+                   class="btn btn-outline-primary me-2">
+
+                    Login
+
+                </a>
+
+                <a href="{{ url_for('auth.register') }}"
+                   class="btn btn-primary">
+
+                    Daftar Sekarang
+
+                </a>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</nav>
+
+{% block content %}
+{% endblock %}
+
+<footer class="footer"
+        id="kontak">
+
+    <div class="container">
+
+        <div class="row">
+
+            <div class="col-lg-6 mb-4">
+
+                <h5>
+                    PPDB Online
+                </h5>
+
+                <p>
+
+                    Sistem Penerimaan Peserta Didik Baru
+                    yang memudahkan calon siswa melakukan
+                    pendaftaran, mengisi formulir,
+                    upload berkas, mengikuti ujian,
+                    dan melihat hasil seleksi secara online.
+
+                </p>
+
+            </div>
+
+            <div class="col-lg-6 mb-4">
+
+                <h5>
+                    Hubungi Kami
+                </h5>
+
+                <p>
+                    <i class="bi bi-geo-alt-fill"></i>
+                    Jl. Pendidikan No. 1
+                </p>
+
+                <p>
+                    <i class="bi bi-telephone-fill"></i>
+                    (021) 12345678
+                </p>
+
+                <p>
+                    <i class="bi bi-envelope-fill"></i>
+                    info@sekolah.sch.id
+                </p>
+
+            </div>
+
+        </div>
+
+        <hr>
+
+        <div class="text-center">
+
+            © 2026 PPDB Online |
+            Seluruh Hak Cipta Dilindungi
+
+        </div>
+
+    </div>
+
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+
+document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+
+    anchor.addEventListener('click', function(e) {
+
+        e.preventDefault();
+
+        document.querySelector(
+            this.getAttribute('href')
+        ).scrollIntoView({
+
+            behavior: 'smooth'
+
+        });
+
+    });
+
+});
+
+</script>
+
+</body>
+</html>

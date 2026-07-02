@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{% endblock %}</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/sidebar.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/upload_berkas.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/topbar.css') }}">
+
+    {% block extra_css %}{% endblock %}
+</head>
+
+<body>
+
+<div class="mobile-overlay" id="mobileOverlay"></div>
+
+<div class="dashboard-wrapper">
+
+    <!-- ========== SIDEBAR ========== -->
+    <aside class="sidebar" id="sidebar">
+
+        <!--
+            BRAND HEADER — tampil saat sidebar EXPANDED
+            Berisi: logo + nama + tombol collapse (desktop)
+                                 + tombol close   (mobile)
+        -->
+        <div class="sidebar-brand" id="sidebarBrand">
+            <div class="brand-left">
+                <div class="logo-circle">P</div>
+                <div class="brand-info">
+                    <div class="school-name">PPDB Online</div>
+                    <div class="school-desc">Sistem Penerimaan Siswa</div>
+                </div>
+            </div>
+            <!-- Desktop: collapse -->
+            <button class="btn-sidebar-collapse" id="btnCollapse" title="Sembunyikan sidebar">
+                <i class="bi bi-layout-sidebar"></i>
+            </button>
+            <!-- Mobile: tutup -->
+            <button class="btn-sidebar-close" id="btnClose" title="Tutup sidebar">
+                <i class="bi bi-layout-sidebar"></i>
+            </button>
+        </div>
+
+        <!--
+            COLLAPSED HEADER — tampil saat sidebar COLLAPSED (desktop only)
+            Hanya berisi tombol expand, benar-benar center
+        -->
+        <div class="sidebar-collapsed-header" id="sidebarCollapsedHeader">
+            <button class="btn-sidebar-expand" id="btnExpand" title="Tampilkan sidebar">
+                <i class="bi bi-layout-sidebar"></i>
+            </button>
+        </div>
+
+        <div class="sidebar-scroll">
+            {% if current_user.role == 'admin' %}
+                {% include 'partials/sidebar_admin.html' %}
+            {% else %}
+                {% include 'partials/sidebar_siswa.html' %}
+            {% endif %}
+        </div>
+
+    </aside>
+
+    <!-- ========== MAIN ========== -->
+    <main class="main-content">
+
+        <header class="topbar">
+            <div class="topbar-left">
+                <!-- Mobile only: tombol buka sidebar dari topbar -->
+                <button class="btn-topbar-open" id="btnOpen" title="Buka sidebar">
+                    <i class="bi bi-layout-sidebar"></i>
+                </button>
+                <div>
+                    <h4 class="page-title">{% block page_title %}Dashboard{% endblock %}</h4>
+                    <div class="page-subtitle">Selamat datang kembali</div>
+                </div>
+            </div>
+            <div class="topbar-right">
+
+                <!-- USER DROPDOWN -->
+                <div class="user-dropdown" id="userDropdown">
+
+                    <!-- Trigger -->
+                    <button class="user-dropdown-trigger" id="userDropdownTrigger" aria-haspopup="true"
+                            aria-expanded="false">
+                        <div class="user-avatar">{{ current_user.username[0]|upper }}</div>
+                        <div class="user-info">
+                            <div class="user-name">{{ current_user.username }}</div>
+                            <div class="user-role">{{ current_user.role|capitalize }}</div>
+                        </div>
+                        <i class="bi bi-chevron-down user-chevron"></i>
+                    </button>
+
+                    <!-- Dropdown menu -->
+                    <div class="user-dropdown-menu" id="userDropdownMenu">
+                        <div class="dropdown-header">
+                            <div class="dropdown-header-name">{{ current_user.username }}</div>
+                            <div class="dropdown-header-role">{{ current_user.role|capitalize }}</div>
+                        </div>
+                        <div class="dropdown-divider"></div>
+                        <a href="#" class="dropdown-item">
+                            <i class="bi bi-person"></i>
+                            Profil Saya
+                        </a>
+                        <a href="#" class="dropdown-item">
+                            <i class="bi bi-gear"></i>
+                            Pengaturan
+                        </a>
+                        <div class="dropdown-divider"></div>
+                        <a href="{{ url_for('auth.logout') }}" class="dropdown-item dropdown-item-danger">
+                            <i class="bi bi-box-arrow-right"></i>
+                            Logout
+                        </a>
+                    </div>
+
+                </div>
+
+            </div>
+        </header>
+
+        <section class="content-area">
+            {% block content %}{% endblock %}
+        </section>
+
+    </main>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+
+        var sidebar = document.getElementById("sidebar");
+        var overlay = document.getElementById("mobileOverlay");
+        var btnColl = document.getElementById("btnCollapse");   // collapse — desktop, di brand header
+        var btnExp = document.getElementById("btnExpand");     // expand  — desktop, di collapsed header
+        var btnClose = document.getElementById("btnClose");      // tutup   — mobile, di brand header
+        var btnOpen = document.getElementById("btnOpen");       // buka    — mobile, di topbar
+        var MOBILE = 992;
+
+        function isMobile() {
+            return window.innerWidth <= MOBILE;
+        }
+
+        /* ── Mobile ── */
+        function openSidebar() {
+            sidebar.classList.add("show");
+            overlay.classList.add("show");
+            document.body.style.overflow = "hidden";
+        }
+
+        function closeSidebar() {
+            sidebar.classList.remove("show");
+            overlay.classList.remove("show");
+            document.body.style.overflow = "";
+        }
+
+        /* ── Desktop ── */
+        function collapseSidebar() {
+            sidebar.classList.add("collapsed");
+            localStorage.setItem("sidebarCollapsed", "true");
+        }
+
+        function expandSidebar() {
+            sidebar.classList.remove("collapsed");
+            localStorage.setItem("sidebarCollapsed", "false");
+        }
+
+        /* ── Init ── */
+        if (isMobile()) {
+            sidebar.classList.remove("show", "collapsed");
+            overlay.classList.remove("show");
+        } else {
+            if (localStorage.getItem("sidebarCollapsed") === "true") {
+                sidebar.classList.add("collapsed");
+            }
+        }
+
+        /* ── Event listeners ── */
+        btnColl.addEventListener("click", collapseSidebar);
+        btnExp.addEventListener("click", expandSidebar);
+        btnClose.addEventListener("click", closeSidebar);
+        btnOpen.addEventListener("click", function () {
+            sidebar.classList.contains("show") ? closeSidebar() : openSidebar();
+        });
+        overlay.addEventListener("click", closeSidebar);
+
+        /* ── Resize ── */
+        window.addEventListener("resize", function () {
+            if (!isMobile()) {
+                closeSidebar();
+                if (localStorage.getItem("sidebarCollapsed") === "true") {
+                    sidebar.classList.add("collapsed");
+                } else {
+                    sidebar.classList.remove("collapsed");
+                }
+            } else {
+                sidebar.classList.remove("collapsed");
+                closeSidebar();
+            }
+        });
+
+        /* ── User Dropdown ── */
+        var ddTrigger = document.getElementById("userDropdownTrigger");
+        var ddMenu = document.getElementById("userDropdownMenu");
+        var ddWrap = document.getElementById("userDropdown");
+
+        function openDropdown() {
+            ddMenu.classList.add("show");
+            ddTrigger.setAttribute("aria-expanded", "true");
+            ddTrigger.classList.add("active");
+        }
+
+        function closeDropdown() {
+            ddMenu.classList.remove("show");
+            ddTrigger.setAttribute("aria-expanded", "false");
+            ddTrigger.classList.remove("active");
+        }
+
+        ddTrigger.addEventListener("click", function (e) {
+            e.stopPropagation();
+            ddMenu.classList.contains("show") ? closeDropdown() : openDropdown();
+        });
+
+        /* Klik di luar dropdown: tutup */
+        document.addEventListener("click", function (e) {
+            if (!ddWrap.contains(e.target)) {
+                closeDropdown();
+            }
+        });
+
+        /* Escape key: tutup dropdown */
+        document.addEventListener("keydown", function (e) {
+            if (e.key === "Escape") closeDropdown();
+        });
+    });
+</script>
+
+</body>
+</html>

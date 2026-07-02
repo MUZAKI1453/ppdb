@@ -1,0 +1,357 @@
+/* ==================================================
+   GLOBAL
+================================================== */
+
+body {
+    margin: 0;
+    background: #F8FAFC;
+    font-family: 'Segoe UI', sans-serif;
+}
+
+/* ==================================================
+   LAYOUT DASHBOARD
+================================================== */
+
+.dashboard-wrapper {
+    display: flex;
+    min-height: 100vh;
+}
+
+.main-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.content-area {
+    padding: 30px;
+}
+
+/* ==================================================
+   CARD UMUM
+================================================== */
+
+.dashboard-card {
+    background: white;
+    border: none;
+    border-radius: 20px;
+    padding: 25px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, .05);
+}
+
+.dashboard-card h3 {
+    font-weight: 700;
+    margin-bottom: 10px;
+}
+
+.dashboard-card p {
+    color: #64748B;
+    margin: 0;
+}
+
+/* ==================================================
+   WELCOME CARD
+================================================== */
+
+.welcome-card {
+
+    background: linear-gradient(
+            135deg,
+            #2563EB,
+            #1D4ED8
+    );
+
+    color: white;
+
+    padding: 30px;
+
+    border-radius: 20px;
+
+    margin-bottom: 25px;
+
+    box-shadow: 0 10px 25px rgba(37, 99, 235, .25);
+}
+
+.welcome-card h3 {
+
+    font-weight: 700;
+
+    margin-bottom: 10px;
+}
+
+.welcome-card p {
+
+    margin: 0;
+
+    opacity: .9;
+}
+
+/* ==================================================
+   STATISTIC CARD
+================================================== */
+
+.stat-card {
+    border-radius: 20px;
+    padding: 22px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    color: white;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, .08);
+    transition: .3s;
+    min-width: 0;
+    height: 100%;
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+}
+
+.stat-card > div {
+    min-width: 0;
+    flex: 1 1 auto;
+}
+
+.stat-card h2 {
+    font-size: clamp(18px, 2.2vw, 32px);
+    font-weight: 700;
+    margin-bottom: 5px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.stat-card p {
+    margin: 0;
+    opacity: .9;
+    font-size: 13px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.stat-card i {
+    font-size: clamp(24px, 3vw, 45px);
+    flex-shrink: 0;
+}
+
+/* ==================================================
+   WARNA STAT CARD
+================================================== */
+
+.stat-blue {
+
+    background: linear-gradient(
+            135deg,
+            #2563EB,
+            #3B82F6
+    );
+}
+
+.stat-green {
+
+    background: linear-gradient(
+            135deg,
+            #10B981,
+            #34D399
+    );
+}
+
+.stat-orange {
+
+    background: linear-gradient(
+            135deg,
+            #F59E0B,
+            #FBBF24
+    );
+}
+
+.stat-purple {
+
+    background: linear-gradient(
+            135deg,
+            #8B5CF6,
+            #A78BFA
+    );
+}
+
+.stat-red {
+    background: linear-gradient(
+            135deg,
+            #ef4444,
+            #dc2626
+    );
+    color: white;
+}
+
+/* ==================================================
+   CONTENT CARD
+================================================== */
+
+.content-card {
+
+    background: white;
+
+    border-radius: 20px;
+
+    padding: 25px;
+
+    box-shadow: 0 5px 20px rgba(0, 0, 0, .05);
+}
+
+.content-card h3,
+.content-card h4,
+.content-card h5 {
+
+    font-weight: 700;
+
+    margin-bottom: 20px;
+}
+
+/* ==================================================
+   QUICK ACTION
+================================================== */
+
+.quick-btn {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 12px;
+
+    padding: 15px;
+
+    border-radius: 15px;
+
+    background: #EFF6FF;
+
+    color: #2563EB;
+
+    text-decoration: none;
+
+    font-weight: 600;
+
+    transition: .3s;
+}
+
+.quick-btn:hover {
+
+    background: #DBEAFE;
+
+    transform: translateY(-2px);
+}
+
+/* ==================================================
+   PROGRESS PPDB
+================================================== */
+
+.progress-item {
+
+    padding: 15px;
+
+    border-radius: 12px;
+
+    margin-bottom: 10px;
+
+    background: white;
+
+    border: 1px solid #E2E8F0;
+
+    color: #475569;
+}
+
+.progress-item.active {
+
+    background: #EFF6FF;
+
+    color: #2563EB;
+
+    border-color: #2563EB;
+
+    font-weight: 600;
+}
+
+/* ==================================================
+   TABLE DASHBOARD
+================================================== */
+
+.table {
+
+    margin-bottom: 0;
+}
+
+.table th {
+
+    background: #F8FAFC;
+
+    font-weight: 600;
+
+    color: #334155;
+}
+
+.table td {
+
+    vertical-align: middle;
+}
+
+/* ==================================================
+   RESPONSIVE
+================================================== */
+
+@media (max-width: 992px) {
+    .content-area {
+        padding: 20px;
+    }
+
+    .stat-card {
+        margin-bottom: 15px;
+        padding: 18px;
+    }
+}
+
+@media (max-width: 768px) {
+    .content-area {
+        padding: 15px;
+    }
+
+    .dashboard-card,
+    .content-card {
+        padding: 20px;
+    }
+
+    .welcome-card {
+        padding: 20px;
+    }
+
+    .stat-card {
+        padding: 16px;
+    }
+
+    .stat-card h2 {
+        font-size: 20px;
+    }
+
+    .stat-card i {
+        font-size: 28px;
+    }
+}
+
+@media (max-width: 480px) {
+    .stat-card {
+        flex-direction: row;
+        align-items: center;
+    }
+
+    .stat-card h2 {
+        font-size: 17px;
+    }
+
+    .stat-card p {
+        font-size: 12px;
+    }
+
+    .stat-card i {
+        font-size: 22px;
+    }
+}
