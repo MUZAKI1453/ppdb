@@ -1,491 +1,491 @@
 {% extends 'layouts/base_dashboard.html' %}
 
 {% block title %}
-Detail Berkas
+    Detail Berkas
 {% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet"
-      href="{{ url_for('static', filename='css/detail_berkas.css') }}">
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/detail_berkas.css') }}">
 {% endblock %}
 
 {% block content %}
 
-<div class="detail-page">
+    <div class="detail-page">
 
-    <!-- HEADER -->
-    <div class="detail-header">
+        <!-- HEADER -->
+        <div class="detail-header">
 
-        <div>
+            <div>
 
-            <h2>Detail Berkas Siswa</h2>
+                <h2>Detail Berkas Siswa</h2>
 
-            <div class="student-info">
+                <div class="student-info">
 
             <span>
                 <i class="bi bi-person-fill"></i>
                 {{ berkas.calon_siswa.nama_lengkap }}
             </span>
 
-                <span>
+                    <span>
                 <i class="bi bi-folder-fill"></i>
                 Dokumen Pendaftaran
             </span>
 
+                </div>
+
             </div>
 
-        </div>
+            {% set status = berkas.status_verifikasi|string|lower %}
 
-        {% set status = berkas.status_verifikasi|string|lower %}
+            {% if status == 'diverifikasi' %}
 
-        {% if status == 'diverifikasi' %}
-
-        <span class="status-success">
+                <span class="status-success">
             <i class="bi bi-check-circle-fill"></i>
             Diverifikasi
         </span>
 
-        {% elif status == 'ditolak' %}
+            {% elif status == 'ditolak' %}
 
-        <span class="status-danger">
+                <span class="status-danger">
             <i class="bi bi-x-circle-fill"></i>
             Ditolak
         </span>
 
-        {% elif status == 'revisi' %}
+            {% elif status == 'revisi' %}
 
-        <span class="status-warning">
+                <span class="status-warning">
             <i class="bi bi-arrow-repeat"></i>
             Revisi
         </span>
 
-        {% else %}
+            {% else %}
 
-        <span class="status-secondary">
+                <span class="status-secondary">
             <i class="bi bi-clock-fill"></i>
             Belum Diverifikasi
         </span>
 
+            {% endif %}
+
+        </div>
+
+        <!-- CATATAN ADMIN -->
+
+        {% if berkas.catatan_verifikasi %}
+
+            <div class="alert alert-warning mt-3">
+
+                <strong>Catatan Admin:</strong>
+
+                <hr>
+
+                {{ berkas.catatan_verifikasi }}
+
+                {% if berkas.list_field_bermasalah %}
+
+                    <hr>
+
+                    <strong>Dokumen Bermasalah:</strong>
+
+                    <ul class="mb-0">
+
+                        {% for f in berkas.list_field_bermasalah %}
+
+                            <li>
+
+                                {% if f == 'pas_foto' %}
+                                    Pas Foto
+                                {% elif f == 'kartu_keluarga' %}
+                                    Kartu Keluarga
+                                {% elif f == 'akta_lahir' %}
+                                    Akta Lahir
+                                {% elif f == 'ijazah' %}
+                                    Ijazah
+                                {% elif f == 'ktp_orang_tua' %}
+                                    KTP Orang Tua/Wali
+                                {% else %}
+                                    {{ f }}
+                                {% endif %}
+
+                            </li>
+
+                        {% endfor %}
+
+                    </ul>
+
+                {% endif %}
+
+            </div>
+
         {% endif %}
 
-    </div>
+        <!-- DOKUMEN -->
+        <div class="document-section">
 
-    <!-- CATATAN ADMIN -->
+            <h5 class="section-title">
+                <i class="bi bi-images"></i>
+                Preview Dokumen
+            </h5>
 
-    {% if berkas.catatan_verifikasi %}
+            <div class="berkas-grid">
 
-    <div class="alert alert-warning mt-3">
+                {% if berkas.pas_foto %}
+                    <div class="document-card {% if berkas.list_field_bermasalah and 'pas_foto' in berkas.list_field_bermasalah %}document-card-bermasalah{% endif %}"
+                         onclick="showPreview('{{ url_for('admin.uploaded_file', filename=berkas.pas_foto) }}')">
 
-        <strong>Catatan Admin:</strong>
+                        <img src="{{ url_for('admin.uploaded_file', filename=berkas.pas_foto) }}"
+                             class="document-thumb">
 
-        <hr>
+                        <div class="document-info">
+                            <h6>Pas Foto</h6>
+                            <small>Klik untuk melihat</small>
+                        </div>
 
-        {{ berkas.catatan_verifikasi }}
-
-        {% if berkas.list_field_bermasalah %}
-
-        <hr>
-
-        <strong>Dokumen Bermasalah:</strong>
-
-        <ul class="mb-0">
-
-            {% for f in berkas.list_field_bermasalah %}
-
-            <li>
-
-                {% if f == 'pas_foto' %}
-                    Pas Foto
-                {% elif f == 'kartu_keluarga' %}
-                    Kartu Keluarga
-                {% elif f == 'akta_lahir' %}
-                    Akta Lahir
-                {% elif f == 'ijazah' %}
-                    Ijazah
-                {% elif f == 'ktp_orang_tua' %}
-                    KTP Orang Tua/Wali
-                {% else %}
-                    {{ f }}
-                {% endif %}
-
-            </li>
-
-            {% endfor %}
-
-        </ul>
-
-        {% endif %}
-
-    </div>
-
-    {% endif %}
-
-    <!-- DOKUMEN -->
-    <div class="document-section">
-
-        <h5 class="section-title">
-            <i class="bi bi-images"></i>
-            Preview Dokumen
-        </h5>
-
-        <div class="berkas-grid">
-
-            {% if berkas.pas_foto %}
-            <div class="document-card {% if berkas.list_field_bermasalah and 'pas_foto' in berkas.list_field_bermasalah %}document-card-bermasalah{% endif %}"
-                 onclick="showPreview('{{ url_for('admin.uploaded_file', filename=berkas.pas_foto) }}')">
-
-                <img src="{{ url_for('admin.uploaded_file', filename=berkas.pas_foto) }}"
-                     class="document-thumb">
-
-                <div class="document-info">
-                    <h6>Pas Foto</h6>
-                    <small>Klik untuk melihat</small>
-                </div>
-
-                {% if berkas.list_field_bermasalah and 'pas_foto' in berkas.list_field_bermasalah %}
-                <span class="badge-bermasalah">
+                        {% if berkas.list_field_bermasalah and 'pas_foto' in berkas.list_field_bermasalah %}
+                            <span class="badge-bermasalah">
                     <i class="bi bi-exclamation-triangle-fill"></i>
                     Bermasalah
                 </span>
+                        {% endif %}
+
+                    </div>
                 {% endif %}
 
-            </div>
-            {% endif %}
+                {% if berkas.kartu_keluarga %}
+                    <div class="document-card {% if berkas.list_field_bermasalah and 'kartu_keluarga' in berkas.list_field_bermasalah %}document-card-bermasalah{% endif %}"
+                         onclick="showPreview('{{ url_for('admin.uploaded_file', filename=berkas.kartu_keluarga) }}')">
 
-            {% if berkas.kartu_keluarga %}
-            <div class="document-card {% if berkas.list_field_bermasalah and 'kartu_keluarga' in berkas.list_field_bermasalah %}document-card-bermasalah{% endif %}"
-                 onclick="showPreview('{{ url_for('admin.uploaded_file', filename=berkas.kartu_keluarga) }}')">
+                        <img src="{{ url_for('admin.uploaded_file', filename=berkas.kartu_keluarga) }}"
+                             class="document-thumb">
 
-                <img src="{{ url_for('admin.uploaded_file', filename=berkas.kartu_keluarga) }}"
-                     class="document-thumb">
+                        <div class="document-info">
+                            <h6>Kartu Keluarga</h6>
+                            <small>Klik untuk melihat</small>
+                        </div>
 
-                <div class="document-info">
-                    <h6>Kartu Keluarga</h6>
-                    <small>Klik untuk melihat</small>
-                </div>
-
-                {% if berkas.list_field_bermasalah and 'kartu_keluarga' in berkas.list_field_bermasalah %}
-                <span class="badge-bermasalah">
+                        {% if berkas.list_field_bermasalah and 'kartu_keluarga' in berkas.list_field_bermasalah %}
+                            <span class="badge-bermasalah">
                     <i class="bi bi-exclamation-triangle-fill"></i>
                     Bermasalah
                 </span>
+                        {% endif %}
+
+                    </div>
                 {% endif %}
 
-            </div>
-            {% endif %}
+                {% if berkas.akta_lahir %}
+                    <div class="document-card {% if berkas.list_field_bermasalah and 'akta_lahir' in berkas.list_field_bermasalah %}document-card-bermasalah{% endif %}"
+                         onclick="showPreview('{{ url_for('admin.uploaded_file', filename=berkas.akta_lahir) }}')">
 
-            {% if berkas.akta_lahir %}
-            <div class="document-card {% if berkas.list_field_bermasalah and 'akta_lahir' in berkas.list_field_bermasalah %}document-card-bermasalah{% endif %}"
-                 onclick="showPreview('{{ url_for('admin.uploaded_file', filename=berkas.akta_lahir) }}')">
+                        <img src="{{ url_for('admin.uploaded_file', filename=berkas.akta_lahir) }}"
+                             class="document-thumb">
 
-                <img src="{{ url_for('admin.uploaded_file', filename=berkas.akta_lahir) }}"
-                     class="document-thumb">
+                        <div class="document-info">
+                            <h6>Akta Lahir</h6>
+                            <small>Klik untuk melihat</small>
+                        </div>
 
-                <div class="document-info">
-                    <h6>Akta Lahir</h6>
-                    <small>Klik untuk melihat</small>
-                </div>
-
-                {% if berkas.list_field_bermasalah and 'akta_lahir' in berkas.list_field_bermasalah %}
-                <span class="badge-bermasalah">
+                        {% if berkas.list_field_bermasalah and 'akta_lahir' in berkas.list_field_bermasalah %}
+                            <span class="badge-bermasalah">
                     <i class="bi bi-exclamation-triangle-fill"></i>
                     Bermasalah
                 </span>
+                        {% endif %}
+
+                    </div>
                 {% endif %}
 
-            </div>
-            {% endif %}
+                {% if berkas.ijazah %}
+                    <div class="document-card {% if berkas.list_field_bermasalah and 'ijazah' in berkas.list_field_bermasalah %}document-card-bermasalah{% endif %}"
+                         onclick="showPreview('{{ url_for('admin.uploaded_file', filename=berkas.ijazah) }}')">
 
-            {% if berkas.ijazah %}
-            <div class="document-card {% if berkas.list_field_bermasalah and 'ijazah' in berkas.list_field_bermasalah %}document-card-bermasalah{% endif %}"
-                 onclick="showPreview('{{ url_for('admin.uploaded_file', filename=berkas.ijazah) }}')">
+                        <img src="{{ url_for('admin.uploaded_file', filename=berkas.ijazah) }}"
+                             class="document-thumb">
 
-                <img src="{{ url_for('admin.uploaded_file', filename=berkas.ijazah) }}"
-                     class="document-thumb">
+                        <div class="document-info">
+                            <h6>Ijazah</h6>
+                            <small>Klik untuk melihat</small>
+                        </div>
 
-                <div class="document-info">
-                    <h6>Ijazah</h6>
-                    <small>Klik untuk melihat</small>
-                </div>
-
-                {% if berkas.list_field_bermasalah and 'ijazah' in berkas.list_field_bermasalah %}
-                <span class="badge-bermasalah">
+                        {% if berkas.list_field_bermasalah and 'ijazah' in berkas.list_field_bermasalah %}
+                            <span class="badge-bermasalah">
                     <i class="bi bi-exclamation-triangle-fill"></i>
                     Bermasalah
                 </span>
+                        {% endif %}
+
+                    </div>
                 {% endif %}
 
-            </div>
-            {% endif %}
+                {% if berkas.ktp_orang_tua %}
+                    <div class="document-card {% if berkas.list_field_bermasalah and 'ktp_orang_tua' in berkas.list_field_bermasalah %}document-card-bermasalah{% endif %}"
+                         onclick="showPreview('{{ url_for('admin.uploaded_file', filename=berkas.ktp_orang_tua) }}')">
 
-            {% if berkas.ktp_orang_tua %}
-            <div class="document-card {% if berkas.list_field_bermasalah and 'ktp_orang_tua' in berkas.list_field_bermasalah %}document-card-bermasalah{% endif %}"
-                 onclick="showPreview('{{ url_for('admin.uploaded_file', filename=berkas.ktp_orang_tua) }}')">
+                        <img src="{{ url_for('admin.uploaded_file', filename=berkas.ktp_orang_tua) }}"
+                             class="document-thumb">
 
-                <img src="{{ url_for('admin.uploaded_file', filename=berkas.ktp_orang_tua) }}"
-                     class="document-thumb">
+                        <div class="document-info">
+                            <h6>KTP Orang Tua/Wali</h6>
+                            <small>Klik untuk melihat</small>
+                        </div>
 
-                <div class="document-info">
-                    <h6>KTP Orang Tua/Wali</h6>
-                    <small>Klik untuk melihat</small>
-                </div>
-
-                {% if berkas.list_field_bermasalah and 'ktp_orang_tua' in berkas.list_field_bermasalah %}
-                <span class="badge-bermasalah">
+                        {% if berkas.list_field_bermasalah and 'ktp_orang_tua' in berkas.list_field_bermasalah %}
+                            <span class="badge-bermasalah">
                     <i class="bi bi-exclamation-triangle-fill"></i>
                     Bermasalah
                 </span>
+                        {% endif %}
+
+                    </div>
                 {% endif %}
 
             </div>
+
+        </div>
+
+        <!-- ACTION -->
+
+        <div class="action-area">
+
+            {% if status == 'belum diverifikasi' or status == 'revisi' %}
+
+                <a href="{{ url_for('admin.verifikasi_berkas', id=berkas.id) }}"
+                   class="btn btn-success">
+
+                    <i class="bi bi-check-circle-fill"></i>
+                    Terima Berkas
+
+                </a>
+
+                <button
+                        type="button"
+                        class="btn btn-danger"
+                        data-bs-toggle="modal"
+                        data-bs-target="#tolakModal">
+
+                    <i class="bi bi-x-circle-fill"></i>
+                    Tolak Berkas
+
+                </button>
+
             {% endif %}
+
+            <a href="{{ url_for('admin.data_berkas') }}"
+               class="btn btn-outline-secondary">
+
+                <i class="bi bi-arrow-left"></i>
+                Kembali
+
+            </a>
 
         </div>
 
     </div>
 
-    <!-- ACTION -->
+    <!-- VIEWER -->
+    <div class="viewer" id="viewer">
 
-    <div class="action-area">
-
-        {% if status == 'belum diverifikasi' or status == 'revisi' %}
-
-        <a href="{{ url_for('admin.verifikasi_berkas', id=berkas.id) }}"
-           class="btn btn-success">
-
-            <i class="bi bi-check-circle-fill"></i>
-            Terima Berkas
-
-        </a>
-
-        <button
-                type="button"
-                class="btn btn-danger"
-                data-bs-toggle="modal"
-                data-bs-target="#tolakModal">
-
-            <i class="bi bi-x-circle-fill"></i>
-            Tolak Berkas
-
+        <button class="viewer-close" onclick="closePreview()">
+            <i class="bi bi-x-lg"></i>
         </button>
 
-        {% endif %}
-
-        <a href="{{ url_for('admin.data_berkas') }}"
-           class="btn btn-outline-secondary">
-
-            <i class="bi bi-arrow-left"></i>
-            Kembali
-
-        </a>
+        <img id="previewImage" class="viewer-image">
 
     </div>
 
-</div>
+    <!-- MODAL TOLAK BERKAS -->
 
-<!-- VIEWER -->
-<div class="viewer" id="viewer">
+    <div class="modal fade"
+         id="tolakModal"
+         tabindex="-1">
 
-    <button class="viewer-close" onclick="closePreview()">
-        <i class="bi bi-x-lg"></i>
-    </button>
+        <div class="modal-dialog">
 
-    <img id="previewImage" class="viewer-image">
+            <div class="modal-content">
 
-</div>
+                <form
+                        method="POST"
+                        action="{{ url_for('admin.tolak_berkas', id=berkas.id) }}"
+                        id="formTolakBerkas">
 
-<!-- MODAL TOLAK BERKAS -->
+                    <div class="modal-header">
 
-<div class="modal fade"
-     id="tolakModal"
-     tabindex="-1">
+                        <h5 class="modal-title">
+                            Tolak Berkas
+                        </h5>
 
-    <div class="modal-dialog">
-
-        <div class="modal-content">
-
-            <form
-                    method="POST"
-                    action="{{ url_for('admin.tolak_berkas', id=berkas.id) }}"
-                    id="formTolakBerkas">
-
-                <div class="modal-header">
-
-                    <h5 class="modal-title">
-                        Tolak Berkas
-                    </h5>
-
-                    <button
-                            type="button"
-                            class="btn-close"
-                            data-bs-dismiss="modal">
-                    </button>
-
-                </div>
-
-                <div class="modal-body">
-
-                    <!-- PILIH DOKUMEN BERMASALAH -->
-                    <div class="mb-3">
-
-                        <label class="form-label">
-                            Dokumen yang Bermasalah
-                            <span class="text-danger">*</span>
-                        </label>
-
-                        <small class="d-block text-muted mb-2">
-                            Pilih dokumen yang perlu diupload ulang oleh siswa.
-                            Dokumen yang tidak dipilih tidak perlu diubah.
-                        </small>
-
-                        {% if berkas.pas_foto %}
-                        <div class="form-check">
-                            <input class="form-check-input"
-                                   type="checkbox"
-                                   name="field_bermasalah"
-                                   value="pas_foto"
-                                   id="cb_pas_foto">
-                            <label class="form-check-label" for="cb_pas_foto">
-                                Pas Foto
-                            </label>
-                        </div>
-                        {% endif %}
-
-                        {% if berkas.kartu_keluarga %}
-                        <div class="form-check">
-                            <input class="form-check-input"
-                                   type="checkbox"
-                                   name="field_bermasalah"
-                                   value="kartu_keluarga"
-                                   id="cb_kk">
-                            <label class="form-check-label" for="cb_kk">
-                                Kartu Keluarga
-                            </label>
-                        </div>
-                        {% endif %}
-
-                        {% if berkas.akta_lahir %}
-                        <div class="form-check">
-                            <input class="form-check-input"
-                                   type="checkbox"
-                                   name="field_bermasalah"
-                                   value="akta_lahir"
-                                   id="cb_akta">
-                            <label class="form-check-label" for="cb_akta">
-                                Akta Lahir
-                            </label>
-                        </div>
-                        {% endif %}
-
-                        {% if berkas.ijazah %}
-                        <div class="form-check">
-                            <input class="form-check-input"
-                                   type="checkbox"
-                                   name="field_bermasalah"
-                                   value="ijazah"
-                                   id="cb_ijazah">
-                            <label class="form-check-label" for="cb_ijazah">
-                                Ijazah
-                            </label>
-                        </div>
-                        {% endif %}
-
-                        {% if berkas.ktp_orang_tua %}
-                        <div class="form-check">
-                            <input class="form-check-input"
-                                   type="checkbox"
-                                   name="field_bermasalah"
-                                   value="ktp_orang_tua"
-                                   id="cb_ktp">
-                            <label class="form-check-label" for="cb_ktp">
-                                KTP Orang Tua/Wali
-                            </label>
-                        </div>
-                        {% endif %}
-
-                        <div class="invalid-feedback-custom text-danger mt-1 d-none" id="errorFieldBermasalah">
-                            Pilih minimal satu dokumen yang bermasalah.
-                        </div>
+                        <button
+                                type="button"
+                                class="btn-close"
+                                data-bs-dismiss="modal">
+                        </button>
 
                     </div>
 
-                    <label class="form-label">
-                        Alasan Penolakan
-                    </label>
+                    <div class="modal-body">
 
-                    <textarea
-                            name="catatan_verifikasi"
-                            class="form-control"
-                            rows="4"
-                            required
-                            placeholder="Contoh: Pas foto buram, upload ulang dengan kualitas lebih baik."></textarea>
+                        <!-- PILIH DOKUMEN BERMASALAH -->
+                        <div class="mb-3">
 
-                </div>
+                            <label class="form-label">
+                                Dokumen yang Bermasalah
+                                <span class="text-danger">*</span>
+                            </label>
 
-                <div class="modal-footer">
+                            <small class="d-block text-muted mb-2">
+                                Pilih dokumen yang perlu diupload ulang oleh siswa.
+                                Dokumen yang tidak dipilih tidak perlu diubah.
+                            </small>
 
-                    <button
-                            type="button"
-                            class="btn btn-secondary"
-                            data-bs-dismiss="modal">
+                            {% if berkas.pas_foto %}
+                                <div class="form-check">
+                                    <input class="form-check-input"
+                                           type="checkbox"
+                                           name="field_bermasalah"
+                                           value="pas_foto"
+                                           id="cb_pas_foto">
+                                    <label class="form-check-label" for="cb_pas_foto">
+                                        Pas Foto
+                                    </label>
+                                </div>
+                            {% endif %}
 
-                        Batal
+                            {% if berkas.kartu_keluarga %}
+                                <div class="form-check">
+                                    <input class="form-check-input"
+                                           type="checkbox"
+                                           name="field_bermasalah"
+                                           value="kartu_keluarga"
+                                           id="cb_kk">
+                                    <label class="form-check-label" for="cb_kk">
+                                        Kartu Keluarga
+                                    </label>
+                                </div>
+                            {% endif %}
 
-                    </button>
+                            {% if berkas.akta_lahir %}
+                                <div class="form-check">
+                                    <input class="form-check-input"
+                                           type="checkbox"
+                                           name="field_bermasalah"
+                                           value="akta_lahir"
+                                           id="cb_akta">
+                                    <label class="form-check-label" for="cb_akta">
+                                        Akta Lahir
+                                    </label>
+                                </div>
+                            {% endif %}
 
-                    <button
-                            type="submit"
-                            class="btn btn-danger">
+                            {% if berkas.ijazah %}
+                                <div class="form-check">
+                                    <input class="form-check-input"
+                                           type="checkbox"
+                                           name="field_bermasalah"
+                                           value="ijazah"
+                                           id="cb_ijazah">
+                                    <label class="form-check-label" for="cb_ijazah">
+                                        Ijazah
+                                    </label>
+                                </div>
+                            {% endif %}
 
-                        Tolak Berkas
+                            {% if berkas.ktp_orang_tua %}
+                                <div class="form-check">
+                                    <input class="form-check-input"
+                                           type="checkbox"
+                                           name="field_bermasalah"
+                                           value="ktp_orang_tua"
+                                           id="cb_ktp">
+                                    <label class="form-check-label" for="cb_ktp">
+                                        KTP Orang Tua/Wali
+                                    </label>
+                                </div>
+                            {% endif %}
 
-                    </button>
+                            <div class="invalid-feedback-custom text-danger mt-1 d-none" id="errorFieldBermasalah">
+                                Pilih minimal satu dokumen yang bermasalah.
+                            </div>
 
-                </div>
+                        </div>
 
-            </form>
+                        <label class="form-label">
+                            Alasan Penolakan
+                        </label>
+
+                        <textarea
+                                name="catatan_verifikasi"
+                                class="form-control"
+                                rows="4"
+                                required
+                                placeholder="Contoh: Pas foto buram, upload ulang dengan kualitas lebih baik."></textarea>
+
+                    </div>
+
+                    <div class="modal-footer">
+
+                        <button
+                                type="button"
+                                class="btn btn-secondary"
+                                data-bs-dismiss="modal">
+
+                            Batal
+
+                        </button>
+
+                        <button
+                                type="submit"
+                                class="btn btn-danger">
+
+                            Tolak Berkas
+
+                        </button>
+
+                    </div>
+
+                </form>
+
+            </div>
 
         </div>
 
     </div>
 
-</div>
+    <script>
 
-<script>
+        function showPreview(url) {
+            document.getElementById("previewImage").src = url;
+            document.getElementById("viewer").classList.add("show");
+        }
 
-    function showPreview(url) {
-        document.getElementById("previewImage").src = url;
-        document.getElementById("viewer").classList.add("show");
-    }
+        function closePreview() {
+            document.getElementById("viewer").classList.remove("show");
+        }
 
-    function closePreview() {
-        document.getElementById("viewer").classList.remove("show");
-    }
+        // Validasi: minimal satu checkbox dokumen bermasalah harus dicentang
+        document.getElementById("formTolakBerkas")
+            .addEventListener("submit", function (e) {
 
-    // Validasi: minimal satu checkbox dokumen bermasalah harus dicentang
-    document.getElementById("formTolakBerkas")
-        .addEventListener("submit", function (e) {
+                const checkboxes = this.querySelectorAll(
+                    'input[name="field_bermasalah"]'
+                );
 
-            const checkboxes = this.querySelectorAll(
-                'input[name="field_bermasalah"]'
-            );
+                const errorEl = document.getElementById(
+                    "errorFieldBermasalah"
+                );
 
-            const errorEl = document.getElementById(
-                "errorFieldBermasalah"
-            );
+                const adaYangDicentang = Array.from(checkboxes)
+                    .some(cb => cb.checked);
 
-            const adaYangDicentang = Array.from(checkboxes)
-                .some(cb => cb.checked);
+                if (checkboxes.length > 0 && !adaYangDicentang) {
+                    e.preventDefault();
+                    errorEl.classList.remove("d-none");
+                } else {
+                    errorEl.classList.add("d-none");
+                }
 
-            if (checkboxes.length > 0 && !adaYangDicentang) {
-                e.preventDefault();
-                errorEl.classList.remove("d-none");
-            } else {
-                errorEl.classList.add("d-none");
-            }
+            });
 
-        });
-
-</script>
+    </script>
 
 {% endblock %}

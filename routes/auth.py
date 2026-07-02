@@ -5,7 +5,6 @@ from flask_login import login_user, logout_user
 from extensions_db import db
 from models.user import User
 
-
 # ==================================================
 # Blueprint Authentication
 # ==================================================
@@ -21,7 +20,6 @@ auth = Blueprint(
 # ==================================================
 @auth.route('/')
 def home():
-
     return render_template('index.html')
 
 
@@ -31,7 +29,6 @@ def home():
 # ==================================================
 @auth.route('/register', methods=['GET', 'POST'])
 def register():
-
     if request.method == 'POST':
 
         username = request.form['username']
@@ -66,7 +63,6 @@ def register():
 # ==================================================
 @auth.route('/login', methods=['GET', 'POST'])
 def login():
-
     if request.method == 'POST':
 
         username = request.form['username']
@@ -91,8 +87,8 @@ def login():
             )
 
         if user and check_password_hash(
-            user.password,
-            password
+                user.password,
+                password
         ):
 
             print("LOGIN BERHASIL")
@@ -115,7 +111,6 @@ def login():
 # ==================================================
 @auth.route('/logout')
 def logout():
-
     logout_user()
 
     return redirect(url_for('auth.login'))

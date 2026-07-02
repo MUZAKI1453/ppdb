@@ -1,7 +1,7 @@
 from extensions_db import db
 
-class AlamatSiswa(db.Model):
 
+class AlamatSiswa(db.Model):
     __tablename__ = 'alamat_siswa'
 
     id = db.Column(

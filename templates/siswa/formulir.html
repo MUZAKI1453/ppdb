@@ -64,9 +64,11 @@
                     <strong>Pendaftaran Anda ditolak.</strong>
                     <p class="mb-0">{{ calon_siswa.catatan_verifikasi or 'Admin tidak menyertakan alasan spesifik. Silakan periksa kembali seluruh data Anda.' }}</p>
                     {% if calon_siswa.tanggal_verifikasi %}
-                        <small class="rejected-date">Ditolak pada {{ calon_siswa.tanggal_verifikasi.strftime('%d %B %Y, %H:%M') }}</small>
+                        <small class="rejected-date">Ditolak
+                            pada {{ calon_siswa.tanggal_verifikasi.strftime('%d %B %Y, %H:%M') }}</small>
                     {% endif %}
-                    <p class="mb-0 mt-2">Silakan perbaiki data yang sesuai, lalu kirim ulang formulir ini untuk diverifikasi kembali.</p>
+                    <p class="mb-0 mt-2">Silakan perbaiki data yang sesuai, lalu kirim ulang formulir ini untuk
+                        diverifikasi kembali.</p>
                 </div>
             </div>
         {% endif %}
@@ -77,7 +79,8 @@
                 <i class="bi bi-shield-check"></i>
                 <div>
                     <strong>Data Anda sudah diverifikasi.</strong>
-                    <p class="mb-0">Anda masih dapat melihat data yang sudah disimpan, namun tidak dapat mengubahnya lagi. Hubungi pihak sekolah jika ada kesalahan data.</p>
+                    <p class="mb-0">Anda masih dapat melihat data yang sudah disimpan, namun tidak dapat mengubahnya
+                        lagi. Hubungi pihak sekolah jika ada kesalahan data.</p>
                 </div>
             </div>
         {% endif %}
@@ -134,8 +137,14 @@
                             <label class="form-label">Jenis Kelamin</label>
                             <select name="jenis_kelamin" class="form-select" required>
                                 <option value="">Pilih Jenis Kelamin</option>
-                                <option value="Laki-Laki" {% if calon_siswa and calon_siswa.jenis_kelamin == 'Laki-Laki' %}selected{% endif %}>Laki-Laki</option>
-                                <option value="Perempuan" {% if calon_siswa and calon_siswa.jenis_kelamin == 'Perempuan' %}selected{% endif %}>Perempuan</option>
+                                <option value="Laki-Laki"
+                                        {% if calon_siswa and calon_siswa.jenis_kelamin == 'Laki-Laki' %}selected{% endif %}>
+                                    Laki-Laki
+                                </option>
+                                <option value="Perempuan"
+                                        {% if calon_siswa and calon_siswa.jenis_kelamin == 'Perempuan' %}selected{% endif %}>
+                                    Perempuan
+                                </option>
                             </select>
                         </div>
 
@@ -223,7 +232,8 @@
 
                         <div class="col-12 mb-3">
                             <label class="form-label">Alamat Jalan</label>
-                            <textarea name="alamat_jalan" class="form-control" rows="3" required>{{ calon_siswa.alamat.alamat_jalan if calon_siswa and calon_siswa.alamat else '' }}</textarea>
+                            <textarea name="alamat_jalan" class="form-control" rows="3"
+                                      required>{{ calon_siswa.alamat.alamat_jalan if calon_siswa and calon_siswa.alamat else '' }}</textarea>
                         </div>
 
                         <div class="col-md-6 mb-3">
@@ -462,7 +472,9 @@
 
                     <div class="section-title"><i class="bi bi-people-fill"></i> Data Wali (Opsional)</div>
 
-                    <div class="alert alert-info">Isi bagian ini hanya jika siswa tidak tinggal bersama ayah atau ibu kandung.</div>
+                    <div class="alert alert-info">Isi bagian ini hanya jika siswa tidak tinggal bersama ayah atau ibu
+                        kandung.
+                    </div>
 
                     <div class="row">
 
@@ -537,7 +549,8 @@
                     {% if is_locked %}
                         <p class="text-muted">Data ini sudah diverifikasi oleh sekolah dan tidak dapat diubah lagi.</p>
                     {% elif calon_siswa and calon_siswa.status_verifikasi == 'Ditolak' %}
-                        <p class="text-muted">Periksa kembali seluruh data, pastikan bagian yang disebutkan dalam alasan penolakan sudah diperbaiki.</p>
+                        <p class="text-muted">Periksa kembali seluruh data, pastikan bagian yang disebutkan dalam alasan
+                            penolakan sudah diperbaiki.</p>
                     {% else %}
                         <p class="text-muted">Periksa kembali seluruh data sebelum menyimpan.</p>
                     {% endif %}

@@ -1,7 +1,7 @@
 from extensions_db import db
 
-class DataAyah(db.Model):
 
+class DataAyah(db.Model):
     __tablename__ = 'data_ayah'
 
     id = db.Column(

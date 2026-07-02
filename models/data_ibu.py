@@ -1,7 +1,7 @@
 from extensions_db import db
 
-class DataIbu(db.Model):
 
+class DataIbu(db.Model):
     __tablename__ = 'data_ibu'
 
     id = db.Column(

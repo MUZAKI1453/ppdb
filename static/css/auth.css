@@ -2,43 +2,43 @@
    LOGIN & REGISTER
 ================================================== */
 
-.auth-wrapper{
+.auth-wrapper {
 
-    min-height:100vh;
+    min-height: 100vh;
 
-    display:flex;
+    display: flex;
 
-    justify-content:center;
+    justify-content: center;
 
-    align-items:center;
+    align-items: center;
 }
 
-.auth-card{
+.auth-card {
 
-    width:100%;
+    width: 100%;
 
-    max-width:460px;
+    max-width: 460px;
 }
 
-.form-control{
+.form-control {
 
-    height:50px;
+    height: 50px;
 
-    border-radius:12px;
+    border-radius: 12px;
 }
 
-.form-control:focus{
+.form-control:focus {
 
-    box-shadow:none;
+    box-shadow: none;
 
-    border-color:var(--primary);
+    border-color: var(--primary);
 }
 
-.btn-auth{
+.btn-auth {
 
-    height:50px;
+    height: 50px;
 
-    border-radius:12px;
+    border-radius: 12px;
 
-    font-weight:600;
+    font-weight: 600;
 }

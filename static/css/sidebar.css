@@ -136,7 +136,9 @@
 }
 
 /* Sembunyikan tombol close di desktop */
-.btn-sidebar-close { display: none; }
+.btn-sidebar-close {
+    display: none;
+}
 
 /* ==================================================
    MENU
@@ -266,7 +268,7 @@
     white-space: nowrap;
     z-index: 9999;
     pointer-events: none;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 /* ==================================================
@@ -304,7 +306,9 @@
         transition: left 0.25s ease;
     }
 
-    .sidebar.show { left: 0; }
+    .sidebar.show {
+        left: 0;
+    }
 
     /* Override collapsed — di mobile sidebar selalu full width */
     .sidebar.collapsed {
@@ -312,13 +316,29 @@
         min-width: 260px !important;
         left: -280px;
     }
-    .sidebar.collapsed.show { left: 0; }
+
+    .sidebar.collapsed.show {
+        left: 0;
+    }
 
     /* Kembalikan tampilan normal di mobile meski class collapsed aktif */
-    .sidebar.collapsed .sidebar-brand           { display: flex; }
-    .sidebar.collapsed .sidebar-collapsed-header{ display: none; }
-    .sidebar.collapsed .menu-title              { height: auto; padding: 16px 18px 6px; }
-    .sidebar.collapsed .menu-text               { display: block; }
+    .sidebar.collapsed .sidebar-brand {
+        display: flex;
+    }
+
+    .sidebar.collapsed .sidebar-collapsed-header {
+        display: none;
+    }
+
+    .sidebar.collapsed .menu-title {
+        height: auto;
+        padding: 16px 18px 6px;
+    }
+
+    .sidebar.collapsed .menu-text {
+        display: block;
+    }
+
     .sidebar.collapsed .sidebar-menu li a {
         margin: 2px 10px;
         padding: 12px 14px;
@@ -328,10 +348,20 @@
     }
 
     /* Tombol: show close di mobile, hide collapse */
-    .btn-sidebar-close    { display: flex !important; }
-    .btn-sidebar-collapse { display: none  !important; }
-    .btn-topbar-open      { display: flex; }
+    .btn-sidebar-close {
+        display: flex !important;
+    }
+
+    .btn-sidebar-collapse {
+        display: none !important;
+    }
+
+    .btn-topbar-open {
+        display: flex;
+    }
 
     /* Matikan tooltip di mobile */
-    .sidebar .sidebar-menu li a:hover::after { display: none !important; }
+    .sidebar .sidebar-menu li a:hover::after {
+        display: none !important;
+    }
 }

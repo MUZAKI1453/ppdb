@@ -4,77 +4,77 @@
    formulir.css (gradient biru, radius, shadow)
 ========================================== */
 
-.ppdb-form-card{
-    background:#FFFFFF;
-    border-radius:24px;
-    padding:35px;
-    box-shadow:0 10px 35px rgba(15,23,42,.08);
+.ppdb-form-card {
+    background: #FFFFFF;
+    border-radius: 24px;
+    padding: 35px;
+    box-shadow: 0 10px 35px rgba(15, 23, 42, .08);
 }
 
 /* ==========================================
    HEADER
 ========================================== */
 
-.form-header{
-    text-align:center;
-    margin-bottom:35px;
+.form-header {
+    text-align: center;
+    margin-bottom: 35px;
 }
 
-.form-header h2{
-    font-size:30px;
-    font-weight:700;
-    color:#0F172A;
-    margin-bottom:10px;
+.form-header h2 {
+    font-size: 30px;
+    font-weight: 700;
+    color: #0F172A;
+    margin-bottom: 10px;
 }
 
-.form-header p{
-    color:#64748B;
-    margin:0;
-    font-size:15px;
+.form-header p {
+    color: #64748B;
+    margin: 0;
+    font-size: 15px;
 }
 
 /* ==========================================
    SECTION TITLE (sama seperti formulir.css)
 ========================================== */
 
-.section-title{
-    display:flex;
-    align-items:center;
-    gap:10px;
+.section-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
 
-    background:linear-gradient(
-        135deg,
-        #EFF6FF,
-        #DBEAFE
+    background: linear-gradient(
+            135deg,
+            #EFF6FF,
+            #DBEAFE
     );
 
-    color:#1D4ED8;
+    color: #1D4ED8;
 
-    padding:14px 18px;
+    padding: 14px 18px;
 
-    border-radius:14px;
+    border-radius: 14px;
 
-    font-size:16px;
-    font-weight:700;
+    font-size: 16px;
+    font-weight: 700;
 
-    margin-bottom:20px;
+    margin-bottom: 20px;
 
-    border-left:5px solid #2563EB;
+    border-left: 5px solid #2563EB;
 }
 
-.section-title i{
-    font-size:18px;
+.section-title i {
+    font-size: 18px;
 }
 
 /* ==========================================
    LABEL
 ========================================== */
 
-.form-label{
-    font-weight:600;
-    color:#334155;
-    margin-bottom:8px;
-    display:block;
+.form-label {
+    font-weight: 600;
+    color: #334155;
+    margin-bottom: 8px;
+    display: block;
 }
 
 /* ==========================================
@@ -82,96 +82,96 @@
    untuk mode tampilan/lihat data)
 ========================================== */
 
-.detail-value{
+.detail-value {
 
-    border:1px solid #CBD5E1;
+    border: 1px solid #CBD5E1;
 
-    border-radius:12px;
+    border-radius: 12px;
 
-    min-height:48px;
+    min-height: 48px;
 
-    padding:12px 14px;
+    padding: 12px 14px;
 
-    font-size:14px;
+    font-size: 14px;
 
-    color:#1E293B;
-    font-weight:500;
+    color: #1E293B;
+    font-weight: 500;
 
-    background:#F8FAFC;
+    background: #F8FAFC;
 
-    display:flex;
-    align-items:center;
+    display: flex;
+    align-items: center;
 
-    word-break:break-word;
+    word-break: break-word;
 }
 
-.detail-value.is-empty{
-    color:#94A3B8;
-    font-style:italic;
-    font-weight:400;
+.detail-value.is-empty {
+    color: #94A3B8;
+    font-style: italic;
+    font-weight: 400;
 }
 
-.detail-empty-note{
-    font-size:14px;
-    color:#94A3B8;
-    font-style:italic;
+.detail-empty-note {
+    font-size: 14px;
+    color: #94A3B8;
+    font-style: italic;
 }
 
 /* ==========================================
    ALERT
 ========================================== */
 
-.alert{
-    border:none;
-    border-radius:14px;
+.alert {
+    border: none;
+    border-radius: 14px;
 }
 
-.alert-info{
-    background:#EFF6FF;
-    color:#1E40AF;
-    margin-bottom:20px;
+.alert-info {
+    background: #EFF6FF;
+    color: #1E40AF;
+    margin-bottom: 20px;
 }
 
 /* ==========================================
    GRID SPACING
 ========================================== */
 
-.row{
-    margin-bottom:5px;
+.row {
+    margin-bottom: 5px;
 }
 
 /* ==========================================
    STATUS PILL
 ========================================== */
 
-.status-pill{
-    display:inline-flex;
-    align-items:center;
-    gap:6px;
+.status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
 
-    padding:8px 16px;
+    padding: 8px 16px;
 
-    border-radius:999px;
+    border-radius: 999px;
 
-    font-size:13px;
-    font-weight:700;
+    font-size: 13px;
+    font-weight: 700;
 
-    white-space:nowrap;
+    white-space: nowrap;
 }
 
-.status-pill-success{
-    background:#DCFCE7;
-    color:#15803D;
+.status-pill-success {
+    background: #DCFCE7;
+    color: #15803D;
 }
 
-.status-pill-warning{
-    background:#DBEAFE;
-    color:#1D4ED8;
+.status-pill-warning {
+    background: #DBEAFE;
+    color: #1D4ED8;
 }
 
-.status-pill-danger{
-    background:#FEE2E2;
-    color:#B91C1C;
+.status-pill-danger {
+    background: #FEE2E2;
+    color: #B91C1C;
 }
 
 /* ==========================================
@@ -179,362 +179,368 @@
    dengan tombol kembali & status)
 ========================================== */
 
-.detail-top{
-    display:flex;
-    justify-content:space-between;
-    align-items:flex-start;
-    gap:20px;
-    margin-bottom:25px;
-    flex-wrap:wrap;
+.detail-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 20px;
+    margin-bottom: 25px;
+    flex-wrap: wrap;
 }
 
-.detail-back-link{
-    display:inline-flex;
-    align-items:center;
-    gap:6px;
-    font-size:13px;
-    font-weight:600;
-    color:#64748B;
-    text-decoration:none;
-    margin-bottom:10px;
+.detail-back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #64748B;
+    text-decoration: none;
+    margin-bottom: 10px;
 }
 
-.detail-back-link:hover{
-    color:#2563EB;
+.detail-back-link:hover {
+    color: #2563EB;
 }
 
 /* ==========================================
    ALERT DANGER (catatan alasan tolak)
 ========================================== */
 
-.alert-danger-soft{
-    display:flex;
-    align-items:flex-start;
-    gap:12px;
+.alert-danger-soft {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
 
-    background:#FEF2F2;
-    color:#991B1B;
+    background: #FEF2F2;
+    color: #991B1B;
 
-    border-radius:14px;
-    border-left:4px solid #DC2626;
+    border-radius: 14px;
+    border-left: 4px solid #DC2626;
 
-    padding:16px 18px;
+    padding: 16px 18px;
 
-    font-size:13.5px;
-    line-height:1.5;
+    font-size: 13.5px;
+    line-height: 1.5;
 
-    margin-bottom:25px;
+    margin-bottom: 25px;
 }
 
-.alert-danger-soft i{
-    font-size:18px;
-    margin-top:1px;
-    flex-shrink:0;
+.alert-danger-soft i {
+    font-size: 18px;
+    margin-top: 1px;
+    flex-shrink: 0;
 }
 
 /* ==========================================
    BUTTONS
 ========================================== */
 
-.form-submit-area{
-    display:flex;
-    justify-content:center;
-    margin-top:40px;
+.form-submit-area {
+    display: flex;
+    justify-content: center;
+    margin-top: 40px;
 }
 
-.detail-actions{
-    display:flex;
-    align-items:center;
-    gap:14px;
-    flex-wrap:wrap;
-    margin-top:10px;
+.detail-actions {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+    margin-top: 10px;
 }
 
-.btn{
-    border:none;
-    border-radius:14px;
-    font-size:15px;
-    font-weight:600;
-    padding:12px 24px;
-    transition:.3s;
+.btn {
+    border: none;
+    border-radius: 14px;
+    font-size: 15px;
+    font-weight: 600;
+    padding: 12px 24px;
+    transition: .3s;
 }
 
-.btn-primary{
-    background:linear-gradient(135deg, #2563EB, #1D4ED8);
-    color:#FFFFFF;
+.btn-primary {
+    background: linear-gradient(135deg, #2563EB, #1D4ED8);
+    color: #FFFFFF;
 }
 
-.btn-primary:hover{
-    transform:translateY(-2px);
-    box-shadow:0 10px 20px rgba(37,99,235,.25);
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(37, 99, 235, .25);
 }
 
-.btn-success{
-    background:linear-gradient(135deg, #22C55E, #16A34A);
-    color:#FFFFFF;
+.btn-success {
+    background: linear-gradient(135deg, #22C55E, #16A34A);
+    color: #FFFFFF;
 }
 
-.btn-success:hover{
-    transform:translateY(-2px);
-    box-shadow:0 10px 20px rgba(34,197,94,.25);
+.btn-success:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(34, 197, 94, .25);
 }
 
-.btn-outline-secondary{
-    background:transparent;
-    border:1px solid #CBD5E1;
-    color:#475569;
+.btn-outline-secondary {
+    background: transparent;
+    border: 1px solid #CBD5E1;
+    color: #475569;
 }
 
-.btn-outline-secondary:hover{
-    background:#F1F5F9;
+.btn-outline-secondary:hover {
+    background: #F1F5F9;
 }
 
-.btn-danger-outline{
-    background:transparent;
-    border:1px solid #FCA5A5;
-    color:#B91C1C;
+.btn-danger-outline {
+    background: transparent;
+    border: 1px solid #FCA5A5;
+    color: #B91C1C;
 }
 
-.btn-danger-outline:hover{
-    background:#FEF2F2;
+.btn-danger-outline:hover {
+    background: #FEF2F2;
 }
 
-.btn-danger-solid{
-    background:linear-gradient(135deg, #EF4444, #DC2626);
-    color:#FFFFFF;
+.btn-danger-solid {
+    background: linear-gradient(135deg, #EF4444, #DC2626);
+    color: #FFFFFF;
 }
 
-.btn-danger-solid:hover{
-    transform:translateY(-2px);
-    box-shadow:0 10px 20px rgba(220,38,38,.25);
+.btn-danger-solid:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(220, 38, 38, .25);
 }
 
 /* ==========================================
    KOTAK FORM PENOLAKAN (inline, toggle)
 ========================================== */
 
-.reject-box{
-    max-width:600px;
-    margin:20px auto 0;
+.reject-box {
+    max-width: 600px;
+    margin: 20px auto 0;
 
-    background:#FEF2F2;
-    border:1px solid #FECACA;
-    border-radius:16px;
-    padding:20px;
+    background: #FEF2F2;
+    border: 1px solid #FECACA;
+    border-radius: 16px;
+    padding: 20px;
 }
 
-.reject-box .form-control{
-    background:#FFFFFF;
+.reject-box .form-control {
+    background: #FFFFFF;
 }
 
-.reject-box-actions{
-    display:flex;
-    justify-content:flex-end;
-    gap:10px;
-    margin-top:14px;
+.reject-box-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 14px;
 }
 
-.reject-box-actions .btn{
-    min-width:auto;
-    height:auto;
-    padding:10px 20px;
+.reject-box-actions .btn {
+    min-width: auto;
+    height: auto;
+    padding: 10px 20px;
 }
 
 .form-submit-area .btn,
-.detail-actions .btn{
-    min-width:220px;
-    height:55px;
-    display:inline-flex;
-    align-items:center;
-    justify-content:center;
-    gap:8px;
+.detail-actions .btn {
+    min-width: 220px;
+    height: 55px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
 }
 
 /* ==========================================
    SELECTOR MOBILE (disembunyikan di desktop)
 ========================================== */
 
-.detail-nav-mobile{
-    display:none;
-    margin-bottom:20px;
+.detail-nav-mobile {
+    display: none;
+    margin-bottom: 20px;
 }
 
-.detail-nav-select{
-    font-weight:600;
-    color:#1D4ED8;
-    background-color:#EFF6FF;
-    border-color:#BFDBFE;
+.detail-nav-select {
+    font-weight: 600;
+    color: #1D4ED8;
+    background-color: #EFF6FF;
+    border-color: #BFDBFE;
 }
 
 /* ==========================================
    LAYOUT: SIDEBAR TAB + KONTEN
 ========================================== */
 
-.detail-shell{
-    max-width:1100px;
-    margin:0 auto;
+.detail-shell {
+    max-width: 1100px;
+    margin: 0 auto;
 }
 
-.detail-layout{
-    display:grid;
+.detail-layout {
+    display: grid;
     grid-template-columns:220px 1fr;
-    gap:28px;
-    align-items:start;
+    gap: 28px;
+    align-items: start;
 }
 
 /* ==========================================
    SIDEBAR NAV
 ========================================== */
 
-.detail-nav{
-    display:flex;
-    flex-direction:column;
-    gap:4px;
+.detail-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
 
-    background:#F8FAFC;
-    border-radius:16px;
-    padding:10px;
+    background: #F8FAFC;
+    border-radius: 16px;
+    padding: 10px;
 
-    position:sticky;
-    top:20px;
+    position: sticky;
+    top: 20px;
 }
 
-.detail-nav-item{
-    display:flex;
-    align-items:center;
-    gap:10px;
+.detail-nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
 
-    border:none;
-    background:transparent;
+    border: none;
+    background: transparent;
 
-    text-align:left;
+    text-align: left;
 
-    padding:12px 14px;
+    padding: 12px 14px;
 
-    border-radius:12px;
+    border-radius: 12px;
 
-    font-size:13.5px;
-    font-weight:600;
-    color:#64748B;
+    font-size: 13.5px;
+    font-weight: 600;
+    color: #64748B;
 
-    cursor:pointer;
+    cursor: pointer;
 
-    transition:.2s;
+    transition: .2s;
 
-    position:relative;
+    position: relative;
 
-    width:100%;
+    width: 100%;
 }
 
-.detail-nav-item i:first-child{
-    font-size:15px;
-    flex-shrink:0;
+.detail-nav-item i:first-child {
+    font-size: 15px;
+    flex-shrink: 0;
 }
 
-.detail-nav-item span{
-    flex:1;
+.detail-nav-item span {
+    flex: 1;
 }
 
-.detail-nav-item:hover{
-    background:#EFF6FF;
-    color:#1D4ED8;
+.detail-nav-item:hover {
+    background: #EFF6FF;
+    color: #1D4ED8;
 }
 
-.detail-nav-item.active{
-    background:linear-gradient(135deg, #2563EB, #1D4ED8);
-    color:#FFFFFF;
-    box-shadow:0 6px 16px rgba(37,99,235,.25);
+.detail-nav-item.active {
+    background: linear-gradient(135deg, #2563EB, #1D4ED8);
+    color: #FFFFFF;
+    box-shadow: 0 6px 16px rgba(37, 99, 235, .25);
 }
 
-.nav-flag{
-    color:#F59E0B !important;
-    font-size:22px !important;
-    flex-shrink:0;
+.nav-flag {
+    color: #F59E0B !important;
+    font-size: 22px !important;
+    flex-shrink: 0;
 }
 
-.detail-nav-item.active .nav-flag{
-    color:#FDE68A !important;
+.detail-nav-item.active .nav-flag {
+    color: #FDE68A !important;
 }
 
 /* ==========================================
    TAB CONTENT
 ========================================== */
 
-.detail-panes{
-    min-width:0;
+.detail-panes {
+    min-width: 0;
 }
 
-.tab-pane{
-    display:none;
-    animation:fadeIn .2s ease;
+.tab-pane {
+    display: none;
+    animation: fadeIn .2s ease;
 }
 
-.tab-pane.active{
-    display:block;
+.tab-pane.active {
+    display: block;
 }
 
-@keyframes fadeIn{
-    from{ opacity:0; transform:translateY(4px); }
-    to{ opacity:1; transform:translateY(0); }
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(4px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 /* ==========================================
    CARD EFFECT
 ========================================== */
 
-.ppdb-form-card:hover{
-    box-shadow:0 15px 40px rgba(0,0,0,.08);
+.ppdb-form-card:hover {
+    box-shadow: 0 15px 40px rgba(0, 0, 0, .08);
 }
 
-.ppdb-form-card + .ppdb-form-card{
-    margin-top:20px;
+.ppdb-form-card + .ppdb-form-card {
+    margin-top: 20px;
 }
 
 /* ==========================================
    MOBILE
 ========================================== */
 
-@media(max-width:768px){
+@media (max-width: 768px) {
 
-    .ppdb-form-card{
-        padding:20px;
-        border-radius:18px;
+    .ppdb-form-card {
+        padding: 20px;
+        border-radius: 18px;
     }
 
-    .form-header h2{
-        font-size:24px;
+    .form-header h2 {
+        font-size: 24px;
     }
 
-    .section-title{
-        font-size:14px;
-        padding:12px 15px;
+    .section-title {
+        font-size: 14px;
+        padding: 12px 15px;
     }
 
-    .detail-top{
-        flex-direction:column;
+    .detail-top {
+        flex-direction: column;
     }
 
-    .detail-actions{
-        flex-direction:column;
-        align-items:stretch;
+    .detail-actions {
+        flex-direction: column;
+        align-items: stretch;
     }
 
     .form-submit-area .btn,
-    .detail-actions .btn{
-        width:100%;
-        min-width:100%;
+    .detail-actions .btn {
+        width: 100%;
+        min-width: 100%;
     }
 
-    .detail-layout{
+    .detail-layout {
         grid-template-columns:1fr;
     }
 
-    .detail-nav{
-        display:none;
+    .detail-nav {
+        display: none;
     }
 
-    .detail-nav-mobile{
-        display:block;
+    .detail-nav-mobile {
+        display: block;
     }
 
 }
@@ -543,10 +549,10 @@
    LARGE DESKTOP
 ========================================== */
 
-@media(min-width:1400px){
+@media (min-width: 1400px) {
 
-    .ppdb-form-card{
-        padding:45px;
+    .ppdb-form-card {
+        padding: 45px;
     }
 
 }

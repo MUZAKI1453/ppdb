@@ -1,55 +1,55 @@
 {% extends 'layouts/base_dashboard.html' %}
 
 {% block extra_css %}
-<link rel="stylesheet"
-      href="{{ url_for('static', filename='css/table.css') }}">
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/table.css') }}">
 {% endblock %}
 
 {% block title %}
-Data Berkas
+    Data Berkas
 {% endblock %}
 
 {% block page_title %}
-Data Berkas Siswa
+    Data Berkas Siswa
 {% endblock %}
 
 {% block content %}
 
-<div class="content-card">
+    <div class="content-card">
 
-    <!-- HEADER -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
+        <!-- HEADER -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
 
-        <h3 class="mb-0 fw-bold">
-            Data Berkas Siswa
-        </h3>
+            <h3 class="mb-0 fw-bold">
+                Data Berkas Siswa
+            </h3>
 
-    </div>
+        </div>
 
-    <!-- SEARCH BAR -->
-    <div class="search-wrapper mb-4">
+        <!-- SEARCH BAR -->
+        <div class="search-wrapper mb-4">
 
-        <div class="input-group">
+            <div class="input-group">
 
             <span class="input-group-text bg-white">
                 <i class="bi bi-search"></i>
             </span>
 
-            <input type="text"
-                   id="searchInput"
-                   class="form-control"
-                   placeholder="Cari nama siswa...">
+                <input type="text"
+                       id="searchInput"
+                       class="form-control"
+                       placeholder="Cari nama siswa...">
+
+            </div>
 
         </div>
 
-    </div>
+        <!-- TABLE -->
+        <div class="table-responsive">
 
-    <!-- TABLE -->
-    <div class="table-responsive">
+            <table class="ppdb-table" id="berkasTable">
 
-        <table class="ppdb-table" id="berkasTable">
-
-            <thead>
+                <thead>
 
                 <tr>
                     <th width="60">No</th>
@@ -62,220 +62,220 @@ Data Berkas Siswa
                     <th width="220" class="text-center">Aksi</th>
                 </tr>
 
-            </thead>
+                </thead>
 
-            <tbody>
+                <tbody>
 
                 {% for item in data_berkas %}
 
-                <tr>
+                    <tr>
 
-                    <td class="text-center fw-medium">
-                        {{ loop.index }}
-                    </td>
+                        <td class="text-center fw-medium">
+                            {{ loop.index }}
+                        </td>
 
-                    <td>
+                        <td>
 
-                        <div class="student-name">
-                            {{ item.calon_siswa.nama_lengkap }}
-                        </div>
+                            <div class="student-name">
+                                {{ item.calon_siswa.nama_lengkap }}
+                            </div>
 
-                        <div class="student-subtitle">
-                            ID Berkas : {{ item.id }}
-                        </div>
+                            <div class="student-subtitle">
+                                ID Berkas : {{ item.id }}
+                            </div>
 
-                    </td>
+                        </td>
 
-                    <td class="text-center">
+                        <td class="text-center">
 
-                        {% if item.pas_foto %}
-                            <span class="status-success">
+                            {% if item.pas_foto %}
+                                <span class="status-success">
                                 ✓ Ada
                             </span>
-                        {% else %}
-                            <span class="status-danger">
+                            {% else %}
+                                <span class="status-danger">
                                 ✕ Kosong
                             </span>
-                        {% endif %}
+                            {% endif %}
 
-                    </td>
+                        </td>
 
-                    <td class="text-center">
+                        <td class="text-center">
 
-                        {% if item.kartu_keluarga %}
-                            <span class="status-success">
+                            {% if item.kartu_keluarga %}
+                                <span class="status-success">
                                 ✓ Ada
                             </span>
-                        {% else %}
-                            <span class="status-danger">
+                            {% else %}
+                                <span class="status-danger">
                                 ✕ Kosong
                             </span>
-                        {% endif %}
+                            {% endif %}
 
-                    </td>
+                        </td>
 
-                    <td class="text-center">
+                        <td class="text-center">
 
-                        {% if item.akta_lahir %}
-                            <span class="status-success">
+                            {% if item.akta_lahir %}
+                                <span class="status-success">
                                 ✓ Ada
                             </span>
-                        {% else %}
-                            <span class="status-danger">
+                            {% else %}
+                                <span class="status-danger">
                                 ✕ Kosong
                             </span>
-                        {% endif %}
+                            {% endif %}
 
-                    </td>
+                        </td>
 
-                    <td class="text-center">
+                        <td class="text-center">
 
-                        {% if item.ijazah %}
-                            <span class="status-success">
+                            {% if item.ijazah %}
+                                <span class="status-success">
                                 ✓ Ada
                             </span>
-                        {% else %}
-                            <span class="status-danger">
+                            {% else %}
+                                <span class="status-danger">
                                 ✕ Kosong
                             </span>
-                        {% endif %}
+                            {% endif %}
 
-                    </td>
+                        </td>
 
-                    <!-- STATUS -->
-                    <td>
+                        <!-- STATUS -->
+                        <td>
 
-                        {% set status = item.status_verifikasi|string|lower %}
+                            {% set status = item.status_verifikasi|string|lower %}
 
-                        {% if status == 'diverifikasi' %}
+                            {% if status == 'diverifikasi' %}
 
-                            <span class="status-success">
+                                <span class="status-success">
                                 ✓ Diverifikasi
                             </span>
 
-                        {% elif status == 'ditolak' %}
+                            {% elif status == 'ditolak' %}
 
-                            <span class="status-danger">
+                                <span class="status-danger">
                                 ✕ Ditolak
                             </span>
 
-                        {% elif status == 'revisi' %}
+                            {% elif status == 'revisi' %}
 
-                            <span class="status-warning">
+                                <span class="status-warning">
                                 ↻ Revisi
                             </span>
 
-                        {% else %}
+                            {% else %}
 
-                            <span class="status-warning">
+                                <span class="status-warning">
                                 ⏳ Menunggu
                             </span>
 
-                        {% endif %}
-
-                    </td>
-
-                    <!-- AKSI -->
-                    <td class="text-center">
-
-                        <div class="action-buttons">
-
-                            <a href="{{ url_for('admin.detail_berkas', id=item.id) }}"
-                               class="btn btn-outline-primary btn-sm"
-                               title="Detail">
-
-                                <i class="bi bi-eye-fill"></i>
-
-                            </a>
-
-                            {% if item.status_verifikasi|string|lower != 'diverifikasi' %}
-
-                            <a href="{{ url_for('admin.verifikasi_berkas', id=item.id) }}"
-                               class="btn btn-outline-success btn-sm"
-                               title="Verifikasi">
-
-                                <i class="bi bi-check-lg"></i>
-
-                            </a>
-
                             {% endif %}
 
-                            <a href="{{ url_for('admin.detail_berkas', id=item.id) }}"
-                               class="btn btn-outline-warning btn-sm"
-                               title="Tolak">
+                        </td>
 
-                                <i class="bi bi-x-lg"></i>
+                        <!-- AKSI -->
+                        <td class="text-center">
 
-                            </a>
+                            <div class="action-buttons">
 
-                            <a href="{{ url_for('admin.hapus_berkas', id=item.id) }}"
-                               class="btn btn-outline-danger btn-sm"
-                               title="Hapus"
-                               onclick="return confirm('Yakin ingin menghapus data ini?')">
+                                <a href="{{ url_for('admin.detail_berkas', id=item.id) }}"
+                                   class="btn btn-outline-primary btn-sm"
+                                   title="Detail">
 
-                                <i class="bi bi-trash-fill"></i>
+                                    <i class="bi bi-eye-fill"></i>
 
-                            </a>
+                                </a>
 
-                        </div>
+                                {% if item.status_verifikasi|string|lower != 'diverifikasi' %}
 
-                    </td>
+                                    <a href="{{ url_for('admin.verifikasi_berkas', id=item.id) }}"
+                                       class="btn btn-outline-success btn-sm"
+                                       title="Verifikasi">
 
-                </tr>
+                                        <i class="bi bi-check-lg"></i>
+
+                                    </a>
+
+                                {% endif %}
+
+                                <a href="{{ url_for('admin.detail_berkas', id=item.id) }}"
+                                   class="btn btn-outline-warning btn-sm"
+                                   title="Tolak">
+
+                                    <i class="bi bi-x-lg"></i>
+
+                                </a>
+
+                                <a href="{{ url_for('admin.hapus_berkas', id=item.id) }}"
+                                   class="btn btn-outline-danger btn-sm"
+                                   title="Hapus"
+                                   onclick="return confirm('Yakin ingin menghapus data ini?')">
+
+                                    <i class="bi bi-trash-fill"></i>
+
+                                </a>
+
+                            </div>
+
+                        </td>
+
+                    </tr>
 
                 {% else %}
 
-                <tr>
+                    <tr>
 
-                    <td colspan="8"
-                        class="text-center py-5 text-muted">
+                        <td colspan="8"
+                            class="text-center py-5 text-muted">
 
-                        Belum ada data berkas
+                            Belum ada data berkas
 
-                    </td>
+                        </td>
 
-                </tr>
+                    </tr>
 
                 {% endfor %}
 
-            </tbody>
+                </tbody>
 
-        </table>
+            </table>
+
+        </div>
 
     </div>
 
-</div>
+    <!-- SEARCH -->
+    <script>
 
-<!-- SEARCH -->
-<script>
+        document.getElementById("searchInput")
+            .addEventListener("keyup", function () {
 
-document.getElementById("searchInput")
-.addEventListener("keyup", function () {
+                const filter = this.value
+                    .toLowerCase()
+                    .trim();
 
-    const filter = this.value
-        .toLowerCase()
-        .trim();
+                const rows = document.querySelectorAll(
+                    "#berkasTable tbody tr"
+                );
 
-    const rows = document.querySelectorAll(
-        "#berkasTable tbody tr"
-    );
+                rows.forEach(row => {
 
-    rows.forEach(row => {
+                    if (row.cells.length === 1) return;
 
-        if (row.cells.length === 1) return;
+                    const text = row.textContent
+                        .toLowerCase();
 
-        const text = row.textContent
-            .toLowerCase();
+                    row.style.display =
+                        text.includes(filter)
+                            ? ""
+                            : "none";
 
-        row.style.display =
-            text.includes(filter)
-            ? ""
-            : "none";
+                });
 
-    });
+            });
 
-});
-
-</script>
+    </script>
 
 {% endblock %}

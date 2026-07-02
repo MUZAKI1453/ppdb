@@ -1,511 +1,516 @@
 {% extends 'layouts/base_dashboard.html' %}
 
 {% block title %}
-Edit Data Siswa
+    Edit Data Siswa
 {% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/formulir.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/formulir.css') }}">
 {% endblock %}
 
 {% block content %}
 
-<div class="ppdb-form-card">
+    <div class="ppdb-form-card">
 
-    <!-- ===================================== -->
-    <!-- HEADER -->
-    <!-- ===================================== -->
+        <!-- ===================================== -->
+        <!-- HEADER -->
+        <!-- ===================================== -->
 
-    <div class="form-header">
+        <div class="form-header">
 
-        <h2>
-            EDIT DATA PESERTA DIDIK
-        </h2>
+            <h2>
+                EDIT DATA PESERTA DIDIK
+            </h2>
 
-        <p>
-            Perbarui data peserta didik dengan benar sesuai dokumen resmi yang valid.
-        </p>
+            <p>
+                Perbarui data peserta didik dengan benar sesuai dokumen resmi yang valid.
+            </p>
 
-        {% if siswa.status_verifikasi == 'Diverifikasi' %}
+            {% if siswa.status_verifikasi == 'Diverifikasi' %}
 
-            <div class="alert alert-success mt-3">
-                Status: <strong>Sudah Diverifikasi</strong>
+                <div class="alert alert-success mt-3">
+                    Status: <strong>Sudah Diverifikasi</strong>
+                </div>
+
+            {% elif siswa.status_verifikasi == 'Ditolak' %}
+
+                <div class="alert alert-rejected mt-3">
+                    Status: <strong>Ditolak</strong>
+                    {% if siswa.catatan_verifikasi %}
+                        <p class="mb-0">Alasan: {{ siswa.catatan_verifikasi }}</p>
+                    {% endif %}
+                </div>
+
+            {% else %}
+
+                <div class="alert alert-warning mt-3">
+                    Status: <strong>Belum Diverifikasi</strong>
+                </div>
+
+            {% endif %}
+
+            <div class="alert alert-info mt-3">
+                <i class="bi bi-info-circle"></i>
+                Menyimpan perubahan akan mereset status verifikasi menjadi <strong>Belum Diverifikasi</strong>.
             </div>
 
-        {% elif siswa.status_verifikasi == 'Ditolak' %}
-
-            <div class="alert alert-rejected mt-3">
-                Status: <strong>Ditolak</strong>
-                {% if siswa.catatan_verifikasi %}
-                    <p class="mb-0">Alasan: {{ siswa.catatan_verifikasi }}</p>
-                {% endif %}
-            </div>
-
-        {% else %}
-
-            <div class="alert alert-warning mt-3">
-                Status: <strong>Belum Diverifikasi</strong>
-            </div>
-
-        {% endif %}
-
-        <div class="alert alert-info mt-3">
-            <i class="bi bi-info-circle"></i>
-            Menyimpan perubahan akan mereset status verifikasi menjadi <strong>Belum Diverifikasi</strong>.
         </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages[-3:] %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <form method="POST">
+
+            <!-- ===================================== -->
+            <!-- A. DATA PRIBADI -->
+            <!-- ===================================== -->
+
+            <div class="section-title"><i class="bi bi-person-vcard"></i> A. DATA PRIBADI</div>
+
+            <div class="row">
+
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Nama Lengkap *</label>
+                    <input type="text" name="nama_lengkap" class="form-control" required
+                           value="{{ siswa.nama_lengkap }}">
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">NISN *</label>
+                    <input type="text" name="nisn" class="form-control" required
+                           value="{{ siswa.nisn }}">
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">NIK *</label>
+                    <input type="text" name="nik" class="form-control" required
+                           value="{{ siswa.nik }}">
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Nomor Registrasi Akta</label>
+                    <input type="text" name="no_registrasi_akta" class="form-control"
+                           value="{{ siswa.no_registrasi_akta }}">
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Tempat Lahir *</label>
+                    <input type="text" name="tempat_lahir" class="form-control" required
+                           value="{{ siswa.tempat_lahir }}">
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Tanggal Lahir *</label>
+                    <input type="date" name="tanggal_lahir" class="form-control" required
+                           value="{{ siswa.tanggal_lahir.strftime('%Y-%m-%d') if siswa.tanggal_lahir else '' }}">
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Jenis Kelamin *</label>
+                    <select name="jenis_kelamin" class="form-select" required>
+                        <option value="Laki-Laki" {% if siswa.jenis_kelamin == 'Laki-Laki' %}selected{% endif %}>
+                            Laki-Laki
+                        </option>
+                        <option value="Perempuan" {% if siswa.jenis_kelamin == 'Perempuan' %}selected{% endif %}>
+                            Perempuan
+                        </option>
+                    </select>
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Agama *</label>
+                    <select name="agama" class="form-select" required>
+                        <option value="">Pilih Agama</option>
+                        <option value="Islam" {% if siswa.agama == 'Islam' %}selected{% endif %}>Islam</option>
+                        <option value="Kristen" {% if siswa.agama == 'Kristen' %}selected{% endif %}>Kristen</option>
+                        <option value="Katolik" {% if siswa.agama == 'Katolik' %}selected{% endif %}>Katolik</option>
+                        <option value="Hindu" {% if siswa.agama == 'Hindu' %}selected{% endif %}>Hindu</option>
+                        <option value="Buddha" {% if siswa.agama == 'Buddha' %}selected{% endif %}>Buddha</option>
+                        <option value="Konghucu" {% if siswa.agama == 'Konghucu' %}selected{% endif %}>Konghucu</option>
+                    </select>
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Kewarganegaraan</label>
+                    <input type="text" name="kewarganegaraan" class="form-control"
+                           value="{{ siswa.kewarganegaraan }}">
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Berkebutuhan Khusus</label>
+                    <input type="text" name="kebutuhan_khusus" class="form-control"
+                           value="{{ siswa.kebutuhan_khusus }}">
+                </div>
+
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">Status Tinggal</label>
+                    <input type="text" name="status_tinggal" class="form-control"
+                           value="{{ siswa.status_tinggal }}">
+                </div>
+
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">Moda Transportasi</label>
+                    <input type="text" name="moda_transportasi" class="form-control"
+                           value="{{ siswa.moda_transportasi }}">
+                </div>
+
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">Anak Ke</label>
+                    <input type="number" name="anak_ke" class="form-control"
+                           value="{{ siswa.anak_ke }}">
+                </div>
+
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">Tinggi Badan (cm)</label>
+                    <input type="number" name="tinggi_badan" class="form-control"
+                           value="{{ siswa.tinggi_badan }}">
+                </div>
+
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">Berat Badan (kg)</label>
+                    <input type="number" name="berat_badan" class="form-control"
+                           value="{{ siswa.berat_badan }}">
+                </div>
+
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">Jumlah Saudara Kandung</label>
+                    <input type="number" name="jumlah_saudara_kandung" class="form-control"
+                           value="{{ siswa.jumlah_saudara_kandung }}">
+                </div>
+
+            </div>
+
+            <!-- ===================================== -->
+            <!-- B. DATA KONTAK -->
+            <!-- ===================================== -->
+
+            <div class="section-title mt-4"><i class="bi bi-telephone-fill"></i> B. DATA KONTAK</div>
+
+            <div class="row">
+
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Nomor HP *</label>
+                    <input type="text" name="no_hp" class="form-control" required
+                           value="{{ siswa.no_hp }}">
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Email</label>
+                    <input type="email" name="email" class="form-control"
+                           value="{{ siswa.email }}">
+                </div>
+
+            </div>
+
+            <!-- ===================================== -->
+            <!-- C. DATA ALAMAT -->
+            <!-- ===================================== -->
+
+            <div class="section-title mt-4"><i class="bi bi-geo-alt-fill"></i> C. DATA ALAMAT</div>
+
+            <div class="row">
+
+                <div class="col-12 mb-3">
+                    <label class="form-label">Alamat Jalan</label>
+                    <textarea name="alamat_jalan" class="form-control"
+                              rows="3">{{ siswa.alamat.alamat_jalan if siswa.alamat else '' }}</textarea>
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Dusun / Blok</label>
+                    <input type="text" name="dusun" class="form-control"
+                           value="{{ siswa.alamat.dusun if siswa.alamat else '' }}">
+                </div>
+
+                <div class="col-md-3 mb-3">
+                    <label class="form-label">RT</label>
+                    <input type="text" name="rt" class="form-control"
+                           value="{{ siswa.alamat.rt if siswa.alamat else '' }}">
+                </div>
+
+                <div class="col-md-3 mb-3">
+                    <label class="form-label">RW</label>
+                    <input type="text" name="rw" class="form-control"
+                           value="{{ siswa.alamat.rw if siswa.alamat else '' }}">
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Desa / Kelurahan</label>
+                    <input type="text" name="desa_kelurahan" class="form-control"
+                           value="{{ siswa.alamat.desa_kelurahan if siswa.alamat else '' }}">
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Kecamatan</label>
+                    <input type="text" name="kecamatan" class="form-control"
+                           value="{{ siswa.alamat.kecamatan if siswa.alamat else '' }}">
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Kabupaten / Kota</label>
+                    <input type="text" name="kabupaten" class="form-control"
+                           value="{{ siswa.alamat.kabupaten if siswa.alamat else '' }}">
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Kode Pos</label>
+                    <input type="text" name="kode_pos" class="form-control"
+                           value="{{ siswa.alamat.kode_pos if siswa.alamat else '' }}">
+                </div>
+
+            </div>
+
+            <!-- ===================================== -->
+            <!-- D. DATA SEKOLAH ASAL -->
+            <!-- ===================================== -->
+
+            <div class="section-title mt-4"><i class="bi bi-building"></i> D. DATA SEKOLAH ASAL</div>
+
+            <div class="row">
+
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Asal Sekolah *</label>
+                    <input type="text" name="asal_sekolah" class="form-control" required
+                           value="{{ siswa.asal_sekolah }}">
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Tahun Lulus *</label>
+                    <input type="text" name="tahun_lulus" class="form-control" required
+                           value="{{ siswa.tahun_lulus }}">
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Jarak Tempat Tinggal ke Sekolah</label>
+                    <input type="text" name="jarak_ke_sekolah" class="form-control"
+                           value="{{ siswa.jarak_ke_sekolah }}">
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Waktu Tempuh ke Sekolah</label>
+                    <input type="text" name="waktu_tempuh" class="form-control"
+                           value="{{ siswa.waktu_tempuh }}">
+                </div>
+
+            </div>
+
+            <!-- ===================================== -->
+            <!-- E. DATA AYAH KANDUNG -->
+            <!-- ===================================== -->
+
+            <div class="section-title mt-4"><i class="bi bi-person-badge-fill"></i> E. DATA AYAH KANDUNG</div>
+
+            <div class="row">
+
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Nama Lengkap Ayah</label>
+                    <input type="text" name="ayah_nama" class="form-control"
+                           value="{{ siswa.ayah.nama if siswa.ayah else '' }}">
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">NIK Ayah</label>
+                    <input type="text" name="ayah_nik" class="form-control"
+                           value="{{ siswa.ayah.nik if siswa.ayah else '' }}">
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Tempat Lahir</label>
+                    <input type="text" name="ayah_tempat_lahir" class="form-control"
+                           value="{{ siswa.ayah.tempat_lahir if siswa.ayah else '' }}">
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Tanggal Lahir</label>
+                    <input type="date" name="ayah_tanggal_lahir" class="form-control"
+                           value="{{ siswa.ayah.tanggal_lahir.strftime('%Y-%m-%d') if siswa.ayah and siswa.ayah.tanggal_lahir else '' }}">
+                </div>
+
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">Pendidikan Terakhir</label>
+                    <input type="text" name="ayah_pendidikan" class="form-control"
+                           value="{{ siswa.ayah.pendidikan if siswa.ayah else '' }}">
+                </div>
+
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">Pekerjaan</label>
+                    <input type="text" name="ayah_pekerjaan" class="form-control"
+                           value="{{ siswa.ayah.pekerjaan if siswa.ayah else '' }}">
+                </div>
+
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">Penghasilan Bulanan</label>
+                    <input type="text" name="ayah_penghasilan" class="form-control"
+                           value="{{ siswa.ayah.penghasilan if siswa.ayah else '' }}">
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Berkebutuhan Khusus</label>
+                    <input type="text" name="ayah_kebutuhan_khusus" class="form-control"
+                           value="{{ siswa.ayah.kebutuhan_khusus if siswa.ayah else '' }}">
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Nomor HP</label>
+                    <input type="text" name="ayah_no_hp" class="form-control"
+                           value="{{ siswa.ayah.no_hp if siswa.ayah else '' }}">
+                </div>
+
+            </div>
+
+            <!-- ===================================== -->
+            <!-- F. DATA IBU KANDUNG -->
+            <!-- ===================================== -->
+
+            <div class="section-title mt-4"><i class="bi bi-person-heart"></i> F. DATA IBU KANDUNG</div>
+
+            <div class="row">
+
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Nama Lengkap Ibu</label>
+                    <input type="text" name="ibu_nama" class="form-control"
+                           value="{{ siswa.ibu.nama if siswa.ibu else '' }}">
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">NIK Ibu</label>
+                    <input type="text" name="ibu_nik" class="form-control"
+                           value="{{ siswa.ibu.nik if siswa.ibu else '' }}">
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Tempat Lahir</label>
+                    <input type="text" name="ibu_tempat_lahir" class="form-control"
+                           value="{{ siswa.ibu.tempat_lahir if siswa.ibu else '' }}">
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Tanggal Lahir</label>
+                    <input type="date" name="ibu_tanggal_lahir" class="form-control"
+                           value="{{ siswa.ibu.tanggal_lahir.strftime('%Y-%m-%d') if siswa.ibu and siswa.ibu.tanggal_lahir else '' }}">
+                </div>
+
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">Pendidikan Terakhir</label>
+                    <input type="text" name="ibu_pendidikan" class="form-control"
+                           value="{{ siswa.ibu.pendidikan if siswa.ibu else '' }}">
+                </div>
+
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">Pekerjaan</label>
+                    <input type="text" name="ibu_pekerjaan" class="form-control"
+                           value="{{ siswa.ibu.pekerjaan if siswa.ibu else '' }}">
+                </div>
+
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">Penghasilan Bulanan</label>
+                    <input type="text" name="ibu_penghasilan" class="form-control"
+                           value="{{ siswa.ibu.penghasilan if siswa.ibu else '' }}">
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Berkebutuhan Khusus</label>
+                    <input type="text" name="ibu_kebutuhan_khusus" class="form-control"
+                           value="{{ siswa.ibu.kebutuhan_khusus if siswa.ibu else '' }}">
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Nomor HP</label>
+                    <input type="text" name="ibu_no_hp" class="form-control"
+                           value="{{ siswa.ibu.no_hp if siswa.ibu else '' }}">
+                </div>
+
+            </div>
+
+            <!-- ===================================== -->
+            <!-- G. DATA WALI (OPSIONAL) -->
+            <!-- ===================================== -->
+
+            <div class="section-title mt-4"><i class="bi bi-people-fill"></i> G. DATA WALI (OPSIONAL)</div>
+
+            <div class="alert alert-info">
+                Isi bagian ini hanya jika siswa tidak tinggal bersama ayah atau ibu kandung.
+            </div>
+
+            <div class="row">
+
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Nama Lengkap Wali</label>
+                    <input type="text" name="wali_nama" class="form-control"
+                           value="{{ siswa.wali.nama if siswa.wali else '' }}">
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">NIK Wali</label>
+                    <input type="text" name="wali_nik" class="form-control"
+                           value="{{ siswa.wali.nik if siswa.wali else '' }}">
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Tempat Lahir</label>
+                    <input type="text" name="wali_tempat_lahir" class="form-control"
+                           value="{{ siswa.wali.tempat_lahir if siswa.wali else '' }}">
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Tanggal Lahir</label>
+                    <input type="date" name="wali_tanggal_lahir" class="form-control"
+                           value="{{ siswa.wali.tanggal_lahir.strftime('%Y-%m-%d') if siswa.wali and siswa.wali.tanggal_lahir else '' }}">
+                </div>
+
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">Pendidikan Terakhir</label>
+                    <input type="text" name="wali_pendidikan" class="form-control"
+                           value="{{ siswa.wali.pendidikan if siswa.wali else '' }}">
+                </div>
+
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">Pekerjaan</label>
+                    <input type="text" name="wali_pekerjaan" class="form-control"
+                           value="{{ siswa.wali.pekerjaan if siswa.wali else '' }}">
+                </div>
+
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">Penghasilan Bulanan</label>
+                    <input type="text" name="wali_penghasilan" class="form-control"
+                           value="{{ siswa.wali.penghasilan if siswa.wali else '' }}">
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Berkebutuhan Khusus</label>
+                    <input type="text" name="wali_kebutuhan_khusus" class="form-control"
+                           value="{{ siswa.wali.kebutuhan_khusus if siswa.wali else '' }}">
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Nomor HP</label>
+                    <input type="text" name="wali_no_hp" class="form-control"
+                           value="{{ siswa.wali.no_hp if siswa.wali else '' }}">
+                </div>
+
+            </div>
+
+            <hr class="my-4">
+
+            <div class="d-flex justify-content-between">
+
+                <a href="{{ url_for('admin.detail_siswa', id=siswa.id) }}" class="btn btn-outline-secondary btn-lg">
+                    Batal
+                </a>
+
+                <button type="submit" class="btn btn-primary btn-lg">
+                    <i class="bi bi-floppy-fill"></i> Update Data Siswa
+                </button>
+
+            </div>
+
+        </form>
 
     </div>
-
-    {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-            {% for category, message in messages[-3:] %}
-                <div class="alert alert-{{ category }}">{{ message }}</div>
-            {% endfor %}
-        {% endif %}
-    {% endwith %}
-
-    <form method="POST">
-
-        <!-- ===================================== -->
-        <!-- A. DATA PRIBADI -->
-        <!-- ===================================== -->
-
-        <div class="section-title"><i class="bi bi-person-vcard"></i> A. DATA PRIBADI</div>
-
-        <div class="row">
-
-            <div class="col-md-6 mb-3">
-                <label class="form-label">Nama Lengkap *</label>
-                <input type="text" name="nama_lengkap" class="form-control" required
-                       value="{{ siswa.nama_lengkap }}">
-            </div>
-
-            <div class="col-md-6 mb-3">
-                <label class="form-label">NISN *</label>
-                <input type="text" name="nisn" class="form-control" required
-                       value="{{ siswa.nisn }}">
-            </div>
-
-            <div class="col-md-6 mb-3">
-                <label class="form-label">NIK *</label>
-                <input type="text" name="nik" class="form-control" required
-                       value="{{ siswa.nik }}">
-            </div>
-
-            <div class="col-md-6 mb-3">
-                <label class="form-label">Nomor Registrasi Akta</label>
-                <input type="text" name="no_registrasi_akta" class="form-control"
-                       value="{{ siswa.no_registrasi_akta }}">
-            </div>
-
-            <div class="col-md-6 mb-3">
-                <label class="form-label">Tempat Lahir *</label>
-                <input type="text" name="tempat_lahir" class="form-control" required
-                       value="{{ siswa.tempat_lahir }}">
-            </div>
-
-            <div class="col-md-6 mb-3">
-                <label class="form-label">Tanggal Lahir *</label>
-                <input type="date" name="tanggal_lahir" class="form-control" required
-                       value="{{ siswa.tanggal_lahir.strftime('%Y-%m-%d') if siswa.tanggal_lahir else '' }}">
-            </div>
-
-            <div class="col-md-6 mb-3">
-                <label class="form-label">Jenis Kelamin *</label>
-                <select name="jenis_kelamin" class="form-select" required>
-                    <option value="Laki-Laki" {% if siswa.jenis_kelamin == 'Laki-Laki' %}selected{% endif %}>Laki-Laki</option>
-                    <option value="Perempuan" {% if siswa.jenis_kelamin == 'Perempuan' %}selected{% endif %}>Perempuan</option>
-                </select>
-            </div>
-
-            <div class="col-md-6 mb-3">
-                <label class="form-label">Agama *</label>
-                <select name="agama" class="form-select" required>
-                    <option value="">Pilih Agama</option>
-                    <option value="Islam" {% if siswa.agama == 'Islam' %}selected{% endif %}>Islam</option>
-                    <option value="Kristen" {% if siswa.agama == 'Kristen' %}selected{% endif %}>Kristen</option>
-                    <option value="Katolik" {% if siswa.agama == 'Katolik' %}selected{% endif %}>Katolik</option>
-                    <option value="Hindu" {% if siswa.agama == 'Hindu' %}selected{% endif %}>Hindu</option>
-                    <option value="Buddha" {% if siswa.agama == 'Buddha' %}selected{% endif %}>Buddha</option>
-                    <option value="Konghucu" {% if siswa.agama == 'Konghucu' %}selected{% endif %}>Konghucu</option>
-                </select>
-            </div>
-
-            <div class="col-md-6 mb-3">
-                <label class="form-label">Kewarganegaraan</label>
-                <input type="text" name="kewarganegaraan" class="form-control"
-                       value="{{ siswa.kewarganegaraan }}">
-            </div>
-
-            <div class="col-md-6 mb-3">
-                <label class="form-label">Berkebutuhan Khusus</label>
-                <input type="text" name="kebutuhan_khusus" class="form-control"
-                       value="{{ siswa.kebutuhan_khusus }}">
-            </div>
-
-            <div class="col-md-4 mb-3">
-                <label class="form-label">Status Tinggal</label>
-                <input type="text" name="status_tinggal" class="form-control"
-                       value="{{ siswa.status_tinggal }}">
-            </div>
-
-            <div class="col-md-4 mb-3">
-                <label class="form-label">Moda Transportasi</label>
-                <input type="text" name="moda_transportasi" class="form-control"
-                       value="{{ siswa.moda_transportasi }}">
-            </div>
-
-            <div class="col-md-4 mb-3">
-                <label class="form-label">Anak Ke</label>
-                <input type="number" name="anak_ke" class="form-control"
-                       value="{{ siswa.anak_ke }}">
-            </div>
-
-            <div class="col-md-4 mb-3">
-                <label class="form-label">Tinggi Badan (cm)</label>
-                <input type="number" name="tinggi_badan" class="form-control"
-                       value="{{ siswa.tinggi_badan }}">
-            </div>
-
-            <div class="col-md-4 mb-3">
-                <label class="form-label">Berat Badan (kg)</label>
-                <input type="number" name="berat_badan" class="form-control"
-                       value="{{ siswa.berat_badan }}">
-            </div>
-
-            <div class="col-md-4 mb-3">
-                <label class="form-label">Jumlah Saudara Kandung</label>
-                <input type="number" name="jumlah_saudara_kandung" class="form-control"
-                       value="{{ siswa.jumlah_saudara_kandung }}">
-            </div>
-
-        </div>
-
-        <!-- ===================================== -->
-        <!-- B. DATA KONTAK -->
-        <!-- ===================================== -->
-
-        <div class="section-title mt-4"><i class="bi bi-telephone-fill"></i> B. DATA KONTAK</div>
-
-        <div class="row">
-
-            <div class="col-md-6 mb-3">
-                <label class="form-label">Nomor HP *</label>
-                <input type="text" name="no_hp" class="form-control" required
-                       value="{{ siswa.no_hp }}">
-            </div>
-
-            <div class="col-md-6 mb-3">
-                <label class="form-label">Email</label>
-                <input type="email" name="email" class="form-control"
-                       value="{{ siswa.email }}">
-            </div>
-
-        </div>
-
-        <!-- ===================================== -->
-        <!-- C. DATA ALAMAT -->
-        <!-- ===================================== -->
-
-        <div class="section-title mt-4"><i class="bi bi-geo-alt-fill"></i> C. DATA ALAMAT</div>
-
-        <div class="row">
-
-            <div class="col-12 mb-3">
-                <label class="form-label">Alamat Jalan</label>
-                <textarea name="alamat_jalan" class="form-control" rows="3">{{ siswa.alamat.alamat_jalan if siswa.alamat else '' }}</textarea>
-            </div>
-
-            <div class="col-md-6 mb-3">
-                <label class="form-label">Dusun / Blok</label>
-                <input type="text" name="dusun" class="form-control"
-                       value="{{ siswa.alamat.dusun if siswa.alamat else '' }}">
-            </div>
-
-            <div class="col-md-3 mb-3">
-                <label class="form-label">RT</label>
-                <input type="text" name="rt" class="form-control"
-                       value="{{ siswa.alamat.rt if siswa.alamat else '' }}">
-            </div>
-
-            <div class="col-md-3 mb-3">
-                <label class="form-label">RW</label>
-                <input type="text" name="rw" class="form-control"
-                       value="{{ siswa.alamat.rw if siswa.alamat else '' }}">
-            </div>
-
-            <div class="col-md-6 mb-3">
-                <label class="form-label">Desa / Kelurahan</label>
-                <input type="text" name="desa_kelurahan" class="form-control"
-                       value="{{ siswa.alamat.desa_kelurahan if siswa.alamat else '' }}">
-            </div>
-
-            <div class="col-md-6 mb-3">
-                <label class="form-label">Kecamatan</label>
-                <input type="text" name="kecamatan" class="form-control"
-                       value="{{ siswa.alamat.kecamatan if siswa.alamat else '' }}">
-            </div>
-
-            <div class="col-md-6 mb-3">
-                <label class="form-label">Kabupaten / Kota</label>
-                <input type="text" name="kabupaten" class="form-control"
-                       value="{{ siswa.alamat.kabupaten if siswa.alamat else '' }}">
-            </div>
-
-            <div class="col-md-6 mb-3">
-                <label class="form-label">Kode Pos</label>
-                <input type="text" name="kode_pos" class="form-control"
-                       value="{{ siswa.alamat.kode_pos if siswa.alamat else '' }}">
-            </div>
-
-        </div>
-
-        <!-- ===================================== -->
-        <!-- D. DATA SEKOLAH ASAL -->
-        <!-- ===================================== -->
-
-        <div class="section-title mt-4"><i class="bi bi-building"></i> D. DATA SEKOLAH ASAL</div>
-
-        <div class="row">
-
-            <div class="col-md-6 mb-3">
-                <label class="form-label">Asal Sekolah *</label>
-                <input type="text" name="asal_sekolah" class="form-control" required
-                       value="{{ siswa.asal_sekolah }}">
-            </div>
-
-            <div class="col-md-6 mb-3">
-                <label class="form-label">Tahun Lulus *</label>
-                <input type="text" name="tahun_lulus" class="form-control" required
-                       value="{{ siswa.tahun_lulus }}">
-            </div>
-
-            <div class="col-md-6 mb-3">
-                <label class="form-label">Jarak Tempat Tinggal ke Sekolah</label>
-                <input type="text" name="jarak_ke_sekolah" class="form-control"
-                       value="{{ siswa.jarak_ke_sekolah }}">
-            </div>
-
-            <div class="col-md-6 mb-3">
-                <label class="form-label">Waktu Tempuh ke Sekolah</label>
-                <input type="text" name="waktu_tempuh" class="form-control"
-                       value="{{ siswa.waktu_tempuh }}">
-            </div>
-
-        </div>
-
-        <!-- ===================================== -->
-        <!-- E. DATA AYAH KANDUNG -->
-        <!-- ===================================== -->
-
-        <div class="section-title mt-4"><i class="bi bi-person-badge-fill"></i> E. DATA AYAH KANDUNG</div>
-
-        <div class="row">
-
-            <div class="col-md-6 mb-3">
-                <label class="form-label">Nama Lengkap Ayah</label>
-                <input type="text" name="ayah_nama" class="form-control"
-                       value="{{ siswa.ayah.nama if siswa.ayah else '' }}">
-            </div>
-
-            <div class="col-md-6 mb-3">
-                <label class="form-label">NIK Ayah</label>
-                <input type="text" name="ayah_nik" class="form-control"
-                       value="{{ siswa.ayah.nik if siswa.ayah else '' }}">
-            </div>
-
-            <div class="col-md-6 mb-3">
-                <label class="form-label">Tempat Lahir</label>
-                <input type="text" name="ayah_tempat_lahir" class="form-control"
-                       value="{{ siswa.ayah.tempat_lahir if siswa.ayah else '' }}">
-            </div>
-
-            <div class="col-md-6 mb-3">
-                <label class="form-label">Tanggal Lahir</label>
-                <input type="date" name="ayah_tanggal_lahir" class="form-control"
-                       value="{{ siswa.ayah.tanggal_lahir.strftime('%Y-%m-%d') if siswa.ayah and siswa.ayah.tanggal_lahir else '' }}">
-            </div>
-
-            <div class="col-md-4 mb-3">
-                <label class="form-label">Pendidikan Terakhir</label>
-                <input type="text" name="ayah_pendidikan" class="form-control"
-                       value="{{ siswa.ayah.pendidikan if siswa.ayah else '' }}">
-            </div>
-
-            <div class="col-md-4 mb-3">
-                <label class="form-label">Pekerjaan</label>
-                <input type="text" name="ayah_pekerjaan" class="form-control"
-                       value="{{ siswa.ayah.pekerjaan if siswa.ayah else '' }}">
-            </div>
-
-            <div class="col-md-4 mb-3">
-                <label class="form-label">Penghasilan Bulanan</label>
-                <input type="text" name="ayah_penghasilan" class="form-control"
-                       value="{{ siswa.ayah.penghasilan if siswa.ayah else '' }}">
-            </div>
-
-            <div class="col-md-6 mb-3">
-                <label class="form-label">Berkebutuhan Khusus</label>
-                <input type="text" name="ayah_kebutuhan_khusus" class="form-control"
-                       value="{{ siswa.ayah.kebutuhan_khusus if siswa.ayah else '' }}">
-            </div>
-
-            <div class="col-md-6 mb-3">
-                <label class="form-label">Nomor HP</label>
-                <input type="text" name="ayah_no_hp" class="form-control"
-                       value="{{ siswa.ayah.no_hp if siswa.ayah else '' }}">
-            </div>
-
-        </div>
-
-        <!-- ===================================== -->
-        <!-- F. DATA IBU KANDUNG -->
-        <!-- ===================================== -->
-
-        <div class="section-title mt-4"><i class="bi bi-person-heart"></i> F. DATA IBU KANDUNG</div>
-
-        <div class="row">
-
-            <div class="col-md-6 mb-3">
-                <label class="form-label">Nama Lengkap Ibu</label>
-                <input type="text" name="ibu_nama" class="form-control"
-                       value="{{ siswa.ibu.nama if siswa.ibu else '' }}">
-            </div>
-
-            <div class="col-md-6 mb-3">
-                <label class="form-label">NIK Ibu</label>
-                <input type="text" name="ibu_nik" class="form-control"
-                       value="{{ siswa.ibu.nik if siswa.ibu else '' }}">
-            </div>
-
-            <div class="col-md-6 mb-3">
-                <label class="form-label">Tempat Lahir</label>
-                <input type="text" name="ibu_tempat_lahir" class="form-control"
-                       value="{{ siswa.ibu.tempat_lahir if siswa.ibu else '' }}">
-            </div>
-
-            <div class="col-md-6 mb-3">
-                <label class="form-label">Tanggal Lahir</label>
-                <input type="date" name="ibu_tanggal_lahir" class="form-control"
-                       value="{{ siswa.ibu.tanggal_lahir.strftime('%Y-%m-%d') if siswa.ibu and siswa.ibu.tanggal_lahir else '' }}">
-            </div>
-
-            <div class="col-md-4 mb-3">
-                <label class="form-label">Pendidikan Terakhir</label>
-                <input type="text" name="ibu_pendidikan" class="form-control"
-                       value="{{ siswa.ibu.pendidikan if siswa.ibu else '' }}">
-            </div>
-
-            <div class="col-md-4 mb-3">
-                <label class="form-label">Pekerjaan</label>
-                <input type="text" name="ibu_pekerjaan" class="form-control"
-                       value="{{ siswa.ibu.pekerjaan if siswa.ibu else '' }}">
-            </div>
-
-            <div class="col-md-4 mb-3">
-                <label class="form-label">Penghasilan Bulanan</label>
-                <input type="text" name="ibu_penghasilan" class="form-control"
-                       value="{{ siswa.ibu.penghasilan if siswa.ibu else '' }}">
-            </div>
-
-            <div class="col-md-6 mb-3">
-                <label class="form-label">Berkebutuhan Khusus</label>
-                <input type="text" name="ibu_kebutuhan_khusus" class="form-control"
-                       value="{{ siswa.ibu.kebutuhan_khusus if siswa.ibu else '' }}">
-            </div>
-
-            <div class="col-md-6 mb-3">
-                <label class="form-label">Nomor HP</label>
-                <input type="text" name="ibu_no_hp" class="form-control"
-                       value="{{ siswa.ibu.no_hp if siswa.ibu else '' }}">
-            </div>
-
-        </div>
-
-        <!-- ===================================== -->
-        <!-- G. DATA WALI (OPSIONAL) -->
-        <!-- ===================================== -->
-
-        <div class="section-title mt-4"><i class="bi bi-people-fill"></i> G. DATA WALI (OPSIONAL)</div>
-
-        <div class="alert alert-info">
-            Isi bagian ini hanya jika siswa tidak tinggal bersama ayah atau ibu kandung.
-        </div>
-
-        <div class="row">
-
-            <div class="col-md-6 mb-3">
-                <label class="form-label">Nama Lengkap Wali</label>
-                <input type="text" name="wali_nama" class="form-control"
-                       value="{{ siswa.wali.nama if siswa.wali else '' }}">
-            </div>
-
-            <div class="col-md-6 mb-3">
-                <label class="form-label">NIK Wali</label>
-                <input type="text" name="wali_nik" class="form-control"
-                       value="{{ siswa.wali.nik if siswa.wali else '' }}">
-            </div>
-
-            <div class="col-md-6 mb-3">
-                <label class="form-label">Tempat Lahir</label>
-                <input type="text" name="wali_tempat_lahir" class="form-control"
-                       value="{{ siswa.wali.tempat_lahir if siswa.wali else '' }}">
-            </div>
-
-            <div class="col-md-6 mb-3">
-                <label class="form-label">Tanggal Lahir</label>
-                <input type="date" name="wali_tanggal_lahir" class="form-control"
-                       value="{{ siswa.wali.tanggal_lahir.strftime('%Y-%m-%d') if siswa.wali and siswa.wali.tanggal_lahir else '' }}">
-            </div>
-
-            <div class="col-md-4 mb-3">
-                <label class="form-label">Pendidikan Terakhir</label>
-                <input type="text" name="wali_pendidikan" class="form-control"
-                       value="{{ siswa.wali.pendidikan if siswa.wali else '' }}">
-            </div>
-
-            <div class="col-md-4 mb-3">
-                <label class="form-label">Pekerjaan</label>
-                <input type="text" name="wali_pekerjaan" class="form-control"
-                       value="{{ siswa.wali.pekerjaan if siswa.wali else '' }}">
-            </div>
-
-            <div class="col-md-4 mb-3">
-                <label class="form-label">Penghasilan Bulanan</label>
-                <input type="text" name="wali_penghasilan" class="form-control"
-                       value="{{ siswa.wali.penghasilan if siswa.wali else '' }}">
-            </div>
-
-            <div class="col-md-6 mb-3">
-                <label class="form-label">Berkebutuhan Khusus</label>
-                <input type="text" name="wali_kebutuhan_khusus" class="form-control"
-                       value="{{ siswa.wali.kebutuhan_khusus if siswa.wali else '' }}">
-            </div>
-
-            <div class="col-md-6 mb-3">
-                <label class="form-label">Nomor HP</label>
-                <input type="text" name="wali_no_hp" class="form-control"
-                       value="{{ siswa.wali.no_hp if siswa.wali else '' }}">
-            </div>
-
-        </div>
-
-        <hr class="my-4">
-
-        <div class="d-flex justify-content-between">
-
-            <a href="{{ url_for('admin.detail_siswa', id=siswa.id) }}" class="btn btn-outline-secondary btn-lg">
-                Batal
-            </a>
-
-            <button type="submit" class="btn btn-primary btn-lg">
-                <i class="bi bi-floppy-fill"></i> Update Data Siswa
-            </button>
-
-        </div>
-
-    </form>
-
-</div>
 
 {% endblock %}

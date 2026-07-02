@@ -5,41 +5,41 @@
 {% endblock %}
 
 {% block title %}
-Data Calon Siswa
+    Data Calon Siswa
 {% endblock %}
 
 {% block page_title %}
-Data Calon Siswa
+    Data Calon Siswa
 {% endblock %}
 
 {% block content %}
 
-<div class="content-card">
+    <div class="content-card">
 
-    <!-- HEADER -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h3 class="mb-0 fw-bold">
-            Data Calon Siswa
-        </h3>
-    </div>
+        <!-- HEADER -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h3 class="mb-0 fw-bold">
+                Data Calon Siswa
+            </h3>
+        </div>
 
-    <!-- SEARCH BAR -->
-    <div class="search-wrapper mb-4">
-        <div class="input-group">
+        <!-- SEARCH BAR -->
+        <div class="search-wrapper mb-4">
+            <div class="input-group">
             <span class="input-group-text bg-white">
                 <i class="bi bi-search"></i>
             </span>
-            <input type="text"
-                   id="searchInput"
-                   class="form-control"
-                   placeholder="Cari nama siswa, NISN, atau sekolah...">
+                <input type="text"
+                       id="searchInput"
+                       class="form-control"
+                       placeholder="Cari nama siswa, NISN, atau sekolah...">
+            </div>
         </div>
-    </div>
 
-    <!-- TABLE -->
-    <div class="table-responsive">
-        <table class="ppdb-table" id="siswaTable">
-            <thead>
+        <!-- TABLE -->
+        <div class="table-responsive">
+            <table class="ppdb-table" id="siswaTable">
+                <thead>
                 <tr>
                     <th width="60">No</th>
                     <th>Nama Siswa</th>
@@ -47,77 +47,77 @@ Data Calon Siswa
                     <th>Status</th>
                     <th width="200" class="text-center">Aksi</th>
                 </tr>
-            </thead>
-            <tbody>
+                </thead>
+                <tbody>
                 {% for siswa in data_siswa %}
-                <tr>
-                    <td class="text-center fw-medium">{{ loop.index }}</td>
+                    <tr>
+                        <td class="text-center fw-medium">{{ loop.index }}</td>
 
-                    <td>
-                        <div class="student-name">{{ siswa.nama_lengkap }}</div>
-                        <div class="student-subtitle">NISN : {{ siswa.nisn }}</div>
-                    </td>
+                        <td>
+                            <div class="student-name">{{ siswa.nama_lengkap }}</div>
+                            <div class="student-subtitle">NISN : {{ siswa.nisn }}</div>
+                        </td>
 
-                    <td>{{ siswa.asal_sekolah }}</td>
+                        <td>{{ siswa.asal_sekolah }}</td>
 
-                    <td>
-                        {% if siswa.status_verifikasi == 'Diverifikasi' %}
-                            <span class="status-success">✓ Diverifikasi</span>
-                        {% else %}
-                            <span class="status-warning">⏳ Menunggu</span>
-                        {% endif %}
-                    </td>
-
-                    <td class="text-center">
-                        <div class="action-buttons">
-                            <a href="{{ url_for('admin.detail_siswa', id=siswa.id) }}"
-                               class="btn btn-outline-primary btn-sm" title="Detail">
-                                <i class="bi bi-eye-fill"></i>
-                            </a>
-                            <a href="{{ url_for('admin.edit_siswa', id=siswa.id) }}"
-                               class="btn btn-outline-warning btn-sm" title="Edit">
-                                <i class="bi bi-pencil-fill"></i>
-                            </a>
-
-                            {% if siswa.status_verifikasi != 'Diverifikasi' %}
-                            <a href="{{ url_for('admin.verifikasi_siswa', id=siswa.id) }}"
-                               class="btn btn-outline-success btn-sm" title="Verifikasi">
-                                <i class="bi bi-check-lg"></i>
-                            </a>
+                        <td>
+                            {% if siswa.status_verifikasi == 'Diverifikasi' %}
+                                <span class="status-success">✓ Diverifikasi</span>
+                            {% else %}
+                                <span class="status-warning">⏳ Menunggu</span>
                             {% endif %}
+                        </td>
 
-                            <a href="{{ url_for('admin.hapus_siswa', id=siswa.id) }}"
-                               class="btn btn-outline-danger btn-sm"
-                               onclick="return confirm('Yakin ingin menghapus data ini?')">
-                                <i class="bi bi-trash-fill"></i>
-                            </a>
-                        </div>
-                    </td>
-                </tr>
+                        <td class="text-center">
+                            <div class="action-buttons">
+                                <a href="{{ url_for('admin.detail_siswa', id=siswa.id) }}"
+                                   class="btn btn-outline-primary btn-sm" title="Detail">
+                                    <i class="bi bi-eye-fill"></i>
+                                </a>
+                                <a href="{{ url_for('admin.edit_siswa', id=siswa.id) }}"
+                                   class="btn btn-outline-warning btn-sm" title="Edit">
+                                    <i class="bi bi-pencil-fill"></i>
+                                </a>
+
+                                {% if siswa.status_verifikasi != 'Diverifikasi' %}
+                                    <a href="{{ url_for('admin.verifikasi_siswa', id=siswa.id) }}"
+                                       class="btn btn-outline-success btn-sm" title="Verifikasi">
+                                        <i class="bi bi-check-lg"></i>
+                                    </a>
+                                {% endif %}
+
+                                <a href="{{ url_for('admin.hapus_siswa', id=siswa.id) }}"
+                                   class="btn btn-outline-danger btn-sm"
+                                   onclick="return confirm('Yakin ingin menghapus data ini?')">
+                                    <i class="bi bi-trash-fill"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
                 {% else %}
-                <tr>
-                    <td colspan="5" class="text-center py-5 text-muted">
-                        Belum ada data pendaftar
-                    </td>
-                </tr>
+                    <tr>
+                        <td colspan="5" class="text-center py-5 text-muted">
+                            Belum ada data pendaftar
+                        </td>
+                    </tr>
                 {% endfor %}
-            </tbody>
-        </table>
+                </tbody>
+            </table>
+        </div>
     </div>
-</div>
 
-<!-- CLIENT SIDE SEARCH -->
-<script>
-    document.getElementById("searchInput").addEventListener("keyup", function () {
-        const filter = this.value.toLowerCase().trim();
-        const rows = document.querySelectorAll("#siswaTable tbody tr");
+    <!-- CLIENT SIDE SEARCH -->
+    <script>
+        document.getElementById("searchInput").addEventListener("keyup", function () {
+            const filter = this.value.toLowerCase().trim();
+            const rows = document.querySelectorAll("#siswaTable tbody tr");
 
-        rows.forEach(row => {
-            if (row.cells.length === 1) return;
-            const text = row.textContent.toLowerCase();
-            row.style.display = text.includes(filter) ? "" : "none";
+            rows.forEach(row => {
+                if (row.cells.length === 1) return;
+                const text = row.textContent.toLowerCase();
+                row.style.display = text.includes(filter) ? "" : "none";
+            });
         });
-    });
-</script>
+    </script>
 
 {% endblock %}

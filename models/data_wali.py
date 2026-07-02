@@ -1,7 +1,7 @@
 from extensions_db import db
 
-class DataWali(db.Model):
 
+class DataWali(db.Model):
     __tablename__ = 'data_wali'
 
     id = db.Column(

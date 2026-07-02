@@ -4,8 +4,8 @@ BASE_DIR = os.path.abspath(
     os.path.dirname(__file__)
 )
 
-class Config:
 
+class Config:
     SECRET_KEY = 'secret-key'
 
     SQLALCHEMY_DATABASE_URI = \

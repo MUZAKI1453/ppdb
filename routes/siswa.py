@@ -321,7 +321,6 @@ def upload_berkas():
         if not berkas:
             berkas = Berkas(calon_siswa_id=calon_siswa.id)
 
-
         file_map = {
             'pas_foto': ('pasfoto', 'pas_foto'),
             'kartu_keluarga': ('kk', 'kartu_keluarga'),

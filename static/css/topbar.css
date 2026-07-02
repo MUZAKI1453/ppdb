@@ -12,7 +12,7 @@
     position: sticky;
     top: 0;
     z-index: 900;
-    box-shadow: 0 1px 8px rgba(0,0,0,.05);
+    box-shadow: 0 1px 8px rgba(0, 0, 0, .05);
     gap: 16px;
 }
 
@@ -137,7 +137,7 @@
     background: #FFFFFF;
     border: 0.5px solid #E2E8F0;
     border-radius: 14px;
-    box-shadow: 0 8px 24px rgba(0,0,0,.10), 0 2px 6px rgba(0,0,0,.06);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, .10), 0 2px 6px rgba(0, 0, 0, .06);
     padding: 6px;
     z-index: 9999;
     /* Animasi muncul */
@@ -237,7 +237,9 @@
         height: 64px;
     }
 
-    .page-title { font-size: 18px; }
+    .page-title {
+        font-size: 18px;
+    }
 }
 
 /* ==================================================
@@ -250,8 +252,13 @@
         padding: 0 14px;
     }
 
-    .page-subtitle { display: none; }
-    .user-info     { display: none; }
+    .page-subtitle {
+        display: none;
+    }
+
+    .user-info {
+        display: none;
+    }
 
     .user-dropdown-trigger {
         padding: 6px 8px;
@@ -263,6 +270,11 @@
    RESPONSIVE — Extra small
 ================================================== */
 @media (max-width: 480px) {
-    .page-title { font-size: 16px; }
-    .user-chevron { display: none; }
+    .page-title {
+        font-size: 16px;
+    }
+
+    .user-chevron {
+        display: none;
+    }
 }
