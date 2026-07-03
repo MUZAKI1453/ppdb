@@ -178,6 +178,10 @@ def dashboard():
     status_seleksi = "Menunggu"
     boleh_ujian = False
     hasil_ujian = None
+    status_ujian = {
+        jenis: {'hasil': None, 'label': label}
+        for jenis, label in Soal.JENIS_PILIHAN
+    }
 
     if calon_siswa:
         progress = 50
@@ -201,12 +205,28 @@ def dashboard():
                 status_berkas = "Diverifikasi"
 
         boleh_ujian = calon_siswa.sudah_lolos_administrasi()
-        hasil_ujian = calon_siswa.hasil_ujian
 
-        if hasil_ujian and hasil_ujian.is_selesai():
-            status_seleksi = f"Nilai {hasil_ujian.nilai:g}"
+        for jenis in status_ujian:
+            status_ujian[jenis]['hasil'] = calon_siswa.get_hasil_ujian(jenis)
+
+        semua_selesai = calon_siswa.sudah_selesai_semua_ujian()
+        ada_yang_selesai = any(
+            v['hasil'] and v['hasil'].is_selesai()
+            for v in status_ujian.values()
+        )
+
+        if semua_selesai:
+            nilai_akhir = calon_siswa.nilai_akhir_ujian()
+            status_seleksi = f"Nilai {nilai_akhir:g}"
+        elif ada_yang_selesai:
+            status_seleksi = "Sebagian Ujian Selesai"
         elif boleh_ujian:
             status_seleksi = "Siap Ujian"
+
+        # hasil_ujian dipertahankan untuk kompatibilitas
+        # lama pada template (dipakai untuk pewarnaan kartu),
+        # dianggap "selesai" hanya jika kedua ujian selesai.
+        hasil_ujian = status_ujian[Soal.JENIS_AKADEMIK]['hasil'] if semua_selesai else None
 
     return render_template(
         'siswa/dashboard.html',
@@ -216,6 +236,7 @@ def dashboard():
         status_seleksi=status_seleksi,
         boleh_ujian=boleh_ujian,
         hasil_ujian=hasil_ujian,
+        status_ujian=status_ujian,
         berkas=berkas,
         calon_siswa=calon_siswa
     )
@@ -380,18 +401,29 @@ def upload_berkas():
     )
 
 
+JENIS_UJIAN_VALID = [Soal.JENIS_AKADEMIK, Soal.JENIS_PSIKOTES]
+LABEL_JENIS_UJIAN = dict(Soal.JENIS_PILIHAN)
+
+
 # ==================================================
-# Ujian Seleksi -> /siswa/ujian
+# Ujian Seleksi -> /siswa/ujian/<jenis>
+#
+# jenis: 'akademik' atau 'psikotes'. Keduanya adalah
+# dua sesi ujian terpisah, masing-masing hanya bisa
+# dikerjakan satu kali.
 #
 # Syarat mengerjakan:
 # - Data pribadi & berkas sudah sama-sama Diverifikasi
-# - Belum pernah menyelesaikan ujian (satu kali kesempatan)
+# - Belum pernah menyelesaikan ujian jenis ini
 # ==================================================
-@siswa.route('/ujian', methods=['GET', 'POST'])
+@siswa.route('/ujian/<jenis>', methods=['GET', 'POST'])
 @login_required
-def ujian():
+def ujian(jenis):
     if current_user.role != 'siswa':
         return "Akses Ditolak", 403
+
+    if jenis not in JENIS_UJIAN_VALID:
+        return "Jenis ujian tidak dikenal", 404
 
     calon_siswa = current_user.calon_siswa
 
@@ -399,21 +431,22 @@ def ujian():
         flash('Ujian hanya bisa diakses setelah data dan berkas Anda diverifikasi admin.', 'warning')
         return redirect(url_for('siswa.dashboard'))
 
-    hasil = calon_siswa.hasil_ujian
+    hasil = calon_siswa.get_hasil_ujian(jenis)
 
     if hasil and hasil.is_selesai():
-        return redirect(url_for('siswa.hasil_ujian'))
+        return redirect(url_for('siswa.hasil_ujian', jenis=jenis))
 
-    daftar_soal = Soal.query.order_by(Soal.id).all()
+    daftar_soal = Soal.query.filter_by(jenis_ujian=jenis).order_by(Soal.id).all()
 
     if not daftar_soal:
-        flash('Belum ada soal ujian yang tersedia. Silakan hubungi pihak sekolah.', 'warning')
-        return render_template('siswa/ujian.html', daftar_soal=[])
+        flash(f'Belum ada soal ujian {LABEL_JENIS_UJIAN[jenis]} yang tersedia. Silakan hubungi pihak sekolah.', 'warning')
+        return render_template('siswa/ujian.html', daftar_soal=[], jenis=jenis, label_jenis=LABEL_JENIS_UJIAN[jenis])
 
     if request.method == 'POST':
         if not hasil:
             hasil = HasilUjian(
                 calon_siswa_id=calon_siswa.id,
+                jenis_ujian=jenis,
                 waktu_mulai=datetime.utcnow()
             )
             db.session.add(hasil)
@@ -445,30 +478,37 @@ def ujian():
 
         db.session.commit()
 
-        flash('Ujian berhasil dikumpulkan.', 'success')
-        return redirect(url_for('siswa.hasil_ujian'))
+        flash(f'Ujian {LABEL_JENIS_UJIAN[jenis]} berhasil dikumpulkan.', 'success')
+        return redirect(url_for('siswa.hasil_ujian', jenis=jenis))
 
     return render_template(
         'siswa/ujian.html',
-        daftar_soal=daftar_soal
+        daftar_soal=daftar_soal,
+        jenis=jenis,
+        label_jenis=LABEL_JENIS_UJIAN[jenis]
     )
 
 
 # ==================================================
-# Hasil Ujian -> /siswa/hasil-ujian
+# Hasil Ujian -> /siswa/hasil-ujian/<jenis>
 # ==================================================
-@siswa.route('/hasil-ujian')
+@siswa.route('/hasil-ujian/<jenis>')
 @login_required
-def hasil_ujian():
+def hasil_ujian(jenis):
     if current_user.role != 'siswa':
         return "Akses Ditolak", 403
 
+    if jenis not in JENIS_UJIAN_VALID:
+        return "Jenis ujian tidak dikenal", 404
+
     calon_siswa = current_user.calon_siswa
-    hasil = calon_siswa.hasil_ujian if calon_siswa else None
+    hasil = calon_siswa.get_hasil_ujian(jenis) if calon_siswa else None
 
     return render_template(
         'siswa/hasil_ujian.html',
-        hasil=hasil
+        hasil=hasil,
+        jenis=jenis,
+        label_jenis=LABEL_JENIS_UJIAN[jenis]
     )
 
 

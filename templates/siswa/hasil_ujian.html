@@ -1,11 +1,11 @@
 {% extends 'layouts/base_dashboard.html' %}
 
 {% block title %}
-    Hasil Ujian
+    Hasil Ujian {{ label_jenis }}
 {% endblock %}
 
 {% block page_title %}
-    Hasil Ujian
+    Hasil Ujian {{ label_jenis }}
 {% endblock %}
 
 {% block extra_css %}
@@ -18,20 +18,20 @@
 
         <div class="hasil-card belum">
             <i class="bi bi-hourglass-split" style="font-size: 40px;"></i>
-            <p class="nilai-sub mb-0 mt-3">Anda belum mengerjakan ujian seleksi.</p>
+            <p class="nilai-sub mb-0 mt-3">Anda belum mengerjakan ujian {{ label_jenis }}.</p>
         </div>
 
         <div class="text-center">
-            <a href="{{ url_for('siswa.ujian') }}" class="btn btn-primary">
+            <a href="{{ url_for('siswa.ujian', jenis=jenis) }}" class="btn btn-primary">
                 <i class="bi bi-pencil-square"></i>
-                Kerjakan Ujian Sekarang
+                Kerjakan Ujian {{ label_jenis }} Sekarang
             </a>
         </div>
 
     {% else %}
 
         <div class="hasil-card">
-            <div class="nilai-sub">Nilai Ujian Anda</div>
+            <div class="nilai-sub">Nilai Ujian {{ label_jenis }} Anda</div>
             <div class="nilai-besar">{{ hasil.nilai }}</div>
             <div class="nilai-sub">
                 Benar {{ hasil.jumlah_benar }} dari {{ hasil.jumlah_soal }} soal

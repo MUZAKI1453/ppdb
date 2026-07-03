@@ -125,16 +125,18 @@
             ✓ Verifikasi Administrasi
         </div>
 
-        <div class="progress-item {% if hasil_ujian and hasil_ujian.is_selesai() %}active{% endif %}">
-            {% if hasil_ujian and hasil_ujian.is_selesai() %}
-                ✓ Seleksi / Ujian — selesai, nilai {{ hasil_ujian.nilai }}
-            {% elif boleh_ujian %}
-                ○ Seleksi / Ujian —
-                <a href="{{ url_for('siswa.ujian') }}">kerjakan sekarang</a>
-            {% else %}
-                ○ Seleksi / Ujian
-            {% endif %}
-        </div>
+        {% for jenis, info in status_ujian.items() %}
+            <div class="progress-item {% if info.hasil and info.hasil.is_selesai() %}active{% endif %}">
+                {% if info.hasil and info.hasil.is_selesai() %}
+                    ✓ Ujian {{ info.label }} — selesai, nilai {{ info.hasil.nilai }}
+                {% elif boleh_ujian %}
+                    ○ Ujian {{ info.label }} —
+                    <a href="{{ url_for('siswa.ujian', jenis=jenis) }}">kerjakan sekarang</a>
+                {% else %}
+                    ○ Ujian {{ info.label }}
+                {% endif %}
+            </div>
+        {% endfor %}
 
         <div class="progress-item {% if calon_siswa and calon_siswa.status_kelulusan != 'Menunggu' %}active{% endif %}">
             {% if calon_siswa and calon_siswa.status_kelulusan != 'Menunggu' %}

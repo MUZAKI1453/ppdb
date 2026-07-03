@@ -5,6 +5,18 @@ from datetime import datetime
 class Soal(db.Model):
     __tablename__ = 'soal'
 
+    # Jenis ujian: soal Akademik (MTK, IPA, Indo, dll) atau
+    # soal Psikotes. Keduanya disimpan di tabel yang sama,
+    # dibedakan lewat kolom ini supaya siswa mengerjakan
+    # dua sesi ujian yang terpisah.
+    JENIS_AKADEMIK = 'akademik'
+    JENIS_PSIKOTES = 'psikotes'
+
+    JENIS_PILIHAN = [
+        (JENIS_AKADEMIK, 'Akademik'),
+        (JENIS_PSIKOTES, 'Psikotes'),
+    ]
+
     id = db.Column(
         db.Integer,
         primary_key=True
@@ -13,6 +25,13 @@ class Soal(db.Model):
     # ==========================
     # ISI SOAL
     # ==========================
+
+    jenis_ujian = db.Column(
+        db.String(20),
+        nullable=False,
+        default=JENIS_AKADEMIK,
+        server_default=JENIS_AKADEMIK
+    )
 
     pertanyaan = db.Column(
         db.Text,

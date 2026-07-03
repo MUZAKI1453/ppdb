@@ -1,11 +1,11 @@
 {% extends 'layouts/base_dashboard.html' %}
 
 {% block title %}
-    Ujian Seleksi
+    Ujian {{ label_jenis }}
 {% endblock %}
 
 {% block page_title %}
-    Ujian Seleksi
+    Ujian {{ label_jenis }}
 {% endblock %}
 
 {% block extra_css %}
@@ -24,7 +24,7 @@
 
     <div class="ujian-header">
         <div>
-            <h2>Ujian Seleksi PPDB</h2>
+            <h2>Ujian {{ label_jenis }} PPDB</h2>
             <p>Kerjakan seluruh soal di bawah ini, lalu klik "Kumpulkan Jawaban". Ujian hanya bisa dikerjakan satu
                 kali.</p>
         </div>
@@ -46,7 +46,7 @@
 
     {% else %}
 
-        <form method="POST" action="{{ url_for('siswa.ujian') }}" id="formUjian">
+        <form method="POST" action="{{ url_for('siswa.ujian', jenis=jenis) }}" id="formUjian">
 
             {% for soal in daftar_soal %}
 

@@ -81,7 +81,9 @@
                 <tr>
                     <th width="60">No</th>
                     <th>Nama Siswa</th>
-                    <th class="text-center">Nilai Ujian</th>
+                    <th class="text-center">Akademik</th>
+                    <th class="text-center">Psikotes</th>
+                    <th class="text-center">Nilai Akhir</th>
                     <th>Status Kelulusan</th>
                     <th width="220" class="text-center">Aksi</th>
                 </tr>
@@ -99,9 +101,29 @@
                             <div class="student-subtitle">NISN: {{ siswa.nisn or '-' }}</div>
                         </td>
 
+                        {% set hasil_akademik = siswa.get_hasil_ujian('akademik') %}
+                        {% set hasil_psikotes = siswa.get_hasil_ujian('psikotes') %}
+                        {% set nilai_akhir = siswa.nilai_akhir_ujian() %}
+
                         <td class="text-center">
-                            {% if siswa.hasil_ujian and siswa.hasil_ujian.is_selesai() %}
-                                <span class="fw-bold">{{ siswa.hasil_ujian.nilai }}</span>
+                            {% if hasil_akademik and hasil_akademik.is_selesai() %}
+                                {{ hasil_akademik.nilai }}
+                            {% else %}
+                                <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+
+                        <td class="text-center">
+                            {% if hasil_psikotes and hasil_psikotes.is_selesai() %}
+                                {{ hasil_psikotes.nilai }}
+                            {% else %}
+                                <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+
+                        <td class="text-center">
+                            {% if nilai_akhir is not none %}
+                                <span class="fw-bold">{{ nilai_akhir }}</span>
                             {% else %}
                                 <span class="text-muted">Belum Ujian</span>
                             {% endif %}
@@ -153,7 +175,7 @@
                 {% else %}
 
                     <tr>
-                        <td colspan="5" class="text-center py-5 text-muted">
+                        <td colspan="7" class="text-center py-5 text-muted">
                             Belum ada siswa yang lolos verifikasi administrasi & berkas.
                         </td>
                     </tr>

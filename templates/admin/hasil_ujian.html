@@ -26,6 +26,18 @@
             </span>
         </div>
 
+        <!-- TAB JENIS UJIAN -->
+        <ul class="nav nav-tabs mb-4">
+            {% for jenis, label in jenis_pilihan %}
+                <li class="nav-item">
+                    <a class="nav-link {% if jenis_aktif == jenis %}active{% endif %}"
+                       href="{{ url_for('admin.hasil_ujian', jenis=jenis) }}">
+                        {{ label }}
+                    </a>
+                </li>
+            {% endfor %}
+        </ul>
+
         <div class="search-wrapper mb-4">
             <div class="input-group">
                 <span class="input-group-text bg-white">

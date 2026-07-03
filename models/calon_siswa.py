@@ -201,10 +201,14 @@ class CalonSiswa(db.Model):
     # RELASI HASIL UJIAN
     # ==========================
 
+    # Sekarang satu siswa bisa punya lebih dari satu hasil
+    # ujian (akademik & psikotes), jadi relasinya berupa
+    # list, bukan satu objek tunggal lagi. Gunakan
+    # get_hasil_ujian(jenis) untuk mengambil salah satunya.
     hasil_ujian = db.relationship(
         'HasilUjian',
         backref='calon_siswa',
-        uselist=False,
+        uselist=True,
         cascade='all, delete-orphan'
     )
 
@@ -219,3 +223,37 @@ class CalonSiswa(db.Model):
             and self.berkas is not None
             and self.berkas.status_verifikasi == 'Diverifikasi'
         )
+
+    def get_hasil_ujian(self, jenis_ujian):
+        # Ambil hasil ujian siswa untuk jenis tertentu
+        # ('akademik' atau 'psikotes'), atau None kalau
+        # belum mengerjakan.
+        for hasil in self.hasil_ujian:
+            if hasil.jenis_ujian == jenis_ujian:
+                return hasil
+        return None
+
+    def sudah_selesai_semua_ujian(self):
+        from models.soal import Soal
+
+        for jenis, _ in Soal.JENIS_PILIHAN:
+            hasil = self.get_hasil_ujian(jenis)
+            if not hasil or not hasil.is_selesai():
+                return False
+        return True
+
+    def nilai_akhir_ujian(self):
+        # Rata-rata nilai akademik & psikotes yang sudah
+        # selesai. Dipakai untuk mengurutkan hasil seleksi.
+        # Kalau belum ada satupun yang selesai, hasilnya
+        # None (ditempatkan paling bawah saat diurutkan).
+        nilai_list = [
+            hasil.nilai
+            for hasil in self.hasil_ujian
+            if hasil.is_selesai()
+        ]
+
+        if not nilai_list:
+            return None
+
+        return round(sum(nilai_list) / len(nilai_list), 2)

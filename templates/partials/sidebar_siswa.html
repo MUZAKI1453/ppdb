@@ -67,14 +67,14 @@
 
     <li>
 
-        <a href="{{ url_for('siswa.ujian') }}"
-           class="{% if request.endpoint == 'siswa.ujian' %}active{% endif %}"
-           data-title="Mulai Ujian">
+        <a href="{{ url_for('siswa.ujian', jenis='akademik') }}"
+           class="{% if request.endpoint == 'siswa.ujian' and request.view_args.jenis == 'akademik' %}active{% endif %}"
+           data-title="Ujian Akademik">
 
             <i class="bi bi-pencil-square"></i>
 
             <span class="menu-text">
-                Mulai Ujian
+                Ujian Akademik
             </span>
 
         </a>
@@ -83,14 +83,46 @@
 
     <li>
 
-        <a href="{{ url_for('siswa.hasil_ujian') }}"
-           class="{% if request.endpoint == 'siswa.hasil_ujian' %}active{% endif %}"
-           data-title="Hasil Ujian">
+        <a href="{{ url_for('siswa.hasil_ujian', jenis='akademik') }}"
+           class="{% if request.endpoint == 'siswa.hasil_ujian' and request.view_args.jenis == 'akademik' %}active{% endif %}"
+           data-title="Hasil Ujian Akademik">
 
             <i class="bi bi-bar-chart-fill"></i>
 
             <span class="menu-text">
-                Hasil Ujian
+                Hasil Ujian Akademik
+            </span>
+
+        </a>
+
+    </li>
+
+    <li>
+
+        <a href="{{ url_for('siswa.ujian', jenis='psikotes') }}"
+           class="{% if request.endpoint == 'siswa.ujian' and request.view_args.jenis == 'psikotes' %}active{% endif %}"
+           data-title="Ujian Psikotes">
+
+            <i class="bi bi-pencil-square"></i>
+
+            <span class="menu-text">
+                Ujian Psikotes
+            </span>
+
+        </a>
+
+    </li>
+
+    <li>
+
+        <a href="{{ url_for('siswa.hasil_ujian', jenis='psikotes') }}"
+           class="{% if request.endpoint == 'siswa.hasil_ujian' and request.view_args.jenis == 'psikotes' %}active{% endif %}"
+           data-title="Hasil Ujian Psikotes">
+
+            <i class="bi bi-bar-chart-fill"></i>
+
+            <span class="menu-text">
+                Hasil Ujian Psikotes
             </span>
 
         </a>

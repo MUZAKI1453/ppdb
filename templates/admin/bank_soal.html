@@ -31,12 +31,32 @@
                 Bank Soal Ujian ({{ daftar_soal|length }} soal)
             </h3>
 
-            <a href="{{ url_for('admin.tambah_soal') }}" class="btn btn-primary">
-                <i class="bi bi-plus-circle"></i>
-                Tambah Soal
-            </a>
+            <div class="d-flex gap-2">
+                <a href="{{ url_for('admin.upload_soal_pdf') }}" class="btn btn-outline-primary">
+                    <i class="bi bi-file-earmark-pdf"></i>
+                    Upload PDF
+                </a>
+
+                <a href="{{ url_for('admin.tambah_soal', jenis=jenis_aktif) }}" class="btn btn-primary">
+                    <i class="bi bi-plus-circle"></i>
+                    Tambah Soal
+                </a>
+            </div>
 
         </div>
+
+        <!-- TAB JENIS UJIAN -->
+        <ul class="nav nav-tabs mb-4">
+            {% for jenis, label in jenis_pilihan %}
+                <li class="nav-item">
+                    <a class="nav-link {% if jenis_aktif == jenis %}active{% endif %}"
+                       href="{{ url_for('admin.bank_soal', jenis=jenis) }}">
+                        {{ label }}
+                        <span class="badge bg-secondary ms-1">{{ jumlah_per_jenis[jenis] }}</span>
+                    </a>
+                </li>
+            {% endfor %}
+        </ul>
 
         <!-- SEARCH BAR -->
         <div class="search-wrapper mb-4">

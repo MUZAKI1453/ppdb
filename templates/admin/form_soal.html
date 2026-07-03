@@ -36,6 +36,21 @@
             {% set fd = form_data if form_data is defined else None %}
 
             <div class="mb-3">
+                <label class="form-label fw-semibold">Jenis Ujian</label>
+                {% set jenis_terpilih = fd.jenis_ujian if fd else (soal.jenis_ujian if soal else (jenis_default if jenis_default is defined else 'akademik')) %}
+                <select name="jenis_ujian" class="form-select" required>
+                    {% for nilai, label in jenis_pilihan %}
+                        <option value="{{ nilai }}" {% if jenis_terpilih == nilai %}selected{% endif %}>
+                            {{ label }}
+                        </option>
+                    {% endfor %}
+                </select>
+                <div class="form-text">Soal Akademik (MTK, IPA, Indo, dll) dan soal Psikotes dikerjakan sebagai dua
+                    sesi ujian terpisah oleh siswa.
+                </div>
+            </div>
+
+            <div class="mb-3">
                 <label class="form-label fw-semibold">Pertanyaan</label>
                 <textarea name="pertanyaan" class="form-control" rows="3"
                           required>{{ fd.pertanyaan if fd else (soal.pertanyaan if soal else '') }}</textarea>
