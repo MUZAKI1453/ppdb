@@ -49,7 +49,8 @@
     </li>
 
     <li>
-        <a href="#"
+        <a href="{{ url_for('admin.hasil_seleksi') }}"
+           class="{% if request.endpoint == 'admin.hasil_seleksi' %}active{% endif %}"
            data-title="Hasil Seleksi">
 
             <i class="bi bi-award-fill"></i>
@@ -67,7 +68,8 @@
     </li>
 
     <li>
-        <a href="#"
+        <a href="{{ url_for('admin.bank_soal') }}"
+           class="{% if request.endpoint in ['admin.bank_soal','admin.tambah_soal','admin.edit_soal'] %}active{% endif %}"
            data-title="Bank Soal">
 
             <i class="bi bi-journal-text"></i>
@@ -80,7 +82,8 @@
     </li>
 
     <li>
-        <a href="#"
+        <a href="{{ url_for('admin.hasil_ujian') }}"
+           class="{% if request.endpoint in ['admin.hasil_ujian','admin.detail_hasil_ujian'] %}active{% endif %}"
            data-title="Hasil Ujian">
 
             <i class="bi bi-bar-chart-fill"></i>

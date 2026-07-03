@@ -1,0 +1,130 @@
+{% extends 'layouts/base_dashboard.html' %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/table.css') }}">
+{% endblock %}
+
+{% block title %}
+    Bank Soal
+{% endblock %}
+
+{% block page_title %}
+    Bank Soal Ujian
+{% endblock %}
+
+{% block content %}
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages[-3:] %}
+                <div class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <div class="content-card">
+
+        <!-- HEADER -->
+        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+
+            <h3 class="mb-0 fw-bold">
+                Bank Soal Ujian ({{ daftar_soal|length }} soal)
+            </h3>
+
+            <a href="{{ url_for('admin.tambah_soal') }}" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i>
+                Tambah Soal
+            </a>
+
+        </div>
+
+        <!-- SEARCH BAR -->
+        <div class="search-wrapper mb-4">
+            <div class="input-group">
+                <span class="input-group-text bg-white">
+                    <i class="bi bi-search"></i>
+                </span>
+                <input type="text" id="searchInput" class="form-control" placeholder="Cari pertanyaan...">
+            </div>
+        </div>
+
+        <!-- TABLE -->
+        <div class="table-responsive">
+
+            <table class="ppdb-table" id="soalTable">
+
+                <thead>
+                <tr>
+                    <th width="60">No</th>
+                    <th>Pertanyaan</th>
+                    <th width="140">Kategori</th>
+                    <th width="120" class="text-center">Jawaban Benar</th>
+                    <th width="140" class="text-center">Aksi</th>
+                </tr>
+                </thead>
+
+                <tbody>
+
+                {% for soal in daftar_soal %}
+
+                    <tr>
+                        <td class="text-center fw-medium">{{ loop.index }}</td>
+
+                        <td>
+                            {{ soal.pertanyaan[:100] }}{% if soal.pertanyaan|length > 100 %}...{% endif %}
+                        </td>
+
+                        <td>{{ soal.kategori or '-' }}</td>
+
+                        <td class="text-center">
+                            <span class="status-success">{{ soal.jawaban_benar }}</span>
+                        </td>
+
+                        <td class="text-center">
+                            <div class="action-buttons">
+                                <a href="{{ url_for('admin.edit_soal', id=soal.id) }}"
+                                   class="btn btn-outline-primary btn-sm" title="Edit">
+                                    <i class="bi bi-pencil-fill"></i>
+                                </a>
+
+                                <a href="{{ url_for('admin.hapus_soal', id=soal.id) }}"
+                                   class="btn btn-outline-danger btn-sm" title="Hapus"
+                                   onclick="return confirm('Yakin ingin menghapus soal ini?')">
+                                    <i class="bi bi-trash-fill"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+
+                {% else %}
+
+                    <tr>
+                        <td colspan="5" class="text-center py-5 text-muted">
+                            Belum ada soal. Klik "Tambah Soal" untuk membuat soal baru.
+                        </td>
+                    </tr>
+
+                {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+    <script>
+        document.getElementById("searchInput").addEventListener("keyup", function () {
+            const filter = this.value.toLowerCase().trim();
+            const rows = document.querySelectorAll("#soalTable tbody tr");
+
+            rows.forEach(row => {
+                if (row.cells.length === 1) return;
+                const text = row.textContent.toLowerCase();
+                row.style.display = text.includes(filter) ? "" : "none";
+            });
+        });
+    </script>
+
+{% endblock %}

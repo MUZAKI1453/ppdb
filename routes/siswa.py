@@ -9,6 +9,9 @@ from models.alamat_siswa import AlamatSiswa
 from models.data_ayah import DataAyah
 from models.data_ibu import DataIbu
 from models.data_wali import DataWali
+from models.soal import Soal
+from models.hasil_ujian import HasilUjian
+from models.jawaban_ujian import JawabanUjian
 from flask_login import login_required, current_user
 
 siswa = Blueprint('siswa', __name__, url_prefix='/siswa')
@@ -172,6 +175,9 @@ def dashboard():
     progress = 25
     status_data = "Belum Mengisi"
     status_berkas = "Belum Upload"
+    status_seleksi = "Menunggu"
+    boleh_ujian = False
+    hasil_ujian = None
 
     if calon_siswa:
         progress = 50
@@ -194,11 +200,22 @@ def dashboard():
                 progress = 100
                 status_berkas = "Diverifikasi"
 
+        boleh_ujian = calon_siswa.sudah_lolos_administrasi()
+        hasil_ujian = calon_siswa.hasil_ujian
+
+        if hasil_ujian and hasil_ujian.is_selesai():
+            status_seleksi = f"Nilai {hasil_ujian.nilai:g}"
+        elif boleh_ujian:
+            status_seleksi = "Siap Ujian"
+
     return render_template(
         'siswa/dashboard.html',
         progress=progress,
         status_data=status_data,
         status_berkas=status_berkas,
+        status_seleksi=status_seleksi,
+        boleh_ujian=boleh_ujian,
+        hasil_ujian=hasil_ujian,
         berkas=berkas,
         calon_siswa=calon_siswa
     )
@@ -360,4 +377,113 @@ def upload_berkas():
         berkas=berkas,
         upload_mode=upload_mode,
         field_boleh_upload=field_boleh_upload
+    )
+
+
+# ==================================================
+# Ujian Seleksi -> /siswa/ujian
+#
+# Syarat mengerjakan:
+# - Data pribadi & berkas sudah sama-sama Diverifikasi
+# - Belum pernah menyelesaikan ujian (satu kali kesempatan)
+# ==================================================
+@siswa.route('/ujian', methods=['GET', 'POST'])
+@login_required
+def ujian():
+    if current_user.role != 'siswa':
+        return "Akses Ditolak", 403
+
+    calon_siswa = current_user.calon_siswa
+
+    if not calon_siswa or not calon_siswa.sudah_lolos_administrasi():
+        flash('Ujian hanya bisa diakses setelah data dan berkas Anda diverifikasi admin.', 'warning')
+        return redirect(url_for('siswa.dashboard'))
+
+    hasil = calon_siswa.hasil_ujian
+
+    if hasil and hasil.is_selesai():
+        return redirect(url_for('siswa.hasil_ujian'))
+
+    daftar_soal = Soal.query.order_by(Soal.id).all()
+
+    if not daftar_soal:
+        flash('Belum ada soal ujian yang tersedia. Silakan hubungi pihak sekolah.', 'warning')
+        return render_template('siswa/ujian.html', daftar_soal=[])
+
+    if request.method == 'POST':
+        if not hasil:
+            hasil = HasilUjian(
+                calon_siswa_id=calon_siswa.id,
+                waktu_mulai=datetime.utcnow()
+            )
+            db.session.add(hasil)
+            db.session.flush()
+
+        jumlah_benar = 0
+
+        for soal in daftar_soal:
+            jawaban_dipilih = request.form.get(f'soal_{soal.id}')
+            benar = bool(jawaban_dipilih) and jawaban_dipilih == soal.jawaban_benar
+
+            if benar:
+                jumlah_benar += 1
+
+            db.session.add(
+                JawabanUjian(
+                    hasil_ujian_id=hasil.id,
+                    soal_id=soal.id,
+                    jawaban_dipilih=jawaban_dipilih,
+                    benar=benar
+                )
+            )
+
+        hasil.jumlah_soal = len(daftar_soal)
+        hasil.jumlah_benar = jumlah_benar
+        hasil.nilai = round((jumlah_benar / len(daftar_soal)) * 100, 2)
+        hasil.status = HasilUjian.STATUS_SELESAI
+        hasil.waktu_selesai = datetime.utcnow()
+
+        db.session.commit()
+
+        flash('Ujian berhasil dikumpulkan.', 'success')
+        return redirect(url_for('siswa.hasil_ujian'))
+
+    return render_template(
+        'siswa/ujian.html',
+        daftar_soal=daftar_soal
+    )
+
+
+# ==================================================
+# Hasil Ujian -> /siswa/hasil-ujian
+# ==================================================
+@siswa.route('/hasil-ujian')
+@login_required
+def hasil_ujian():
+    if current_user.role != 'siswa':
+        return "Akses Ditolak", 403
+
+    calon_siswa = current_user.calon_siswa
+    hasil = calon_siswa.hasil_ujian if calon_siswa else None
+
+    return render_template(
+        'siswa/hasil_ujian.html',
+        hasil=hasil
+    )
+
+
+# ==================================================
+# Pengumuman Kelulusan -> /siswa/pengumuman
+# ==================================================
+@siswa.route('/pengumuman')
+@login_required
+def pengumuman():
+    if current_user.role != 'siswa':
+        return "Akses Ditolak", 403
+
+    calon_siswa = current_user.calon_siswa
+
+    return render_template(
+        'siswa/pengumuman.html',
+        calon_siswa=calon_siswa
     )

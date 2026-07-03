@@ -1,0 +1,80 @@
+{% extends 'layouts/base_dashboard.html' %}
+
+{% block title %}
+    Hasil Ujian
+{% endblock %}
+
+{% block page_title %}
+    Hasil Ujian
+{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/ujian.css') }}">
+{% endblock %}
+
+{% block content %}
+
+    {% if not hasil or hasil.status != 'Selesai' %}
+
+        <div class="hasil-card belum">
+            <i class="bi bi-hourglass-split" style="font-size: 40px;"></i>
+            <p class="nilai-sub mb-0 mt-3">Anda belum mengerjakan ujian seleksi.</p>
+        </div>
+
+        <div class="text-center">
+            <a href="{{ url_for('siswa.ujian') }}" class="btn btn-primary">
+                <i class="bi bi-pencil-square"></i>
+                Kerjakan Ujian Sekarang
+            </a>
+        </div>
+
+    {% else %}
+
+        <div class="hasil-card">
+            <div class="nilai-sub">Nilai Ujian Anda</div>
+            <div class="nilai-besar">{{ hasil.nilai }}</div>
+            <div class="nilai-sub">
+                Benar {{ hasil.jumlah_benar }} dari {{ hasil.jumlah_soal }} soal
+            </div>
+            {% if hasil.waktu_selesai %}
+                <div class="nilai-sub mt-2">
+                    <i class="bi bi-calendar-check"></i>
+                    Dikumpulkan pada {{ hasil.waktu_selesai.strftime('%d %B %Y, %H:%M') }}
+                </div>
+            {% endif %}
+        </div>
+
+        <h5 class="mb-3">Review Jawaban</h5>
+
+        {% for j in hasil.jawaban %}
+
+            <div class="review-item {{ 'benar' if j.benar else 'salah' }}">
+
+                <div class="d-flex justify-content-between align-items-start gap-2">
+                    <strong>{{ loop.index }}. {{ j.soal.pertanyaan }}</strong>
+
+                    {% if j.benar %}
+                        <span class="status-success"><i class="bi bi-check-circle-fill"></i> Benar</span>
+                    {% else %}
+                        <span class="status-danger"><i class="bi bi-x-circle-fill"></i> Salah</span>
+                    {% endif %}
+                </div>
+
+                <div class="review-jawaban">
+                    <div>
+                        <span class="label">Jawaban Anda:</span>
+                        <strong>{{ j.jawaban_dipilih or '-' }}</strong>
+                    </div>
+                    <div>
+                        <span class="label">Jawaban Benar:</span>
+                        <strong>{{ j.soal.jawaban_benar }}</strong>
+                    </div>
+                </div>
+
+            </div>
+
+        {% endfor %}
+
+    {% endif %}
+
+{% endblock %}

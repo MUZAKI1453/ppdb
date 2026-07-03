@@ -1,0 +1,69 @@
+{% extends 'layouts/base_dashboard.html' %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/ujian.css') }}">
+{% endblock %}
+
+{% block title %}
+    Detail Hasil Ujian
+{% endblock %}
+
+{% block page_title %}
+    Detail Hasil Ujian
+{% endblock %}
+
+{% block content %}
+
+    <div class="ujian-header">
+        <div>
+            <h2>{{ hasil.calon_siswa.nama_lengkap }}</h2>
+            <p>NISN: {{ hasil.calon_siswa.nisn or '-' }} &middot;
+                Dikumpulkan {{ hasil.waktu_selesai.strftime('%d %B %Y, %H:%M') if hasil.waktu_selesai else '-' }}</p>
+        </div>
+
+        <span class="badge-jumlah">
+            Nilai {{ hasil.nilai }} ({{ hasil.jumlah_benar }}/{{ hasil.jumlah_soal }} benar)
+        </span>
+    </div>
+
+    <a href="{{ url_for('admin.hasil_ujian') }}" class="btn btn-outline-secondary btn-sm mb-3">
+        <i class="bi bi-arrow-left"></i>
+        Kembali ke Daftar
+    </a>
+
+    {% for j in hasil.jawaban %}
+
+        <div class="review-item {{ 'benar' if j.benar else 'salah' }}">
+
+            <div class="d-flex justify-content-between align-items-start gap-2">
+                <strong>{{ loop.index }}. {{ j.soal.pertanyaan }}</strong>
+
+                {% if j.benar %}
+                    <span class="status-success"><i class="bi bi-check-circle-fill"></i> Benar</span>
+                {% else %}
+                    <span class="status-danger"><i class="bi bi-x-circle-fill"></i> Salah</span>
+                {% endif %}
+            </div>
+
+            <div class="review-jawaban">
+                <div>
+                    <span class="label">Jawaban Siswa:</span>
+                    <strong>{{ j.jawaban_dipilih or '-' }}</strong>
+                </div>
+                <div>
+                    <span class="label">Jawaban Benar:</span>
+                    <strong>{{ j.soal.jawaban_benar }}</strong>
+                </div>
+            </div>
+
+        </div>
+
+    {% else %}
+
+        <div class="alert alert-warning">
+            Tidak ada data jawaban untuk hasil ujian ini.
+        </div>
+
+    {% endfor %}
+
+{% endblock %}

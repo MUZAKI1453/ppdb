@@ -1,0 +1,101 @@
+{% extends 'layouts/base_dashboard.html' %}
+
+{% block title %}
+    Ujian Seleksi
+{% endblock %}
+
+{% block page_title %}
+    Ujian Seleksi
+{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/ujian.css') }}">
+{% endblock %}
+
+{% block content %}
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages[-3:] %}
+                <div class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <div class="ujian-header">
+        <div>
+            <h2>Ujian Seleksi PPDB</h2>
+            <p>Kerjakan seluruh soal di bawah ini, lalu klik "Kumpulkan Jawaban". Ujian hanya bisa dikerjakan satu
+                kali.</p>
+        </div>
+
+        {% if daftar_soal %}
+            <span class="badge-jumlah">
+                <i class="bi bi-list-ol"></i>
+                {{ daftar_soal|length }} Soal
+            </span>
+        {% endif %}
+    </div>
+
+    {% if not daftar_soal %}
+
+        <div class="alert alert-warning">
+            <i class="bi bi-exclamation-triangle-fill"></i>
+            Belum ada soal ujian yang tersedia saat ini. Silakan cek kembali nanti atau hubungi pihak sekolah.
+        </div>
+
+    {% else %}
+
+        <form method="POST" action="{{ url_for('siswa.ujian') }}" id="formUjian">
+
+            {% for soal in daftar_soal %}
+
+                <div class="soal-card">
+
+                    <div class="soal-nomor">{{ loop.index }}</div>
+
+                    <div class="soal-pertanyaan">{{ soal.pertanyaan }}</div>
+
+                    <div class="pilihan-list">
+
+                        {% for huruf, teks in [('A', soal.pilihan_a), ('B', soal.pilihan_b), ('C', soal.pilihan_c), ('D', soal.pilihan_d)] %}
+                            <label class="pilihan-item">
+                                <input type="radio"
+                                       name="soal_{{ soal.id }}"
+                                       value="{{ huruf }}"
+                                       required>
+                                <span class="pilihan-huruf">{{ huruf }}.</span>
+                                <span>{{ teks }}</span>
+                            </label>
+                        {% endfor %}
+
+                    </div>
+
+                </div>
+
+            {% endfor %}
+
+            <div class="ujian-submit-bar">
+                <div class="text-muted">
+                    Pastikan seluruh soal sudah dijawab sebelum mengumpulkan.
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-lg">
+                    <i class="bi bi-check2-circle"></i>
+                    Kumpulkan Jawaban
+                </button>
+            </div>
+
+        </form>
+
+        <script>
+            document.getElementById('formUjian').addEventListener('submit', function (e) {
+                if (!confirm('Yakin ingin mengumpulkan jawaban? Jawaban tidak dapat diubah setelah dikumpulkan.')) {
+                    e.preventDefault();
+                }
+            });
+        </script>
+
+    {% endif %}
+
+{% endblock %}

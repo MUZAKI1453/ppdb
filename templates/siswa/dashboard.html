@@ -10,6 +10,14 @@
 
 {% block content %}
 
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages[-3:] %}
+                <div class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
     <div class="welcome-card">
 
         <h3>
@@ -76,9 +84,17 @@
 
         <!-- STATUS SELEKSI -->
         <div class="col-6 col-xl-3">
-            <div class="stat-card stat-orange">
+            <div class="stat-card
+            {% if hasil_ujian and hasil_ujian.is_selesai() %}
+                stat-green
+            {% elif boleh_ujian %}
+                stat-blue
+            {% else %}
+                stat-orange
+            {% endif %}
+        ">
                 <div>
-                    <h2>Menunggu</h2>
+                    <h2>{{ status_seleksi }}</h2>
                     <p>Status Seleksi</p>
                 </div>
                 <i class="bi bi-award-fill"></i>
@@ -109,12 +125,24 @@
             ✓ Verifikasi Administrasi
         </div>
 
-        <div class="progress-item">
-            ○ Seleksi / Ujian
+        <div class="progress-item {% if hasil_ujian and hasil_ujian.is_selesai() %}active{% endif %}">
+            {% if hasil_ujian and hasil_ujian.is_selesai() %}
+                ✓ Seleksi / Ujian — selesai, nilai {{ hasil_ujian.nilai }}
+            {% elif boleh_ujian %}
+                ○ Seleksi / Ujian —
+                <a href="{{ url_for('siswa.ujian') }}">kerjakan sekarang</a>
+            {% else %}
+                ○ Seleksi / Ujian
+            {% endif %}
         </div>
 
-        <div class="progress-item">
-            ○ Pengumuman
+        <div class="progress-item {% if calon_siswa and calon_siswa.status_kelulusan != 'Menunggu' %}active{% endif %}">
+            {% if calon_siswa and calon_siswa.status_kelulusan != 'Menunggu' %}
+                ✓ Pengumuman —
+                <a href="{{ url_for('siswa.pengumuman') }}">lihat hasil</a>
+            {% else %}
+                ○ Pengumuman
+            {% endif %}
         </div>
 
     </div>

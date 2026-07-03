@@ -66,6 +66,10 @@ def create_app():
         from models.data_ibu import DataIbu
         from models.data_wali import DataWali
 
+        from models.soal import Soal
+        from models.hasil_ujian import HasilUjian
+        from models.jawaban_ujian import JawabanUjian
+
         db.create_all()
 
         create_default_admin()

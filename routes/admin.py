@@ -7,6 +7,8 @@ from models.data_ibu import DataIbu
 from models.data_wali import DataWali
 from extensions_db import db
 from models.berkas import Berkas
+from models.soal import Soal
+from models.hasil_ujian import HasilUjian
 from config import Config
 from datetime import datetime
 
@@ -46,6 +48,10 @@ def dashboard():
 
     total_berkas_masuk = Berkas.query.count()
 
+    total_diterima = CalonSiswa.query.filter_by(
+        status_kelulusan='Diterima'
+    ).count()
+
     periode_ppdb = "2026 / 2027"
 
     return render_template(
@@ -56,6 +62,7 @@ def dashboard():
         berkas_ditolak=berkas_ditolak,
         menunggu_verifikasi=menunggu_verifikasi,
         total_berkas_masuk=total_berkas_masuk,
+        total_diterima=total_diterima,
         periode_ppdb=periode_ppdb
     )
 
@@ -698,3 +705,259 @@ def uploaded_file(filename):
         Config.UPLOAD_FOLDER,
         filename
     )
+
+
+# ==================================================
+# BANK SOAL - MENAMPILKAN SELURUH SOAL / READ
+# URL : /admin/bank-soal
+# ==================================================
+@admin.route('/bank-soal')
+@login_required
+def bank_soal():
+    if current_user.role != 'admin':
+        return "Akses Ditolak", 403
+
+    daftar_soal = Soal.query.order_by(Soal.id).all()
+
+    return render_template(
+        'admin/bank_soal.html',
+        daftar_soal=daftar_soal
+    )
+
+
+# ==================================================
+# BANK SOAL - TAMBAH SOAL / CREATE
+# URL : /admin/bank-soal/tambah
+# ==================================================
+@admin.route('/bank-soal/tambah', methods=['GET', 'POST'])
+@login_required
+def tambah_soal():
+    if current_user.role != 'admin':
+        return "Akses Ditolak", 403
+
+    if request.method == 'POST':
+        pertanyaan = request.form.get('pertanyaan')
+        pilihan_a = request.form.get('pilihan_a')
+        pilihan_b = request.form.get('pilihan_b')
+        pilihan_c = request.form.get('pilihan_c')
+        pilihan_d = request.form.get('pilihan_d')
+        jawaban_benar = request.form.get('jawaban_benar')
+
+        if not all([pertanyaan, pilihan_a, pilihan_b, pilihan_c, pilihan_d, jawaban_benar]):
+            flash('Semua field wajib diisi', 'danger')
+            return render_template('admin/form_soal.html', soal=None, form_data=request.form)
+
+        soal = Soal(
+            pertanyaan=pertanyaan,
+            pilihan_a=pilihan_a,
+            pilihan_b=pilihan_b,
+            pilihan_c=pilihan_c,
+            pilihan_d=pilihan_d,
+            jawaban_benar=jawaban_benar,
+            kategori=request.form.get('kategori')
+        )
+
+        db.session.add(soal)
+        db.session.commit()
+
+        flash('Soal berhasil ditambahkan', 'success')
+        return redirect(url_for('admin.bank_soal'))
+
+    return render_template('admin/form_soal.html', soal=None)
+
+
+# ==================================================
+# BANK SOAL - EDIT SOAL / UPDATE
+# URL : /admin/bank-soal/edit/<id>
+# ==================================================
+@admin.route('/bank-soal/edit/<int:id>', methods=['GET', 'POST'])
+@login_required
+def edit_soal(id):
+    if current_user.role != 'admin':
+        return "Akses Ditolak", 403
+
+    soal = Soal.query.get_or_404(id)
+
+    if request.method == 'POST':
+        pertanyaan = request.form.get('pertanyaan')
+        pilihan_a = request.form.get('pilihan_a')
+        pilihan_b = request.form.get('pilihan_b')
+        pilihan_c = request.form.get('pilihan_c')
+        pilihan_d = request.form.get('pilihan_d')
+        jawaban_benar = request.form.get('jawaban_benar')
+
+        if not all([pertanyaan, pilihan_a, pilihan_b, pilihan_c, pilihan_d, jawaban_benar]):
+            flash('Semua field wajib diisi', 'danger')
+            return render_template('admin/form_soal.html', soal=soal)
+
+        soal.pertanyaan = pertanyaan
+        soal.pilihan_a = pilihan_a
+        soal.pilihan_b = pilihan_b
+        soal.pilihan_c = pilihan_c
+        soal.pilihan_d = pilihan_d
+        soal.jawaban_benar = jawaban_benar
+        soal.kategori = request.form.get('kategori')
+
+        db.session.commit()
+
+        flash('Soal berhasil diperbarui', 'success')
+        return redirect(url_for('admin.bank_soal'))
+
+    return render_template('admin/form_soal.html', soal=soal)
+
+
+# ==================================================
+# BANK SOAL - HAPUS SOAL / DELETE
+# URL : /admin/bank-soal/hapus/<id>
+# ==================================================
+@admin.route('/bank-soal/hapus/<int:id>')
+@login_required
+def hapus_soal(id):
+    if current_user.role != 'admin':
+        return "Akses Ditolak", 403
+
+    soal = Soal.query.get_or_404(id)
+
+    db.session.delete(soal)
+    db.session.commit()
+
+    flash('Soal berhasil dihapus', 'success')
+    return redirect(url_for('admin.bank_soal'))
+
+
+# ==================================================
+# HASIL UJIAN - MENAMPILKAN SELURUH HASIL / READ
+# URL : /admin/hasil-ujian
+# ==================================================
+@admin.route('/hasil-ujian')
+@login_required
+def hasil_ujian():
+    if current_user.role != 'admin':
+        return "Akses Ditolak", 403
+
+    data_hasil = HasilUjian.query.filter_by(
+        status=HasilUjian.STATUS_SELESAI
+    ).order_by(HasilUjian.nilai.desc()).all()
+
+    total_soal = Soal.query.count()
+
+    return render_template(
+        'admin/hasil_ujian.html',
+        data_hasil=data_hasil,
+        total_soal=total_soal
+    )
+
+
+# ==================================================
+# HASIL UJIAN - DETAIL JAWABAN SISWA
+# URL : /admin/hasil-ujian/<id>
+# ==================================================
+@admin.route('/hasil-ujian/<int:id>')
+@login_required
+def detail_hasil_ujian(id):
+    if current_user.role != 'admin':
+        return "Akses Ditolak", 403
+
+    hasil = HasilUjian.query.get_or_404(id)
+
+    return render_template(
+        'admin/detail_hasil_ujian.html',
+        hasil=hasil
+    )
+
+
+# ==================================================
+# HASIL SELEKSI - MENAMPILKAN SISWA YANG SUDAH LOLOS
+# ADMINISTRASI UNTUK DITETAPKAN KELULUSANNYA
+# URL : /admin/hasil-seleksi
+# ==================================================
+@admin.route('/hasil-seleksi')
+@login_required
+def hasil_seleksi():
+    if current_user.role != 'admin':
+        return "Akses Ditolak", 403
+
+    data_siswa = [
+        cs for cs in CalonSiswa.query.all()
+        if cs.sudah_lolos_administrasi()
+    ]
+
+    # Urutkan dari nilai ujian tertinggi. Siswa yang belum
+    # mengerjakan ujian ditempatkan paling bawah.
+    data_siswa.sort(
+        key=lambda cs: (
+            cs.hasil_ujian.nilai
+            if cs.hasil_ujian and cs.hasil_ujian.is_selesai()
+            else -1
+        ),
+        reverse=True
+    )
+
+    total_diterima = CalonSiswa.query.filter_by(
+        status_kelulusan='Diterima'
+    ).count()
+
+    total_tidak_diterima = CalonSiswa.query.filter_by(
+        status_kelulusan='Tidak Diterima'
+    ).count()
+
+    return render_template(
+        'admin/hasil_seleksi.html',
+        data_siswa=data_siswa,
+        total_diterima=total_diterima,
+        total_tidak_diterima=total_tidak_diterima
+    )
+
+
+# ==================================================
+# HASIL SELEKSI - TETAPKAN DITERIMA
+# URL : /admin/hasil-seleksi/terima/<id>
+# ==================================================
+@admin.route('/hasil-seleksi/terima/<int:id>')
+@login_required
+def terima_seleksi(id):
+    if current_user.role != 'admin':
+        return "Akses Ditolak", 403
+
+    siswa = CalonSiswa.query.get_or_404(id)
+    siswa.status_kelulusan = 'Diterima'
+    db.session.commit()
+
+    flash(f'{siswa.nama_lengkap} dinyatakan Diterima', 'success')
+    return redirect(url_for('admin.hasil_seleksi'))
+
+
+# ==================================================
+# HASIL SELEKSI - TETAPKAN TIDAK DITERIMA
+# URL : /admin/hasil-seleksi/tolak/<id>
+# ==================================================
+@admin.route('/hasil-seleksi/tolak/<int:id>')
+@login_required
+def tolak_seleksi(id):
+    if current_user.role != 'admin':
+        return "Akses Ditolak", 403
+
+    siswa = CalonSiswa.query.get_or_404(id)
+    siswa.status_kelulusan = 'Tidak Diterima'
+    db.session.commit()
+
+    flash(f'{siswa.nama_lengkap} dinyatakan Tidak Diterima', 'warning')
+    return redirect(url_for('admin.hasil_seleksi'))
+
+
+# ==================================================
+# HASIL SELEKSI - RESET KE MENUNGGU
+# URL : /admin/hasil-seleksi/reset/<id>
+# ==================================================
+@admin.route('/hasil-seleksi/reset/<int:id>')
+@login_required
+def reset_seleksi(id):
+    if current_user.role != 'admin':
+        return "Akses Ditolak", 403
+
+    siswa = CalonSiswa.query.get_or_404(id)
+    siswa.status_kelulusan = 'Menunggu'
+    db.session.commit()
+
+    flash(f'Status kelulusan {siswa.nama_lengkap} direset ke Menunggu', 'success')
+    return redirect(url_for('admin.hasil_seleksi'))

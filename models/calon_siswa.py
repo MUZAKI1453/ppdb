@@ -196,3 +196,26 @@ class CalonSiswa(db.Model):
         uselist=False,
         cascade='all, delete-orphan'
     )
+
+    # ==========================
+    # RELASI HASIL UJIAN
+    # ==========================
+
+    hasil_ujian = db.relationship(
+        'HasilUjian',
+        backref='calon_siswa',
+        uselist=False,
+        cascade='all, delete-orphan'
+    )
+
+    # ==========================
+    # HELPER STATUS
+    # ==========================
+    def sudah_lolos_administrasi(self):
+        # Syarat boleh ikut ujian: data & berkas sudah
+        # sama-sama diverifikasi admin.
+        return (
+            self.status_verifikasi == 'Diverifikasi'
+            and self.berkas is not None
+            and self.berkas.status_verifikasi == 'Diverifikasi'
+        )

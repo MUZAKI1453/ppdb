@@ -1,0 +1,54 @@
+{% extends 'layouts/base_dashboard.html' %}
+
+{% block title %}
+    Pengumuman Kelulusan
+{% endblock %}
+
+{% block page_title %}
+    Pengumuman Kelulusan
+{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/ujian.css') }}">
+{% endblock %}
+
+{% block content %}
+
+    {% set status = calon_siswa.status_kelulusan if calon_siswa else None %}
+
+    {% if not calon_siswa or status == 'Menunggu' or not status %}
+
+        <div class="hasil-card belum">
+            <i class="bi bi-hourglass-split" style="font-size: 40px;"></i>
+            <p class="nilai-sub mb-0 mt-3">
+                Pengumuman kelulusan belum dirilis. Silakan pantau halaman ini secara berkala.
+            </p>
+        </div>
+
+    {% elif status == 'Diterima' %}
+
+        <div class="hasil-card">
+            <i class="bi bi-mortarboard-fill" style="font-size: 48px;"></i>
+            <div class="nilai-sub mt-3">Selamat,</div>
+            <div class="nilai-besar" style="font-size: 34px;">{{ calon_siswa.nama_lengkap }}</div>
+            <p class="nilai-sub mb-0">
+                Anda dinyatakan <strong>DITERIMA</strong> dalam Penerimaan Peserta Didik Baru.
+                Silakan tunggu informasi lebih lanjut mengenai daftar ulang dari pihak sekolah.
+            </p>
+        </div>
+
+    {% else %}
+
+        <div class="hasil-card" style="background: linear-gradient(135deg, #DC2626, #B91C1C);">
+            <i class="bi bi-emoji-frown" style="font-size: 48px;"></i>
+            <div class="nilai-sub mt-3">Mohon Maaf,</div>
+            <div class="nilai-besar" style="font-size: 34px;">{{ calon_siswa.nama_lengkap }}</div>
+            <p class="nilai-sub mb-0">
+                Anda dinyatakan <strong>belum dapat diterima</strong> pada Penerimaan Peserta Didik Baru periode
+                ini. Terima kasih atas partisipasi Anda.
+            </p>
+        </div>
+
+    {% endif %}
+
+{% endblock %}

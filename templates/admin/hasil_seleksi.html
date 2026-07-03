@@ -1,0 +1,184 @@
+{% extends 'layouts/base_dashboard.html' %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/table.css') }}">
+{% endblock %}
+
+{% block title %}
+    Hasil Seleksi
+{% endblock %}
+
+{% block page_title %}
+    Hasil Seleksi PPDB
+{% endblock %}
+
+{% block content %}
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages[-3:] %}
+                <div class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <div class="row g-4 mb-4">
+
+        <div class="col-6 col-md-4">
+            <div class="stat-card stat-blue">
+                <div>
+                    <h2>{{ data_siswa|length }}</h2>
+                    <p>Siap Diseleksi</p>
+                </div>
+                <i class="bi bi-people-fill"></i>
+            </div>
+        </div>
+
+        <div class="col-6 col-md-4">
+            <div class="stat-card stat-green">
+                <div>
+                    <h2>{{ total_diterima }}</h2>
+                    <p>Diterima</p>
+                </div>
+                <i class="bi bi-check-circle-fill"></i>
+            </div>
+        </div>
+
+        <div class="col-6 col-md-4">
+            <div class="stat-card stat-red">
+                <div>
+                    <h2>{{ total_tidak_diterima }}</h2>
+                    <p>Tidak Diterima</p>
+                </div>
+                <i class="bi bi-x-circle-fill"></i>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="content-card">
+
+        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+            <h3 class="mb-0 fw-bold">
+                Penetapan Kelulusan
+            </h3>
+        </div>
+
+        <div class="search-wrapper mb-4">
+            <div class="input-group">
+                <span class="input-group-text bg-white">
+                    <i class="bi bi-search"></i>
+                </span>
+                <input type="text" id="searchInput" class="form-control" placeholder="Cari nama siswa...">
+            </div>
+        </div>
+
+        <div class="table-responsive">
+
+            <table class="ppdb-table" id="seleksiTable">
+
+                <thead>
+                <tr>
+                    <th width="60">No</th>
+                    <th>Nama Siswa</th>
+                    <th class="text-center">Nilai Ujian</th>
+                    <th>Status Kelulusan</th>
+                    <th width="220" class="text-center">Aksi</th>
+                </tr>
+                </thead>
+
+                <tbody>
+
+                {% for siswa in data_siswa %}
+
+                    <tr>
+                        <td class="text-center fw-medium">{{ loop.index }}</td>
+
+                        <td>
+                            <div class="student-name">{{ siswa.nama_lengkap }}</div>
+                            <div class="student-subtitle">NISN: {{ siswa.nisn or '-' }}</div>
+                        </td>
+
+                        <td class="text-center">
+                            {% if siswa.hasil_ujian and siswa.hasil_ujian.is_selesai() %}
+                                <span class="fw-bold">{{ siswa.hasil_ujian.nilai }}</span>
+                            {% else %}
+                                <span class="text-muted">Belum Ujian</span>
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            {% set status = siswa.status_kelulusan %}
+
+                            {% if status == 'Diterima' %}
+                                <span class="status-success">✓ Diterima</span>
+                            {% elif status == 'Tidak Diterima' %}
+                                <span class="status-danger">✕ Tidak Diterima</span>
+                            {% else %}
+                                <span class="status-warning">⏳ Menunggu</span>
+                            {% endif %}
+                        </td>
+
+                        <td class="text-center">
+                            <div class="action-buttons">
+
+                                {% if siswa.status_kelulusan != 'Diterima' %}
+                                    <a href="{{ url_for('admin.terima_seleksi', id=siswa.id) }}"
+                                       class="btn btn-outline-success btn-sm" title="Terima"
+                                       onclick="return confirm('Tetapkan {{ siswa.nama_lengkap }} sebagai Diterima?')">
+                                        <i class="bi bi-check-lg"></i>
+                                    </a>
+                                {% endif %}
+
+                                {% if siswa.status_kelulusan != 'Tidak Diterima' %}
+                                    <a href="{{ url_for('admin.tolak_seleksi', id=siswa.id) }}"
+                                       class="btn btn-outline-danger btn-sm" title="Tidak Diterima"
+                                       onclick="return confirm('Tetapkan {{ siswa.nama_lengkap }} sebagai Tidak Diterima?')">
+                                        <i class="bi bi-x-lg"></i>
+                                    </a>
+                                {% endif %}
+
+                                {% if siswa.status_kelulusan != 'Menunggu' %}
+                                    <a href="{{ url_for('admin.reset_seleksi', id=siswa.id) }}"
+                                       class="btn btn-outline-secondary btn-sm" title="Reset ke Menunggu"
+                                       onclick="return confirm('Reset status kelulusan {{ siswa.nama_lengkap }} ke Menunggu?')">
+                                        <i class="bi bi-arrow-counterclockwise"></i>
+                                    </a>
+                                {% endif %}
+
+                            </div>
+                        </td>
+                    </tr>
+
+                {% else %}
+
+                    <tr>
+                        <td colspan="5" class="text-center py-5 text-muted">
+                            Belum ada siswa yang lolos verifikasi administrasi & berkas.
+                        </td>
+                    </tr>
+
+                {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+    <script>
+        document.getElementById("searchInput").addEventListener("keyup", function () {
+            const filter = this.value.toLowerCase().trim();
+            const rows = document.querySelectorAll("#seleksiTable tbody tr");
+
+            rows.forEach(row => {
+                if (row.cells.length === 1) return;
+                const text = row.textContent.toLowerCase();
+                row.style.display = text.includes(filter) ? "" : "none";
+            });
+        });
+    </script>
+
+{% endblock %}
