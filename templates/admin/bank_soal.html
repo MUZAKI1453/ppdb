@@ -1,150 +1,610 @@
 {% extends 'layouts/base_dashboard.html' %}
 
 {% block extra_css %}
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/table.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/table.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/bank_soal.css') }}">
+<style>
+    .bank-soal-page { font-size: inherit; }
+    .bank-page-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: .75rem;
+        flex-wrap: wrap;
+        margin-bottom: 1.5rem;
+    }
+    .bank-page-head h3 { line-height: 1.2; color: #212529; }
+    .bank-page-meta { color: #6c757d; font-size: inherit; }
+    .bank-tabs-row {
+        margin-bottom: 1.5rem;
+        overflow: visible;
+    }
+    .bank-tabs-row .nav-tabs { margin-bottom: 0 !important; flex-wrap: wrap; align-items: flex-end; min-width: 0; }
+    .bank-tabs-row .nav-link { white-space: nowrap; }
+    .bank-session-add-item { display: flex; align-items: flex-end; padding-left: .25rem; padding-bottom: .35rem; }
+    .bank-tabs-actions { display: none; }
+    .bank-toolbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: .75rem;
+        flex-wrap: wrap;
+        margin-bottom: 1.5rem;
+    }
+    .bank-toolbar .search-wrapper { margin-bottom: 0 !important; }
+    .question-list { display: flex; flex-direction: column; gap: .85rem; }
+    .question-card {
+        margin: 0;
+        border: 1px solid #e9ecef;
+        border-radius: 12px;
+        background: #fff;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, .05);
+    }
+    .question-card-body { padding: 1rem; }
+    .question-card-top {
+        display: block;
+    }
+    .question-stem {
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr);
+        gap: .45rem;
+        min-width: 0;
+        flex: 1 1 auto;
+    }
+    .question-number-inline {
+        font-weight: 600;
+        color: #212529;
+        line-height: 1.55;
+    }
+    .preview-question-text { font-size: inherit !important; font-weight: 600; color: #212529; line-height: 1.55; }
+    .question-tools {
+        display: flex;
+        gap: .5rem;
+        flex-wrap: nowrap;
+        justify-content: flex-end;
+        align-items: center;
+        margin-top: .85rem;
+        padding-top: .85rem;
+        border-top: 1px solid #eef2f7;
+    }
+    .question-tools form { display: inline; }
+    .preview-option {
+        display: flex;
+        align-items: flex-start;
+        gap: .7rem;
+        border: 1px solid #e9ecef;
+        border-radius: 10px;
+        padding: .75rem;
+        background: #fff;
+    }
+    .preview-option.correct { border-color: #86efac; background: #f0fdf4; }
+    .preview-option-letter {
+        width: 28px;
+        height: 28px;
+        border-radius: 999px;
+        background: #eff6ff;
+        color: #1d4ed8;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        flex: 0 0 auto;
+    }
+    .question-image-preview img {
+        max-width: 240px;
+        max-height: 160px;
+        width: auto;
+        height: auto;
+        object-fit: contain;
+        border-radius: 10px;
+        border: 1px solid #e5e7eb;
+        margin-bottom: .6rem;
+        background: #f8fafc;
+    }
+    .question-modal .modal-dialog { max-width: 920px; }
+    .question-modal .modal-body { max-height: 76vh; overflow-y: auto; }
+    .question-field-head, .option-field-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: .75rem;
+        margin-bottom: .45rem;
+    }
+    .question-field-head .form-label, .option-field-head .form-label { margin: 0; }
+    .image-toggle-compact {
+        white-space: nowrap;
+        margin: 0;
+        padding: .2rem .55rem;
+        border: 1px solid #e5e7eb;
+        border-radius: 999px;
+        background: #f8fafc;
+        display: inline-flex;
+        align-items: center;
+        gap: .35rem;
+    }
+    .image-toggle-compact .form-check-input { margin-top: 0; }
+    .image-toggle-compact .form-check-label { font-size: .8rem; color: #4b5563; }
+    .image-inline-control { margin-top: .45rem; }
+    .image-inline-control:empty { display: none; }
+    .current-image-note { color: #6b7280; font-size: .82rem; }
+    .option-edit-row {
+        display: grid;
+        grid-template-columns: 38px minmax(0, 1fr);
+        gap: .75rem;
+        align-items: start;
+    }
+    .option-edit-letter {
+        width: 34px;
+        height: 34px;
+        border-radius: 999px;
+        background: #eff6ff;
+        color: #1d4ed8;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        margin-top: 1.85rem;
+    }
+
+    .bank-flash-list { display: flex; flex-direction: column; gap: .65rem; margin-bottom: 1rem; }
+    .bank-flash {
+        display: flex;
+        align-items: flex-start;
+        gap: .7rem;
+        border: 1px solid #e5e7eb;
+        border-radius: 12px;
+        padding: .85rem 1rem;
+        background: #f8fafc;
+        color: #374151;
+        box-shadow: 0 1px 4px rgba(15, 23, 42, .04);
+    }
+    .bank-flash-success { border-color: #bbf7d0; background: #f0fdf4; color: #166534; }
+    .bank-flash-warning { border-color: #fde68a; background: #fffbeb; color: #92400e; }
+    .bank-flash-danger { border-color: #fecaca; background: #fef2f2; color: #991b1b; }
+    .bank-flash-info { border-color: #bfdbfe; background: #eff6ff; color: #1e40af; }
+    .bank-flash-icon {
+        width: 26px;
+        height: 26px;
+        border-radius: 999px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(255, 255, 255, .75);
+        flex: 0 0 auto;
+    }
+    .bank-flash-message { line-height: 1.45; font-size: inherit; }
+    .bank-empty {
+        text-align: center;
+        padding: 3rem 1rem;
+        color: #6c757d;
+    }
+    .bank-empty i { font-size: 2rem; color: #2563eb; }
+    .session-add-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
+    .template-download-box {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: .75rem;
+        padding: .85rem 1rem;
+        border: 1px solid #e5e7eb;
+        border-radius: 12px;
+        background: #f8fafc;
+    }
+    .question-form-bottom {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: .75rem;
+        align-items: end;
+        margin-top: 1rem;
+    }
+    .question-form-actions { display: flex; gap: .5rem; justify-content: flex-end; flex-wrap: wrap; }
+    .sticky-mobile-actions { display: none; }
+    @media (max-width: 768px) {
+        .bank-tabs-row { align-items: stretch; flex-direction: column; gap: .75rem; overflow: visible; }
+        .bank-tabs-row .nav-tabs { flex-wrap: wrap; }
+        .bank-session-add-item { width: 100%; padding-left: 0; }
+        .bank-session-add-item .btn { width: 100%; }
+        .bank-toolbar { align-items: stretch; }
+        .bank-toolbar .search-wrapper, .bank-toolbar .btn { width: 100%; }
+        .session-add-grid { grid-template-columns: 1fr; }
+        .question-tools { justify-content: flex-start; flex-wrap: nowrap; }
+        .question-tools .btn, .question-tools form { flex: 0 0 auto; }
+        .question-tools form .btn { width: auto; }
+        .option-edit-row { grid-template-columns: 32px minmax(0, 1fr); gap: .55rem; }
+        .option-edit-letter { width: 30px; height: 30px; margin-top: 1.8rem; }
+        .question-field-head, .option-field-head { align-items: center; }
+        .template-download-box { align-items: stretch; flex-direction: column; }
+        .template-download-box .btn { width: 100%; }
+        .question-form-bottom { grid-template-columns: 1fr; }
+        .question-form-actions { justify-content: stretch; }
+        .question-form-actions .btn { flex: 1 1 auto; }
+    }
+</style>
 {% endblock %}
 
-{% block title %}
-    Bank Soal
-{% endblock %}
+{% block title %}Bank Soal{% endblock %}
+{% block page_title %}Bank Soal{% endblock %}
 
-{% block page_title %}
-    Bank Soal Ujian
-{% endblock %}
+{% macro soal_image(filename, alt='Gambar soal') -%}
+    {% if filename %}
+        <div class="question-image-preview">
+            <img src="{{ url_for('admin.uploaded_file', filename=filename) }}" alt="{{ alt }}">
+        </div>
+    {% endif %}
+{%- endmacro %}
+
+{% macro option_row(soal, huruf) -%}
+    {% set teks = soal.pilihan().get(huruf) %}
+    {% set gambar = soal.gambar_pilihan(huruf) %}
+    {% if teks or gambar %}
+        <div class="preview-option {% if soal.jawaban_benar == huruf %}correct{% endif %}">
+            <span class="preview-option-letter">{{ huruf }}</span>
+            <div class="flex-grow-1">
+                {{ soal_image(gambar, 'Gambar pilihan ' ~ huruf) }}
+                {% if teks %}<div class="text-break">{{ teks }}</div>{% endif %}
+            </div>
+            {% if soal.jawaban_benar == huruf %}
+                <span class="badge text-bg-success">Benar</span>
+            {% endif %}
+        </div>
+    {% endif %}
+{%- endmacro %}
+
+{% macro image_toggle_compact(name, current='') -%}
+    <label class="form-check form-switch image-toggle-compact">
+        <input class="form-check-input" type="checkbox" name="gunakan_{{ name }}" value="1" data-image-toggle {% if current %}checked{% endif %}>
+        <span class="form-check-label">Gambar</span>
+    </label>
+{%- endmacro %}
+
+{% macro image_input(name, current='') -%}
+    <div data-image-toggle-box>
+        {% if current %}
+            <div class="current-image-note mb-2"><i class="bi bi-image me-1"></i> Gambar sudah tersimpan.</div>
+        {% endif %}
+        <input type="file" name="{{ name }}" class="form-control image-toggle-input" accept="image/png,image/jpeg" {% if not current %}style="display:none"{% endif %}>
+    </div>
+{%- endmacro %}
+
+{% macro soal_form(action, mode='tambah', soal=None) -%}
+    {% set tipe = soal.tipe_soal if soal else 'pg' %}
+    {% set jumlah = soal.jumlah_pilihan if soal else 4 %}
+    <form method="POST" action="{{ action }}" enctype="multipart/form-data" class="question-edit-form" data-question-form>
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="row g-3">
+            <div class="col-md-4">
+                <label class="form-label fw-semibold">Tipe Soal</label>
+                <select name="tipe_soal" class="form-select" data-question-type>
+                    <option value="pg" {% if tipe != 'esai' %}selected{% endif %}>Pilihan Ganda</option>
+                    <option value="esai" {% if tipe == 'esai' %}selected{% endif %}>Esai</option>
+                </select>
+            </div>
+            <div class="col-md-4 pg-only">
+                <label class="form-label fw-semibold">Jumlah Pilihan</label>
+                <select name="jumlah_pilihan" class="form-select" data-option-count>
+                    <option value="4" {% if jumlah != 5 %}selected{% endif %}>4 Pilihan A-D</option>
+                    <option value="5" {% if jumlah == 5 %}selected{% endif %}>5 Pilihan A-E</option>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label fw-semibold">Urutan</label>
+                <input name="urutan" class="form-control" type="number" min="0" value="{{ soal.urutan if soal else '' }}" placeholder="Otomatis">
+            </div>
+        </div>
+
+        <div class="mt-3">
+            <div class="question-field-head">
+                <label class="form-label fw-semibold">Pertanyaan</label>
+                {{ image_toggle_compact('gambar_pertanyaan', soal.gambar_pertanyaan if soal else '') }}
+            </div>
+            <textarea name="pertanyaan" class="form-control" rows="4" placeholder="Tulis pertanyaan di sini..." required>{{ soal.pertanyaan if soal else '' }}</textarea>
+            <div class="image-inline-control mt-2">
+                {{ image_input('gambar_pertanyaan', soal.gambar_pertanyaan if soal else '') }}
+            </div>
+        </div>
+
+        <div class="pg-only mt-3">
+            <div class="stacked-options d-flex flex-column gap-3">
+                {% for huruf in opsi_huruf %}
+                    {% set lower = huruf|lower %}
+                    {% set value = soal.pilihan().get(huruf) if soal else '' %}
+                    {% set opt_img = soal.gambar_pilihan(huruf) if soal else '' %}
+                    <div class="option-edit-row option-{{ huruf }}" data-option-letter="{{ huruf }}">
+                        <div class="option-edit-letter">{{ huruf }}</div>
+                        <div>
+                            <div class="option-field-head">
+                                <label class="form-label fw-semibold">Pilihan {{ huruf }}</label>
+                                {{ image_toggle_compact('gambar_pilihan_' ~ lower, opt_img) }}
+                            </div>
+                            <textarea name="pilihan_{{ lower }}" class="form-control" rows="2" placeholder="Isi pilihan {{ huruf }}">{{ value }}</textarea>
+                            <div class="image-inline-control mt-2">
+                                {{ image_input('gambar_pilihan_' ~ lower, opt_img) }}
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="question-form-bottom">
+            <div class="row g-3 align-items-end">
+                <div class="col-md-6 pg-only">
+                    <label class="form-label fw-semibold">Kunci Jawaban</label>
+                    <select name="jawaban_benar" class="form-select" data-answer-key>
+                        {% for h in opsi_huruf %}
+                            <option value="{{ h }}" {% if soal and soal.jawaban_benar == h %}selected{% endif %}>{{ h }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-6 essay-only">
+                    <label class="form-label fw-semibold">Bobot Esai</label>
+                    <input name="bobot" class="form-control" type="number" min="0" value="{{ soal.bobot if soal else 0 }}">
+                </div>
+            </div>
+            <div class="question-form-actions">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Batal</button>
+                {% if mode == 'edit' %}
+                    <button class="btn btn-primary"><i class="bi bi-save me-1"></i> Simpan Perubahan</button>
+                {% else %}
+                    <button class="btn btn-primary"><i class="bi bi-plus-circle me-1"></i> Simpan Soal</button>
+                {% endif %}
+            </div>
+        </div>
+    </form>
+{%- endmacro %}
 
 {% block content %}
+{% set total_soal_semua = sesi_list|sum(attribute='jumlah_soal') %}
+{% set total_aktif = sesi_list|selectattr('aktif')|list|length %}
 
+<div class="bank-soal-page content-card">
     {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
-            {% for category, message in messages[-3:] %}
-                <div class="alert alert-{{ category }}">{{ message }}</div>
-            {% endfor %}
+            <div class="bank-flash-list">
+                {% for category, message in messages[-3:] %}
+                    {% set flash_class = 'bank-flash-' ~ category %}
+                    <div class="bank-flash {{ flash_class }}">
+                        <span class="bank-flash-icon">
+                            {% if category == 'success' %}
+                                <i class="bi bi-check2-circle"></i>
+                            {% elif category == 'warning' %}
+                                <i class="bi bi-exclamation-triangle"></i>
+                            {% elif category == 'danger' %}
+                                <i class="bi bi-x-circle"></i>
+                            {% else %}
+                                <i class="bi bi-info-circle"></i>
+                            {% endif %}
+                        </span>
+                        <div class="bank-flash-message">{{ message }}</div>
+                    </div>
+                {% endfor %}
+            </div>
         {% endif %}
     {% endwith %}
 
-    <div class="content-card">
+    <div class="bank-page-head">
+        <h3 class="mb-0 fw-bold">Bank Soal</h3>
+        <span class="bank-page-meta">{{ sesi_list|length }} sesi &middot; {{ total_soal_semua }} soal tersedia</span>
+    </div>
 
-        <!-- HEADER -->
-        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
-
-            <h3 class="mb-0 fw-bold">
-                Bank Soal Ujian ({{ daftar_soal|length }} soal)
-            </h3>
-
-            <div class="d-flex gap-2">
-                <a href="{{ url_for('admin.upload_soal_pdf') }}" class="btn btn-outline-primary">
-                    <i class="bi bi-file-earmark-pdf"></i>
-                    Upload PDF
-                </a>
-
-                <a href="{{ url_for('admin.tambah_soal', jenis=jenis_aktif) }}" class="btn btn-primary">
-                    <i class="bi bi-plus-circle"></i>
-                    Tambah Soal
-                </a>
-            </div>
-
-        </div>
-
-        <!-- TAB JENIS UJIAN -->
-        <ul class="nav nav-tabs mb-4">
-            {% for jenis, label in jenis_pilihan %}
+    <div class="bank-tabs-row">
+        <ul class="nav nav-tabs">
+            {% for sesi in sesi_list %}
                 <li class="nav-item">
-                    <a class="nav-link {% if jenis_aktif == jenis %}active{% endif %}"
-                       href="{{ url_for('admin.bank_soal', jenis=jenis) }}">
-                        {{ label }}
-                        <span class="badge bg-secondary ms-1">{{ jumlah_per_jenis[jenis] }}</span>
+                    <a class="nav-link {% if sesi_aktif and sesi_aktif.id == sesi.id %}active{% endif %}"
+                       href="{{ url_for('admin.bank_soal', sesi_id=sesi.id) }}">
+                        {{ sesi.judul }}
                     </a>
                 </li>
             {% endfor %}
+            <li class="nav-item bank-session-add-item">
+                <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#modalTambahSesi">
+                    <i class="bi bi-plus-circle me-1"></i> Tambah Sesi
+                </button>
+            </li>
         </ul>
+    </div>
 
-        <!-- SEARCH BAR -->
-        <div class="search-wrapper mb-4">
-            <div class="input-group">
-                <span class="input-group-text bg-white">
-                    <i class="bi bi-search"></i>
-                </span>
-                <input type="text" id="searchInput" class="form-control" placeholder="Cari pertanyaan...">
+    {% if sesi_aktif %}
+        <div class="bank-toolbar">
+            <div class="search-wrapper">
+                <div class="input-group">
+                    <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
+                    <input type="text" id="searchInput" class="form-control" placeholder="Cari soal...">
+                </div>
+            </div>
+
+            <div class="d-flex gap-2 flex-wrap">
+                <form method="POST" action="{{ url_for('admin.toggle_sesi_ujian', id=sesi_aktif.id) }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button class="btn btn-outline-secondary btn-sm">
+                        <i class="bi bi-power me-1"></i>{{ 'Nonaktifkan' if sesi_aktif.aktif else 'Aktifkan' }}
+                    </button>
+                </form>
+                <form method="POST" action="{{ url_for('admin.hapus_sesi_ujian', id=sesi_aktif.id) }}" onsubmit="return confirm('Hapus sesi ini beserta semua soalnya?')">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button class="btn btn-outline-danger btn-sm"><i class="bi bi-trash me-1"></i> Hapus Sesi</button>
+                </form>
+                <button class="btn btn-primary btn-sm" type="button" data-bs-toggle="modal" data-bs-target="#modalTambahSoal">
+                    <i class="bi bi-plus-circle me-1"></i> Tambah Soal
+                </button>
             </div>
         </div>
 
-        <!-- TABLE -->
-        <div class="table-responsive">
-
-            <table class="ppdb-table" id="soalTable">
-
-                <thead>
-                <tr>
-                    <th width="60">No</th>
-                    <th>Pertanyaan</th>
-                    <th width="140">Kategori</th>
-                    <th width="120" class="text-center">Jawaban Benar</th>
-                    <th width="140" class="text-center">Aksi</th>
-                </tr>
-                </thead>
-
-                <tbody>
-
+        {% if daftar_soal %}
+            <div class="question-list" id="questionList">
                 {% for soal in daftar_soal %}
+                    <article class="question-card" id="soal-{{ soal.id }}">
+                        <div class="question-card-body">
+                            <div class="question-card-top">
+                                <div class="question-stem">
+                                    <span class="question-number-inline">{{ loop.index }}.</span>
+                                    <div class="min-w-0">
+                                        {% if soal.gambar_pertanyaan %}
+                                            {{ soal_image(soal.gambar_pertanyaan) }}
+                                        {% endif %}
+                                        {% if soal.pertanyaan %}
+                                            <div class="preview-question-text text-break">{{ soal.pertanyaan }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
 
-                    <tr>
-                        <td class="text-center fw-medium">{{ loop.index }}</td>
-
-                        <td>
-                            {{ soal.pertanyaan[:100] }}{% if soal.pertanyaan|length > 100 %}...{% endif %}
-                        </td>
-
-                        <td>{{ soal.kategori or '-' }}</td>
-
-                        <td class="text-center">
-                            <span class="status-success">{{ soal.jawaban_benar }}</span>
-                        </td>
-
-                        <td class="text-center">
-                            <div class="action-buttons">
-                                <a href="{{ url_for('admin.edit_soal', id=soal.id) }}"
-                                   class="btn btn-outline-primary btn-sm" title="Edit">
-                                    <i class="bi bi-pencil-fill"></i>
-                                </a>
-
-                                <a href="{{ url_for('admin.hapus_soal', id=soal.id) }}"
-                                   class="btn btn-outline-danger btn-sm" title="Hapus"
-                                   onclick="return confirm('Yakin ingin menghapus soal ini?')">
-                                    <i class="bi bi-trash-fill"></i>
-                                </a>
                             </div>
-                        </td>
-                    </tr>
 
-                {% else %}
+                            {% if soal.is_pilihan_ganda() %}
+                                <div class="d-flex flex-column gap-2 mt-3">
+                                    {% for huruf in opsi_huruf %}
+                                        {{ option_row(soal, huruf) }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
 
-                    <tr>
-                        <td colspan="5" class="text-center py-5 text-muted">
-                            Belum ada soal. Klik "Tambah Soal" untuk membuat soal baru.
-                        </td>
-                    </tr>
+                            <div class="question-tools">
+                                <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#modalEditSoal{{ soal.id }}">
+                                    <i class="bi bi-pencil-square me-1"></i> Edit
+                                </button>
+                                <form method="POST" action="{{ url_for('admin.hapus_soal', id=soal.id) }}" onsubmit="return confirm('Hapus soal ini?')">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <button class="btn btn-outline-danger btn-sm"><i class="bi bi-trash me-1"></i> Hapus</button>
+                                </form>
+                            </div>
+                        </div>
+                    </article>
 
+                    <div class="modal fade question-modal" id="modalEditSoal{{ soal.id }}" tabindex="-1" aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered modal-lg">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title">Edit Soal #{{ loop.index }}</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
+                                </div>
+                                <div class="modal-body">
+                                    {{ soal_form(url_for('admin.update_soal_inline', id=soal.id), mode='edit', soal=soal) }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 {% endfor %}
+            </div>
+        {% else %}
+            <div class="bank-empty">
+                <i class="bi bi-journal-plus"></i>
+                <h5 class="fw-bold mt-3 mb-1">Belum ada soal</h5>
+                <p class="mb-0">Tambahkan soal untuk sesi ini.</p>
+            </div>
+        {% endif %}
 
-                </tbody>
-
-            </table>
-
+        <div class="modal fade question-modal" id="modalTambahSoal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Tambah Soal</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
+                    </div>
+                    <div class="modal-body">
+                        {{ soal_form(url_for('admin.tambah_soal_sesi', sesi_id=sesi_aktif.id)) }}
+                    </div>
+                </div>
+            </div>
         </div>
+    {% else %}
+        <div class="bank-empty">
+            <i class="bi bi-journal-plus"></i>
+            <h5 class="fw-bold mt-3 mb-1">Belum ada sesi ujian</h5>
+            <p class="mb-0">Tambahkan sesi untuk mulai mengisi bank soal.</p>
+        </div>
+    {% endif %}
 
+    <div class="modal fade" id="modalTambahSesi" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Tambah Sesi Ujian</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
+                </div>
+                <form method="POST" action="{{ url_for('admin.tambah_sesi_ujian') }}" enctype="multipart/form-data">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <div class="modal-body">
+                        <div class="session-add-grid">
+                            <div>
+                                <label class="form-label fw-semibold">Judul Sesi</label>
+                                <input type="text" name="judul" class="form-control" placeholder="Contoh: Sesi 1 - Literasi" required>
+                            </div>
+                            <div>
+                                <label class="form-label fw-semibold">Deskripsi Singkat</label>
+                                <input type="text" name="deskripsi" class="form-control" placeholder="Opsional">
+                            </div>
+                        </div>
+                        <div class="mt-3 template-download-box">
+                            <div>
+                                <div class="fw-semibold">Template Import Soal</div>
+                                <small class="text-muted">Gunakan format PG 4/5 pilihan atau esai.</small>
+                            </div>
+                            <a class="btn btn-outline-primary btn-sm" href="{{ url_for('admin.unduh_template_soal') }}">
+                                <i class="bi bi-download me-1"></i> Unduh Template
+                            </a>
+                        </div>
+                        <div class="mt-3">
+                            <label class="form-label fw-semibold">Import PDF Soal</label>
+                            <input type="file" name="file_pdf" class="form-control" accept="application/pdf">
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Batal</button>
+                        <button class="btn btn-primary"><i class="bi bi-save me-1"></i> Simpan Sesi</button>
+                    </div>
+                </form>
+            </div>
+        </div>
     </div>
+</div>
 
-    <script>
-        document.getElementById("searchInput").addEventListener("keyup", function () {
-            const filter = this.value.toLowerCase().trim();
-            const rows = document.querySelectorAll("#soalTable tbody tr");
+<script>
+function refreshQuestionForm(form) {
+    const type = form.querySelector('[data-question-type]')?.value || 'pg';
+    const count = parseInt(form.querySelector('[data-option-count]')?.value || '4', 10);
+    form.querySelectorAll('.pg-only').forEach((el) => el.style.display = type === 'pg' ? '' : 'none');
+    form.querySelectorAll('.essay-only').forEach((el) => el.style.display = type === 'esai' ? '' : 'none');
+    form.querySelectorAll('[data-option-letter="E"]').forEach((el) => el.style.display = (type === 'pg' && count === 5) ? '' : 'none');
+    form.querySelectorAll('[data-answer-key] option[value="E"]').forEach((el) => el.style.display = count === 5 ? '' : 'none');
+}
 
-            rows.forEach(row => {
-                if (row.cells.length === 1) return;
-                const text = row.textContent.toLowerCase();
-                row.style.display = text.includes(filter) ? "" : "none";
-            });
+document.querySelectorAll('[data-question-form]').forEach((form) => {
+    refreshQuestionForm(form);
+    form.querySelectorAll('[data-question-type], [data-option-count]').forEach((input) => {
+        input.addEventListener('change', () => refreshQuestionForm(form));
+    });
+});
+
+document.querySelectorAll('[data-image-toggle-box]').forEach((box) => {
+    const input = box.querySelector('.image-toggle-input');
+    const toggleName = input ? 'gunakan_' + input.name : '';
+    const form = box.closest('form');
+    const toggle = form ? form.querySelector(`[name="${toggleName}"][data-image-toggle]`) : null;
+    if (!toggle || !input) return;
+    const sync = () => { box.style.display = toggle.checked ? '' : 'none'; input.style.display = toggle.checked ? '' : 'none'; };
+    toggle.addEventListener('change', sync);
+    sync();
+});
+
+const searchInput = document.getElementById('searchInput');
+if (searchInput) {
+    searchInput.addEventListener('keyup', function () {
+        const filter = this.value.toLowerCase().trim();
+        document.querySelectorAll('#questionList .question-card').forEach((card) => {
+            card.style.display = card.textContent.toLowerCase().includes(filter) ? '' : 'none';
         });
-    </script>
+    });
+}
 
+{% if edit_id %}
+document.addEventListener('DOMContentLoaded', () => {
+    const modalEl = document.getElementById('modalEditSoal{{ edit_id }}');
+    if (modalEl && window.bootstrap) {
+        window.bootstrap.Modal.getOrCreateInstance(modalEl).show();
+    }
+});
+{% endif %}
+</script>
 {% endblock %}

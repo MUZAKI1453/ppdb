@@ -27,8 +27,8 @@ import re
 import pdfplumber
 
 NOMOR_SOAL_RE = re.compile(r'^\s*(\d+)[.)]\s*(.*)$')
-PILIHAN_RE = re.compile(r'^\s*([A-Da-d])[.)]\s*(.*)$')
-KUNCI_RE = re.compile(r'^\s*(?:KUNCI|JAWABAN)\s*[:=]\s*([A-Da-d])\s*$', re.IGNORECASE)
+PILIHAN_RE = re.compile(r'^\s*([A-Ea-e])[.)]\s*(.*)$')
+KUNCI_RE = re.compile(r'^\s*(?:KUNCI|JAWABAN)\s*[:=]\s*([A-Ea-e])\s*$', re.IGNORECASE)
 KATEGORI_RE = re.compile(r'^\s*KATEGORI\s*[:=]\s*(.+)$', re.IGNORECASE)
 
 
@@ -98,8 +98,10 @@ def _tutup_blok(blok_lines, nomor, hasil, errors):
     for huruf in ['A', 'B', 'C', 'D']:
         if huruf not in pilihan or not pilihan[huruf].strip():
             masalah.append(f'pilihan {huruf} tidak ditemukan')
-    if not kunci or kunci not in ['A', 'B', 'C', 'D']:
+    if not kunci or kunci not in ['A', 'B', 'C', 'D', 'E']:
         masalah.append('baris KUNCI tidak valid/tidak ditemukan')
+    elif kunci == 'E' and not pilihan.get('E'):
+        masalah.append('kunci E dipilih tetapi pilihan E tidak ditemukan')
 
     if masalah:
         errors.append(f'Soal nomor {nomor}: {", ".join(masalah)}')
@@ -112,6 +114,8 @@ def _tutup_blok(blok_lines, nomor, hasil, errors):
         'pilihan_b': pilihan['B'],
         'pilihan_c': pilihan['C'],
         'pilihan_d': pilihan['D'],
+        'pilihan_e': pilihan.get('E', ''),
+        'jumlah_pilihan': 5 if pilihan.get('E') else 4,
         'jawaban_benar': kunci,
         'kategori': kategori,
     })

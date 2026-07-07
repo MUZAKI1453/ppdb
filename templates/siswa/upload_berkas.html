@@ -1,518 +1,158 @@
 {% extends 'layouts/base_dashboard.html' %}
 
-{% block title %}
-    Dokumen Persyaratan PPDB
+{% block title %}Upload Berkas{% endblock %}
+{% block page_title %}Upload Berkas{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/upload_berkas.css') }}">
 {% endblock %}
 
-{% block page_title %}
-    Dokumen Persyaratan PPDB
-{% endblock %}
+{% macro dokumen(field, label, filename) %}
+<div class="document-card {% if berkas and berkas.list_field_bermasalah and field in berkas.list_field_bermasalah %}document-card-bermasalah{% endif %}">
+    {% if filename %}
+        <button type="button"
+                class="document-preview-btn"
+                onclick="showPreview('{{ url_for('siswa.uploaded_file', filename=filename) }}')"
+                aria-label="Lihat {{ label }}">
+            {% if is_image(filename) %}
+                <img src="{{ url_for('siswa.uploaded_file', filename=filename) }}"
+                     class="document-thumb"
+                     alt="{{ label }}">
+            {% elif is_pdf(filename) %}
+                <div class="empty-document empty-document-pdf">
+                    <i class="bi bi-file-earmark-pdf"></i>
+                </div>
+            {% else %}
+                <div class="empty-document">
+                    <i class="bi bi-file-earmark"></i>
+                </div>
+            {% endif %}
+        </button>
+    {% else %}
+        <div class="empty-document">
+            <i class="bi bi-file-earmark-arrow-up"></i>
+        </div>
+    {% endif %}
+
+    <div class="document-info">
+        <div>
+            <h6>{{ label }}</h6>
+            {% if filename %}
+                <small>Dokumen sudah diunggah</small>
+            {% else %}
+                <small>Belum ada dokumen</small>
+            {% endif %}
+        </div>
+        {% if filename %}
+            <a href="{{ url_for('siswa.uploaded_file', filename=filename) }}"
+               target="_blank"
+               class="btn btn-outline-primary btn-sm">
+                <i class="bi bi-eye"></i> Lihat
+            </a>
+        {% endif %}
+    </div>
+
+    {% if berkas and berkas.list_field_bermasalah and field in berkas.list_field_bermasalah %}
+        <span class="badge-bermasalah">
+            <i class="bi bi-exclamation-triangle-fill"></i>
+            Perlu revisi
+        </span>
+    {% endif %}
+
+    {% if upload_mode != 'locked' and field in field_boleh_upload %}
+        <div class="upload-control">
+            <input type="file" name="{{ field }}" class="form-control" accept=".jpg,.jpeg,.png,.pdf">
+            <small class="text-muted">Format: JPG, PNG, atau PDF. Maksimal mengikuti konfigurasi server.</small>
+        </div>
+    {% endif %}
+</div>
+{% endmacro %}
 
 {% block content %}
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% for category, message in messages[-3:] %}<div class="alert alert-{{ category }}">{{ message }}</div>{% endfor %}
+{% endwith %}
 
-    <div class="detail-page">
+<div class="content-card upload-berkas-page">
+    <div class="d-flex justify-content-between align-items-start gap-2 flex-wrap mb-4">
+        <div>
+            <h3 class="fw-bold mb-1">Upload Berkas SPMB</h3>
+            <p class="text-muted mb-0">Unggah dokumen persyaratan dengan file yang jelas, terbaca, dan sesuai format yang diminta.</p>
+        </div>
+        {% if berkas %}
+            <span class="badge bg-{% if berkas.status_verifikasi == 'Diverifikasi' %}success{% elif berkas.status_verifikasi == 'Ditolak' %}danger{% else %}warning text-dark{% endif %}">
+                {{ berkas.status_verifikasi }}
+            </span>
+        {% endif %}
+    </div>
 
-        <!-- HEADER -->
+    {% if upload_mode == 'revisi' %}
+        <div class="alert alert-warning">Beberapa dokumen perlu diperbaiki. Silakan unggah ulang dokumen yang ditandai.</div>
+    {% endif %}
 
-        <div class="detail-header">
+    {% if berkas and berkas.catatan_verifikasi %}
+        <div class="alert alert-danger"><strong>Catatan Admin:</strong><br>{{ berkas.catatan_verifikasi }}</div>
+    {% endif %}
 
-            <div>
+    <form method="POST" enctype="multipart/form-data">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
-                <h2>Dokumen Persyaratan PPDB</h2>
+        <div class="document-section">
+            <h5 class="section-title">
+                <i class="bi bi-images"></i>
+                Preview Dokumen
+            </h5>
 
-                <div class="student-info">
-
-                <span>
-                    <i class="bi bi-folder-fill"></i>
-                    Upload dan Kelola Berkas
-                </span>
-
-                    {% if berkas and berkas.tanggal_upload %}
-                        <span>
-                    <i class="bi bi-calendar-event"></i>
-                    Upload:
-                    {{ berkas.tanggal_upload.strftime('%d-%m-%Y %H:%M') }}
-                </span>
-                    {% endif %}
-
-                </div>
-
+            <div class="berkas-grid">
+                {{ dokumen('pas_foto', 'Pas Foto Calon Siswa', berkas.pas_foto if berkas else None) }}
+                {{ dokumen('kartu_keluarga', 'Kartu Keluarga', berkas.kartu_keluarga if berkas else None) }}
+                {{ dokumen('akta_lahir', 'Akta Lahir', berkas.akta_lahir if berkas else None) }}
+                {{ dokumen('ijazah', 'Ijazah / Surat Keterangan Lulus', berkas.ijazah if berkas else None) }}
+                {{ dokumen('ktp_orang_tua', 'KTP Orang Tua / Wali', berkas.ktp_orang_tua if berkas else None) }}
             </div>
-
-            {% if berkas %}
-
-                {% if berkas.status_verifikasi == 'Diverifikasi' %}
-
-                    <span class="status-success">
-                <i class="bi bi-check-circle-fill"></i>
-                Diverifikasi
-            </span>
-
-                {% elif berkas.status_verifikasi == 'Ditolak' %}
-
-                    <span class="status-danger">
-                <i class="bi bi-x-circle-fill"></i>
-                Ditolak
-            </span>
-
-                {% else %}
-
-                    <span class="status-secondary">
-                <i class="bi bi-clock-fill"></i>
-                Menunggu Verifikasi
-            </span>
-
-                {% endif %}
-
-            {% endif %}
-
         </div>
 
-        <!-- STATUS BANNER -->
-
-        {% if upload_mode == 'locked' %}
-
-            <div class="alert alert-info d-flex align-items-center gap-2">
-
-                <i class="bi bi-lock-fill"></i>
-
-                <div>
-
-                    {% if berkas.status_verifikasi == 'Diverifikasi' %}
-                        Berkas Anda sudah <strong>diverifikasi</strong> dan tidak dapat diubah lagi.
-                    {% else %}
-                        Berkas Anda sedang <strong>menunggu verifikasi admin</strong>. Tidak dapat mengupload ulang
-                        selama proses ini.
-                    {% endif %}
-
-                </div>
-
+        {% if upload_mode != 'locked' %}
+            <div class="action-area">
+                <button class="btn btn-primary w-100 w-md-auto"><i class="bi bi-cloud-upload"></i> Upload Berkas</button>
             </div>
-
-        {% elif upload_mode == 'revisi' %}
-
-            <div class="alert alert-warning d-flex align-items-center gap-2">
-
-                <i class="bi bi-exclamation-triangle-fill"></i>
-
-                <div>
-                    Beberapa dokumen Anda <strong>ditolak</strong> dan perlu diupload ulang.
-                    Dokumen lain yang tidak bermasalah tidak perlu diubah.
-                </div>
-
-            </div>
-
         {% endif %}
-
-        {% if berkas and berkas.catatan_verifikasi %}
-
-            <div class="alert alert-warning">
-
-                <strong>
-                    Catatan Verifikasi Admin
-                </strong>
-
-                <hr>
-
-                {{ berkas.catatan_verifikasi }}
-
-            </div>
-
-        {% endif %}
-
-        <form method="POST" enctype="multipart/form-data">
-
-            <div class="document-section">
-
-                <h5 class="section-title">
-
-                    <i class="bi bi-images"></i>
-
-                    Preview Dokumen
-
-                </h5>
-
-                <div class="berkas-grid">
-
-                    <!-- PAS FOTO -->
-
-                    <div class="document-card">
-
-                        {% if berkas and berkas.pas_foto %}
-
-                            <div onclick="showPreview('{{ url_for('static', filename='uploads/' + berkas.pas_foto) }}')">
-
-                                <img
-                                        src="{{ url_for('static', filename='uploads/' + berkas.pas_foto) }}"
-                                        class="document-thumb">
-
-                            </div>
-
-                        {% else %}
-
-                            <div class="empty-document">
-
-                                <i class="bi bi-image"></i>
-
-                            </div>
-
-                        {% endif %}
-
-                        <div class="document-info">
-
-                            <h6>Pas Foto</h6>
-
-                            <small>
-
-                                {% if berkas and berkas.pas_foto %}
-                                    Sudah Upload
-                                {% else %}
-                                    Belum Upload
-                                {% endif %}
-
-                            </small>
-
-                        </div>
-
-                        {% if 'pas_foto' in field_boleh_upload %}
-
-                            <input
-                                    type="file"
-                                    name="pas_foto"
-                                    class="form-control mt-3">
-
-                        {% else %}
-
-                            <input
-                                    type="file"
-                                    class="form-control mt-3"
-                                    disabled>
-
-                            {% if upload_mode == 'revisi' %}
-                                <small class="text-muted">Dokumen ini tidak bermasalah, tidak perlu diupload
-                                    ulang.</small>
-                            {% endif %}
-
-                        {% endif %}
-
-                    </div>
-
-                    <!-- KK -->
-
-                    <div class="document-card">
-
-                        {% if berkas and berkas.kartu_keluarga %}
-
-                            <div onclick="showPreview('{{ url_for('static', filename='uploads/' + berkas.kartu_keluarga) }}')">
-
-                                <img
-                                        src="{{ url_for('static', filename='uploads/' + berkas.kartu_keluarga) }}"
-                                        class="document-thumb">
-
-                            </div>
-
-                        {% else %}
-
-                            <div class="empty-document">
-
-                                <i class="bi bi-file-earmark"></i>
-
-                            </div>
-
-                        {% endif %}
-
-                        <div class="document-info">
-
-                            <h6>Kartu Keluarga</h6>
-
-                            <small>
-
-                                {% if berkas and berkas.kartu_keluarga %}
-                                    Sudah Upload
-                                {% else %}
-                                    Belum Upload
-                                {% endif %}
-
-                            </small>
-
-                        </div>
-
-                        {% if 'kartu_keluarga' in field_boleh_upload %}
-
-                            <input
-                                    type="file"
-                                    name="kartu_keluarga"
-                                    class="form-control mt-3">
-
-                        {% else %}
-
-                            <input
-                                    type="file"
-                                    class="form-control mt-3"
-                                    disabled>
-
-                            {% if upload_mode == 'revisi' %}
-                                <small class="text-muted">Dokumen ini tidak bermasalah, tidak perlu diupload
-                                    ulang.</small>
-                            {% endif %}
-
-                        {% endif %}
-
-                    </div>
-
-                    <!-- AKTA -->
-
-                    <div class="document-card">
-
-                        {% if berkas and berkas.akta_lahir %}
-
-                            <div onclick="showPreview('{{ url_for('static', filename='uploads/' + berkas.akta_lahir) }}')">
-
-                                <img
-                                        src="{{ url_for('static', filename='uploads/' + berkas.akta_lahir) }}"
-                                        class="document-thumb">
-
-                            </div>
-
-                        {% else %}
-
-                            <div class="empty-document">
-
-                                <i class="bi bi-file-earmark-text"></i>
-
-                            </div>
-
-                        {% endif %}
-
-                        <div class="document-info">
-
-                            <h6>Akta Lahir</h6>
-
-                            <small>
-
-                                {% if berkas and berkas.akta_lahir %}
-                                    Sudah Upload
-                                {% else %}
-                                    Belum Upload
-                                {% endif %}
-
-                            </small>
-
-                        </div>
-
-                        {% if 'akta_lahir' in field_boleh_upload %}
-
-                            <input
-                                    type="file"
-                                    name="akta_lahir"
-                                    class="form-control mt-3">
-
-                        {% else %}
-
-                            <input
-                                    type="file"
-                                    class="form-control mt-3"
-                                    disabled>
-
-                            {% if upload_mode == 'revisi' %}
-                                <small class="text-muted">Dokumen ini tidak bermasalah, tidak perlu diupload
-                                    ulang.</small>
-                            {% endif %}
-
-                        {% endif %}
-
-                    </div>
-
-                    <!-- IJAZAH -->
-
-                    <div class="document-card">
-
-                        {% if berkas and berkas.ijazah %}
-
-                            <div onclick="showPreview('{{ url_for('static', filename='uploads/' + berkas.ijazah) }}')">
-
-                                <img
-                                        src="{{ url_for('static', filename='uploads/' + berkas.ijazah) }}"
-                                        class="document-thumb">
-
-                            </div>
-
-                        {% else %}
-
-                            <div class="empty-document">
-
-                                <i class="bi bi-mortarboard"></i>
-
-                            </div>
-
-                        {% endif %}
-
-                        <div class="document-info">
-
-                            <h6>Ijazah / SKL</h6>
-
-                            <small>
-
-                                {% if berkas and berkas.ijazah %}
-                                    Sudah Upload
-                                {% else %}
-                                    Belum Upload
-                                {% endif %}
-
-                            </small>
-
-                        </div>
-
-                        {% if 'ijazah' in field_boleh_upload %}
-
-                            <input
-                                    type="file"
-                                    name="ijazah"
-                                    class="form-control mt-3">
-
-                        {% else %}
-
-                            <input
-                                    type="file"
-                                    class="form-control mt-3"
-                                    disabled>
-
-                            {% if upload_mode == 'revisi' %}
-                                <small class="text-muted">Dokumen ini tidak bermasalah, tidak perlu diupload
-                                    ulang.</small>
-                            {% endif %}
-
-                        {% endif %}
-
-                    </div>
-
-                    <!-- KTP ORANG TUA/WALI -->
-
-                    <div class="document-card">
-
-                        {% if berkas and berkas.ktp_orang_tua %}
-
-                            <div onclick="showPreview('{{ url_for('static', filename='uploads/' + berkas.ktp_orang_tua) }}')">
-
-                                <img
-                                        src="{{ url_for('static', filename='uploads/' + berkas.ktp_orang_tua) }}"
-                                        class="document-thumb">
-
-                            </div>
-
-                        {% else %}
-
-                            <div class="empty-document">
-
-                                <i class="bi bi-person-vcard"></i>
-
-                            </div>
-
-                        {% endif %}
-
-                        <div class="document-info">
-
-                            <h6>KTP Orang Tua/Wali</h6>
-
-                            <small>
-
-                                {% if berkas and berkas.ktp_orang_tua %}
-                                    Sudah Upload
-                                {% else %}
-                                    Belum Upload
-                                {% endif %}
-
-                            </small>
-
-                        </div>
-
-                        {% if 'ktp_orang_tua' in field_boleh_upload %}
-
-                            <input
-                                    type="file"
-                                    name="ktp_orang_tua"
-                                    class="form-control mt-3">
-
-                        {% else %}
-
-                            <input
-                                    type="file"
-                                    class="form-control mt-3"
-                                    disabled>
-
-                            {% if upload_mode == 'revisi' %}
-                                <small class="text-muted">Dokumen ini tidak bermasalah, tidak perlu diupload
-                                    ulang.</small>
-                            {% endif %}
-
-                        {% endif %}
-
-                    </div>
-
-                </div>
-
-            </div>
-
-            {% if upload_mode != 'locked' %}
-
-                <div class="action-area">
-
-                    <button
-                            type="submit"
-                            class="btn btn-primary btn-lg">
-
-                        <i class="bi bi-cloud-upload-fill"></i>
-
-                        Simpan Berkas
-
-                    </button>
-
-                </div>
-
-            {% endif %}
-
-        </form>
-
-    </div>
-
-    <!-- VIEWER -->
-
-    <div class="viewer" id="viewer">
-
-        <button
-                class="viewer-close"
-                onclick="closePreview()">
-
-            <i class="bi bi-x-lg"></i>
-
-        </button>
-
-        <img
-                id="previewImage"
-                class="viewer-image">
-
-    </div>
-
-    <script>
-
-        function showPreview(url) {
-
-            document.getElementById(
-                "previewImage"
-            ).src = url;
-
-            document.getElementById(
-                "viewer"
-            ).classList.add("show");
-        }
-
-        function closePreview() {
-
-            document.getElementById(
-                "viewer"
-            ).classList.remove("show");
-        }
-
-    </script>
-
+    </form>
+</div>
+
+<div class="viewer" id="viewer" onclick="closePreview()">
+    <button type="button" class="viewer-close" aria-label="Tutup preview" onclick="closePreview()">
+        <i class="bi bi-x-lg"></i>
+    </button>
+    <img src="" id="viewerImage" class="viewer-image" alt="Preview dokumen">
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function showPreview(src) {
+    const viewer = document.getElementById('viewer');
+    const image = document.getElementById('viewerImage');
+
+    if (!viewer || !image) {
+        window.open(src, '_blank');
+        return;
+    }
+
+    image.src = src;
+    viewer.classList.add('show');
+}
+
+function closePreview() {
+    const viewer = document.getElementById('viewer');
+    const image = document.getElementById('viewerImage');
+
+    if (viewer) viewer.classList.remove('show');
+    if (image) image.src = '';
+}
+
+document.addEventListener('keydown', function (event) {
+    if (event.key === 'Escape') closePreview();
+});
+</script>
 {% endblock %}

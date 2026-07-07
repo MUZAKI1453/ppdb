@@ -1,126 +1,53 @@
 {% extends 'layouts/base_dashboard.html' %}
-
-{% block extra_css %}
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/table.css') }}">
-{% endblock %}
-
-{% block title %}
-    Hasil Ujian
-{% endblock %}
-
-{% block page_title %}
-    Hasil Ujian Siswa
-{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{{ url_for('static', filename='css/table.css') }}">{% endblock %}
+{% block title %}Hasil Ujian{% endblock %}
+{% block page_title %}Hasil Ujian Calon Siswa{% endblock %}
 
 {% block content %}
-
-    <div class="content-card">
-
-        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
-            <h3 class="mb-0 fw-bold">
-                Hasil Ujian Siswa
-            </h3>
-
-            <span class="text-muted">
-                {{ data_hasil|length }} siswa telah mengerjakan &middot; {{ total_soal }} soal tersedia
-            </span>
-        </div>
-
-        <!-- TAB JENIS UJIAN -->
-        <ul class="nav nav-tabs mb-4">
-            {% for jenis, label in jenis_pilihan %}
-                <li class="nav-item">
-                    <a class="nav-link {% if jenis_aktif == jenis %}active{% endif %}"
-                       href="{{ url_for('admin.hasil_ujian', jenis=jenis) }}">
-                        {{ label }}
-                    </a>
-                </li>
-            {% endfor %}
-        </ul>
-
-        <div class="search-wrapper mb-4">
-            <div class="input-group">
-                <span class="input-group-text bg-white">
-                    <i class="bi bi-search"></i>
-                </span>
-                <input type="text" id="searchInput" class="form-control" placeholder="Cari nama siswa...">
-            </div>
-        </div>
-
-        <div class="table-responsive">
-
-            <table class="ppdb-table" id="hasilTable">
-
-                <thead>
-                <tr>
-                    <th width="60">No</th>
-                    <th>Nama Siswa</th>
-                    <th class="text-center">Benar</th>
-                    <th class="text-center">Nilai</th>
-                    <th>Waktu Selesai</th>
-                    <th width="100" class="text-center">Aksi</th>
-                </tr>
-                </thead>
-
-                <tbody>
-
-                {% for hasil in data_hasil %}
-
-                    <tr>
-                        <td class="text-center fw-medium">{{ loop.index }}</td>
-
-                        <td>
-                            <div class="student-name">{{ hasil.calon_siswa.nama_lengkap }}</div>
-                            <div class="student-subtitle">NISN: {{ hasil.calon_siswa.nisn or '-' }}</div>
-                        </td>
-
-                        <td class="text-center">{{ hasil.jumlah_benar }} / {{ hasil.jumlah_soal }}</td>
-
-                        <td class="text-center">
-                            <span class="status-success fw-bold">{{ hasil.nilai }}</span>
-                        </td>
-
-                        <td>
-                            {{ hasil.waktu_selesai.strftime('%d-%m-%Y %H:%M') if hasil.waktu_selesai else '-' }}
-                        </td>
-
-                        <td class="text-center">
-                            <a href="{{ url_for('admin.detail_hasil_ujian', id=hasil.id) }}"
-                               class="btn btn-outline-primary btn-sm" title="Detail">
-                                <i class="bi bi-eye-fill"></i>
-                            </a>
-                        </td>
-                    </tr>
-
-                {% else %}
-
-                    <tr>
-                        <td colspan="6" class="text-center py-5 text-muted">
-                            Belum ada siswa yang menyelesaikan ujian.
-                        </td>
-                    </tr>
-
-                {% endfor %}
-
-                </tbody>
-
-            </table>
-
-        </div>
-
+<div class="content-card">
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <h3 class="mb-0 fw-bold">Hasil Ujian Calon Siswa</h3>
+        <span class="text-muted">{{ data_hasil|length }} siswa telah mengerjakan &middot; {{ total_soal }} soal tersedia</span>
     </div>
 
-    <script>
-        document.getElementById("searchInput").addEventListener("keyup", function () {
-            const filter = this.value.toLowerCase().trim();
-            const rows = document.querySelectorAll("#hasilTable tbody tr");
+    <ul class="nav nav-tabs mb-4 flex-nowrap overflow-auto">
+        {% for sesi in sesi_list %}
+            <li class="nav-item">
+                <a class="nav-link {% if sesi_aktif and sesi_aktif.id == sesi.id %}active{% endif %}" href="{{ url_for('admin.hasil_ujian', sesi_id=sesi.id) }}">{{ sesi.judul }}</a>
+            </li>
+        {% endfor %}
+    </ul>
 
-            rows.forEach(row => {
-                if (row.cells.length === 1) return;
-                const text = row.textContent.toLowerCase();
-                row.style.display = text.includes(filter) ? "" : "none";
-            });
-        });
-    </script>
+    <div class="search-wrapper mb-4"><div class="input-group"><span class="input-group-text bg-white"><i class="bi bi-search"></i></span><input type="text" id="searchInput" class="form-control" placeholder="Cari nama siswa..."></div></div>
 
+    <div class="table-responsive">
+        <table class="spmb-table ppdb-table" id="hasilTable">
+            <thead><tr><th width="60">No</th><th>Nama Calon Siswa</th><th>Sesi</th><th class="text-center">Benar</th><th class="text-center">Nilai</th><th>Waktu Selesai</th><th width="100" class="text-center">Aksi</th></tr></thead>
+            <tbody>
+            {% for hasil in data_hasil %}
+                <tr>
+                    <td class="text-center fw-medium">{{ loop.index }}</td>
+                    <td><div class="student-name">{{ hasil.calon_siswa.nama_lengkap }}</div><div class="student-subtitle">NISN: {{ hasil.calon_siswa.nisn or '-' }}</div></td>
+                    <td>{{ hasil.label_sesi() }}</td>
+                    <td class="text-center">{{ hasil.jumlah_benar }} / {{ hasil.jumlah_soal }}</td>
+                    <td class="text-center"><span class="status-success fw-bold">{{ hasil.nilai }}</span></td>
+                    <td>{{ hasil.waktu_selesai.strftime('%d-%m-%Y %H:%M') if hasil.waktu_selesai else '-' }}</td>
+                    <td class="text-center"><a href="{{ url_for('admin.detail_hasil_ujian', id=hasil.id) }}" class="btn btn-outline-primary btn-sm" title="Detail"><i class="bi bi-eye-fill"></i></a></td>
+                </tr>
+            {% else %}
+                <tr><td colspan="7" class="text-center py-5 text-muted">Belum ada siswa yang menyelesaikan ujian pada sesi ini.</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+<script>
+document.getElementById("searchInput").addEventListener("keyup", function () {
+    const filter = this.value.toLowerCase().trim();
+    document.querySelectorAll("#hasilTable tbody tr").forEach(row => {
+        if (row.cells.length === 1) return;
+        row.style.display = row.textContent.toLowerCase().includes(filter) ? "" : "none";
+    });
+});
+</script>
 {% endblock %}

@@ -24,7 +24,8 @@ class CalonSiswa(db.Model):
     )
 
     nisn = db.Column(
-        db.String(20)
+        db.String(20),
+        unique=True
     )
 
     nik = db.Column(
@@ -116,7 +117,7 @@ class CalonSiswa(db.Model):
     )
 
     # ==========================
-    # STATUS PPDB
+    # STATUS SPMB
     # ==========================
 
     status_verifikasi = db.Column(
@@ -224,29 +225,31 @@ class CalonSiswa(db.Model):
             and self.berkas.status_verifikasi == 'Diverifikasi'
         )
 
-    def get_hasil_ujian(self, jenis_ujian):
-        # Ambil hasil ujian siswa untuk jenis tertentu
-        # ('akademik' atau 'psikotes'), atau None kalau
-        # belum mengerjakan.
+    def get_hasil_ujian(self, sesi_id):
         for hasil in self.hasil_ujian:
-            if hasil.jenis_ujian == jenis_ujian:
+            if hasil.sesi_id == sesi_id:
                 return hasil
         return None
 
     def sudah_selesai_semua_ujian(self):
-        from models.soal import Soal
+        from models.ujian_sesi import UjianSesi
 
-        for jenis, _ in Soal.JENIS_PILIHAN:
-            hasil = self.get_hasil_ujian(jenis)
+        sesi_aktif = UjianSesi.query.filter_by(aktif=True).order_by(
+            UjianSesi.urutan,
+            UjianSesi.id
+        ).all()
+
+        sesi_dengan_soal = [sesi for sesi in sesi_aktif if sesi.jumlah_soal > 0]
+        if not sesi_dengan_soal:
+            return False
+
+        for sesi in sesi_dengan_soal:
+            hasil = self.get_hasil_ujian(sesi.id)
             if not hasil or not hasil.is_selesai():
                 return False
         return True
 
     def nilai_akhir_ujian(self):
-        # Rata-rata nilai akademik & psikotes yang sudah
-        # selesai. Dipakai untuk mengurutkan hasil seleksi.
-        # Kalau belum ada satupun yang selesai, hasilnya
-        # None (ditempatkan paling bawah saat diurutkan).
         nilai_list = [
             hasil.nilai
             for hasil in self.hasil_ujian

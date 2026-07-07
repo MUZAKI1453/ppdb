@@ -1,7 +1,7 @@
 {% extends 'layouts/base_dashboard.html' %}
 
 {% block title %}
-    Edit Data Siswa
+    Edit Data Calon Siswa
 {% endblock %}
 
 {% block extra_css %}
@@ -10,7 +10,7 @@
 
 {% block content %}
 
-    <div class="ppdb-form-card">
+    <div class="spmb-form-card">
 
         <!-- ===================================== -->
         <!-- HEADER -->
@@ -65,6 +65,7 @@
         {% endwith %}
 
         <form method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
             <!-- ===================================== -->
             <!-- A. DATA PRIBADI -->
@@ -504,7 +505,7 @@
                 </a>
 
                 <button type="submit" class="btn btn-primary btn-lg">
-                    <i class="bi bi-floppy-fill"></i> Update Data Siswa
+                    <i class="bi bi-floppy-fill"></i> Update Data Calon Siswa
                 </button>
 
             </div>

@@ -15,9 +15,9 @@
         </a>
     </li>
 
-    <!-- PPDB -->
+    <!-- SPMB -->
     <li class="menu-title">
-        PPDB
+        SPMB
     </li>
 
     <li>
@@ -69,7 +69,7 @@
 
     <li>
         <a href="{{ url_for('admin.bank_soal') }}"
-           class="{% if request.endpoint in ['admin.bank_soal','admin.tambah_soal','admin.edit_soal'] %}active{% endif %}"
+           class="{% if request.endpoint in ['admin.bank_soal','admin.tambah_soal','admin.edit_soal','admin.upload_soal_pdf','admin.preview_upload_soal_pdf'] %}active{% endif %}"
            data-title="Bank Soal">
 
             <i class="bi bi-journal-text"></i>

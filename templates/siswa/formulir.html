@@ -1,7 +1,7 @@
 {% extends 'layouts/base_dashboard.html' %}
 
 {% block page_title %}
-    Formulir PPDB
+    Formulir SPMB
 {% endblock %}
 
 {% block extra_css %}
@@ -11,8 +11,10 @@
 
 {% block content %}
 
+    <div id="formulir-top"></div>
+
     <div class="wizard-progress">
-        <div class="wizard-step active"><span>1</span><small>Siswa</small></div>
+        <div class="wizard-step active"><span>1</span><small>Calon Siswa</small></div>
         <div class="wizard-step"><span>2</span><small>Alamat</small></div>
         <div class="wizard-step"><span>3</span><small>Sekolah</small></div>
         <div class="wizard-step"><span>4</span><small>Ayah</small></div>
@@ -21,13 +23,13 @@
         <div class="wizard-step"><span>7</span><small>Simpan</small></div>
     </div>
 
-    <div class="ppdb-form-card">
+    <div class="spmb-form-card">
 
         <!-- Header + tombol edit, hanya muncul jika data sudah ada dan belum terkunci -->
         <div class="form-header">
             <div class="header-top">
                 <div>
-                    <h2>Formulir Pendaftaran PPDB</h2>
+                    <h2>Formulir Pendaftaran SPMB</h2>
                     <p>Lengkapi seluruh data calon peserta didik dengan benar.</p>
                 </div>
 
@@ -87,13 +89,14 @@
 
         <form method="POST"
               action="{{ url_for('siswa.formulir', edit='true') if edit_mode else url_for('siswa.formulir') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
             <fieldset class="{{ 'is-locked' if is_locked else '' }}">
 
-                <!-- Data Pribadi Siswa -->
+                <!-- Data Pribadi Calon Siswa -->
                 <div class="form-step active">
 
-                    <div class="section-title"><i class="bi bi-person-vcard"></i> Data Pribadi Siswa</div>
+                    <div class="section-title"><i class="bi bi-person-vcard"></i> Data Pribadi Calon Siswa</div>
 
                     <div class="row">
 
@@ -472,7 +475,7 @@
 
                     <div class="section-title"><i class="bi bi-people-fill"></i> Data Wali (Opsional)</div>
 
-                    <div class="alert alert-info">Isi bagian ini hanya jika siswa tidak tinggal bersama ayah atau ibu
+                    <div class="alert alert-info">Isi bagian ini hanya jika calon siswa tidak tinggal bersama ayah atau ibu
                         kandung.
                     </div>
 
@@ -560,13 +563,17 @@
 
                         {% if is_locked %}
                             <span class="locked-pill"><i class="bi bi-lock-fill"></i> Data Terverifikasi</span>
+                        {% elif not edit_mode %}
+                            <a href="{{ url_for('siswa.formulir', edit='true') }}" class="btn btn-primary btn-lg">
+                                <i class="bi bi-pencil-square"></i> Edit Data Saya
+                            </a>
                         {% elif calon_siswa and calon_siswa.status_verifikasi == 'Ditolak' %}
                             <button type="submit" class="btn btn-primary btn-lg">
                                 <i class="bi bi-arrow-repeat"></i> Perbarui &amp; Kirim Ulang
                             </button>
                         {% else %}
                             <button type="submit" class="btn btn-primary btn-lg">
-                                <i class="bi bi-floppy-fill"></i> Simpan Data PPDB
+                                <i class="bi bi-floppy-fill"></i> Simpan Data SPMB
                             </button>
                         {% endif %}
                     </div>
@@ -604,12 +611,18 @@
             });
         }
 
-        function showStep(index) {
+        if ('scrollRestoration' in history) {
+            history.scrollRestoration = 'manual';
+        }
+
+        function showStep(index, shouldScroll = true) {
             steps.forEach(step => step.classList.remove("active"));
             indicators.forEach(step => step.classList.remove("active"));
             steps[index].classList.add("active");
             indicators[index].classList.add("active");
-            steps[index].scrollIntoView({behavior: "smooth", block: "start"});
+            if (shouldScroll) {
+                document.getElementById('formulir-top')?.scrollIntoView({behavior: "smooth", block: "start"});
+            }
         }
 
         function validasiStepAktif(index) {
@@ -661,7 +674,8 @@
             });
         }
 
-        showStep(0);
+        showStep(0, false);
+        window.setTimeout(function () { window.scrollTo(0, 0); }, 0);
 
     </script>
 

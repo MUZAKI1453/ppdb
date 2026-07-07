@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, flash, url_for, redirect, send_from_directory
+from flask import Blueprint, render_template, request, flash, url_for, redirect, send_from_directory, current_app, session, make_response
 from flask_login import login_required, current_user
 from models.calon_siswa import CalonSiswa
 from models.alamat_siswa import AlamatSiswa
@@ -8,11 +8,14 @@ from models.data_wali import DataWali
 from extensions_db import db
 from models.berkas import Berkas
 from models.soal import Soal
+from models.ujian_sesi import UjianSesi
 from models.hasil_ujian import HasilUjian
-from config import Config
+from models.user import User
 from datetime import datetime
+from sqlalchemy import func
 from werkzeug.utils import secure_filename
-from utils.soal_pdf_parser import parse_soal_pdf
+from utils.soal_pdf_template_parser import parse_soal_pdf
+from utils.upload_helper import IMAGE_EXTENSIONS, is_image, is_pdf, delete_uploaded_file, save_secure_upload
 import os
 import uuid
 
@@ -56,7 +59,7 @@ def dashboard():
         status_kelulusan='Diterima'
     ).count()
 
-    periode_ppdb = "2026 / 2027"
+    periode_spmb = "2026 / 2027"
 
     return render_template(
         'admin/dashboard.html',
@@ -67,7 +70,7 @@ def dashboard():
         menunggu_verifikasi=menunggu_verifikasi,
         total_berkas_masuk=total_berkas_masuk,
         total_diterima=total_diterima,
-        periode_ppdb=periode_ppdb
+        periode_spmb=periode_spmb
     )
 
 
@@ -418,6 +421,10 @@ def edit_siswa(id):
                 'wali_no_hp'
             )
 
+        elif siswa.wali:
+            db.session.delete(siswa.wali)
+            siswa.wali = None
+
         # ==========================
         # RESET STATUS VERIFIKASI
         #
@@ -432,6 +439,17 @@ def edit_siswa(id):
         siswa.catatan_verifikasi = None
 
         siswa.tanggal_verifikasi = None
+
+        if siswa.user and siswa.nisn:
+            existing_user = User.query.filter(
+                User.username == siswa.nisn,
+                User.id != siswa.user.id
+            ).first()
+            if existing_user:
+                flash('NISN sudah dipakai akun lain. Perubahan dibatalkan.', 'danger')
+                db.session.rollback()
+                return redirect(url_for('admin.edit_siswa', id=siswa.id))
+            siswa.user.username = siswa.nisn
 
         db.session.commit()
 
@@ -457,7 +475,7 @@ def edit_siswa(id):
 # HAPUS CALON SISWA, URL :
 # /admin/calon-siswa/hapus/<id>
 # ==================================================
-@admin.route('/calon-siswa/hapus/<int:id>')
+@admin.route('/calon-siswa/hapus/<int:id>', methods=['POST'])
 @login_required
 def hapus_siswa(id):
     if current_user.role != 'admin':
@@ -485,7 +503,7 @@ def hapus_siswa(id):
 # Verifikasi data Calon Siswa, URL :
 # /admin/calon-siswa/verifikasi/<id>
 # ======================================
-@admin.route('/verifikasi/<int:id>')
+@admin.route('/verifikasi/<int:id>', methods=['POST'])
 @login_required
 def verifikasi_siswa(id):
     if current_user.role != 'admin':
@@ -606,7 +624,9 @@ def detail_berkas(id):
 
     return render_template(
         'admin/detail_berkas.html',
-        berkas=berkas
+        berkas=berkas,
+        is_image=is_image,
+        is_pdf=is_pdf
     )
 
 
@@ -614,7 +634,7 @@ def detail_berkas(id):
 # VERIFIKASI BERKAS SISWA / diterima dan ditolak
 # URL : /admin/verifikasi-berkas/<id>
 # ==================================================
-@admin.route('/verifikasi-berkas/<int:id>')
+@admin.route('/verifikasi-berkas/<int:id>', methods=['POST'])
 @login_required
 def verifikasi_berkas(id):
     if current_user.role != 'admin':
@@ -673,13 +693,23 @@ def tolak_berkas(id):
 #   (jika ingin menghapus file fisik perlu
 #   ditambahkan os.remove())
 # ==================================================
-@admin.route('/hapus-berkas/<int:id>')
+@admin.route('/hapus-berkas/<int:id>', methods=['POST'])
 @login_required
 def hapus_berkas(id):
     if current_user.role != 'admin':
         return "Akses Ditolak", 403
 
     berkas = Berkas.query.get_or_404(id)
+
+    upload_folder = current_app.config['UPLOAD_FOLDER']
+    for filename in [
+        berkas.pas_foto,
+        berkas.kartu_keluarga,
+        berkas.akta_lahir,
+        berkas.ijazah,
+        berkas.ktp_orang_tua,
+    ]:
+        delete_uploaded_file(upload_folder, filename)
 
     db.session.delete(berkas)
 
@@ -706,192 +736,503 @@ def uploaded_file(filename):
         return "Akses Ditolak", 403
 
     return send_from_directory(
-        Config.UPLOAD_FOLDER,
+        current_app.config['UPLOAD_FOLDER'],
         filename
     )
 
 
+
 # ==================================================
-# BANK SOAL - MENAMPILKAN SELURUH SOAL / READ
-# URL : /admin/bank-soal
+# BANK SOAL / SESI UJIAN DINAMIS
 # ==================================================
+def _require_admin():
+    if current_user.role != 'admin':
+        return False
+    return True
+
+
+def _get_sesi_aktif_dari_request():
+    sesi_id = request.args.get('sesi_id', type=int)
+    sesi_list = UjianSesi.query.order_by(UjianSesi.urutan, UjianSesi.id).all()
+    sesi_aktif = None
+
+    if sesi_id:
+        sesi_aktif = UjianSesi.query.get(sesi_id)
+
+    if not sesi_aktif and sesi_list:
+        sesi_aktif = sesi_list[0]
+
+    return sesi_list, sesi_aktif
+
+
+
+@admin.route('/bank-soal/template-soal')
+@login_required
+def unduh_template_soal():
+    if not _require_admin():
+        return "Akses Ditolak", 403
+
+    isi_template = """TEMPLATE IMPORT SOAL SPMB
+
+1. Contoh pertanyaan pilihan ganda dengan empat pilihan.
+A. Pilihan jawaban A
+B. Pilihan jawaban B
+C. Pilihan jawaban C
+D. Pilihan jawaban D
+Jawaban: A
+
+2. Contoh pertanyaan pilihan ganda dengan lima pilihan.
+A. Pilihan jawaban A
+B. Pilihan jawaban B
+C. Pilihan jawaban C
+D. Pilihan jawaban D
+E. Pilihan jawaban E
+Jawaban: C
+
+3. Contoh pertanyaan essay.
+Bobot: 20
+"""
+    response = make_response(isi_template)
+    response.headers['Content-Type'] = 'text/plain; charset=utf-8'
+    response.headers['Content-Disposition'] = 'attachment; filename=template_import_soal_spmb.txt'
+    return response
+
 @admin.route('/bank-soal')
 @login_required
 def bank_soal():
-    if current_user.role != 'admin':
+    if not _require_admin():
         return "Akses Ditolak", 403
 
-    # Tab aktif: 'akademik' atau 'psikotes' lewat ?jenis=...
-    jenis_aktif = request.args.get('jenis', Soal.JENIS_AKADEMIK)
-    if jenis_aktif not in [j for j, _ in Soal.JENIS_PILIHAN]:
-        jenis_aktif = Soal.JENIS_AKADEMIK
-
-    daftar_soal = Soal.query.filter_by(
-        jenis_ujian=jenis_aktif
-    ).order_by(Soal.id).all()
-
-    jumlah_per_jenis = {
-        jenis: Soal.query.filter_by(jenis_ujian=jenis).count()
-        for jenis, _ in Soal.JENIS_PILIHAN
-    }
+    sesi_list, sesi_aktif = _get_sesi_aktif_dari_request()
+    daftar_soal = []
+    if sesi_aktif:
+        daftar_soal = Soal.query.filter_by(
+            sesi_id=sesi_aktif.id
+        ).order_by(Soal.urutan, Soal.id).all()
 
     return render_template(
         'admin/bank_soal.html',
+        sesi_list=sesi_list,
+        sesi_aktif=sesi_aktif,
         daftar_soal=daftar_soal,
-        jenis_aktif=jenis_aktif,
-        jenis_pilihan=Soal.JENIS_PILIHAN,
-        jumlah_per_jenis=jumlah_per_jenis
+        edit_id=request.args.get('edit_id', type=int),
+        opsi_huruf=['A', 'B', 'C', 'D', 'E'],
     )
 
 
-# ==================================================
-# BANK SOAL - TAMBAH SOAL / CREATE
-# URL : /admin/bank-soal/tambah
-# ==================================================
-@admin.route('/bank-soal/tambah', methods=['GET', 'POST'])
+@admin.route('/bank-soal/sesi/<int:sesi_id>/preview')
 @login_required
-def tambah_soal():
-    if current_user.role != 'admin':
+def preview_soal_sesi(sesi_id):
+    if not _require_admin():
         return "Akses Ditolak", 403
 
-    if request.method == 'POST':
-        pertanyaan = request.form.get('pertanyaan')
-        pilihan_a = request.form.get('pilihan_a')
-        pilihan_b = request.form.get('pilihan_b')
-        pilihan_c = request.form.get('pilihan_c')
-        pilihan_d = request.form.get('pilihan_d')
-        jawaban_benar = request.form.get('jawaban_benar')
-        jenis_ujian = request.form.get('jenis_ujian', Soal.JENIS_AKADEMIK)
+    sesi = UjianSesi.query.get_or_404(sesi_id)
+    daftar_soal = Soal.query.filter_by(
+        sesi_id=sesi.id
+    ).order_by(Soal.urutan, Soal.id).all()
 
-        if jenis_ujian not in [j for j, _ in Soal.JENIS_PILIHAN]:
-            jenis_ujian = Soal.JENIS_AKADEMIK
+    return redirect(url_for('admin.bank_soal', sesi_id=sesi.id, edit_id=request.args.get('edit_id', type=int)))
 
-        if not all([pertanyaan, pilihan_a, pilihan_b, pilihan_c, pilihan_d, jawaban_benar]):
-            flash('Semua field wajib diisi', 'danger')
-            return render_template('admin/form_soal.html', soal=None, form_data=request.form, jenis_pilihan=Soal.JENIS_PILIHAN)
 
-        soal = Soal(
-            pertanyaan=pertanyaan,
-            pilihan_a=pilihan_a,
-            pilihan_b=pilihan_b,
-            pilihan_c=pilihan_c,
-            pilihan_d=pilihan_d,
-            jawaban_benar=jawaban_benar,
-            kategori=request.form.get('kategori'),
-            jenis_ujian=jenis_ujian
+@admin.route('/bank-soal/sesi/tambah', methods=['POST'])
+@login_required
+def tambah_sesi_ujian():
+    if not _require_admin():
+        return "Akses Ditolak", 403
+
+    judul = (request.form.get('judul') or '').strip()
+    deskripsi = (request.form.get('deskripsi') or '').strip() or None
+
+    if not judul:
+        flash('Judul sesi wajib diisi.', 'danger')
+        return redirect(url_for('admin.bank_soal'))
+
+    max_urutan = db.session.query(func.max(UjianSesi.urutan)).scalar() or 0
+    sesi = UjianSesi(judul=judul, deskripsi=deskripsi, urutan=max_urutan + 1, aktif=True)
+    db.session.add(sesi)
+    db.session.commit()
+
+    file = request.files.get('file_pdf')
+    if file and file.filename:
+        if not file.filename.lower().endswith('.pdf'):
+            flash('Sesi berhasil dibuat, tetapi file import harus berformat PDF.', 'warning')
+            return redirect(url_for('admin.bank_soal', sesi_id=sesi.id))
+
+        temp_folder = os.path.join(current_app.instance_path, 'tmp')
+        os.makedirs(temp_folder, exist_ok=True)
+        nama_file_sementara = f"{uuid.uuid4().hex}_{secure_filename(file.filename)}"
+        path_sementara = os.path.join(temp_folder, nama_file_sementara)
+        file.save(path_sementara)
+
+        try:
+            daftar_soal_parsed, errors = parse_soal_pdf(path_sementara)
+        except Exception as e:
+            flash(f'Sesi berhasil dibuat, tetapi PDF gagal dibaca: {e}', 'warning')
+            return redirect(url_for('admin.bank_soal', sesi_id=sesi.id))
+        finally:
+            if os.path.exists(path_sementara):
+                os.remove(path_sementara)
+
+        if errors:
+            pesan_error = 'Sebagian soal dilewati karena tidak sesuai format: ' + '; '.join(errors[:10])
+            if len(errors) > 10:
+                pesan_error += f' (dan {len(errors) - 10} lainnya)'
+            flash(pesan_error, 'warning')
+
+        if not daftar_soal_parsed:
+            flash('Sesi berhasil dibuat, tetapi tidak ada soal yang terdeteksi di PDF.', 'warning')
+            return redirect(url_for('admin.bank_soal', sesi_id=sesi.id))
+
+        tersimpan, gagal = _simpan_soal_pdf_ke_sesi(sesi, daftar_soal_parsed)
+        if gagal:
+            pesan_gagal = 'Sebagian soal belum tersimpan: ' + '; '.join(gagal[:10])
+            if len(gagal) > 10:
+                pesan_gagal += f' (dan {len(gagal) - 10} lainnya)'
+            flash(pesan_gagal, 'warning')
+
+        if tersimpan:
+            flash(f'Sesi berhasil dibuat. {tersimpan} soal berhasil masuk ke bank soal.', 'success')
+        else:
+            flash('Sesi berhasil dibuat, tetapi belum ada soal PDF yang valid untuk disimpan.', 'warning')
+        return redirect(url_for('admin.bank_soal', sesi_id=sesi.id))
+
+    flash('Sesi ujian berhasil ditambahkan.', 'success')
+    return redirect(url_for('admin.bank_soal', sesi_id=sesi.id))
+
+
+@admin.route('/bank-soal/sesi/<int:id>/toggle', methods=['POST'])
+@login_required
+def toggle_sesi_ujian(id):
+    if not _require_admin():
+        return "Akses Ditolak", 403
+
+    sesi = UjianSesi.query.get_or_404(id)
+    sesi.aktif = not sesi.aktif
+    db.session.commit()
+    flash('Status sesi ujian berhasil diperbarui.', 'success')
+    return redirect(url_for('admin.bank_soal', sesi_id=sesi.id))
+
+
+@admin.route('/bank-soal/sesi/<int:id>/hapus', methods=['POST'])
+@login_required
+def hapus_sesi_ujian(id):
+    if not _require_admin():
+        return "Akses Ditolak", 403
+
+    sesi = UjianSesi.query.get_or_404(id)
+    if sesi.hasil_ujian:
+        flash('Sesi tidak dapat dihapus karena sudah memiliki hasil ujian calon siswa.', 'danger')
+        return redirect(url_for('admin.bank_soal', sesi_id=sesi.id))
+
+    db.session.delete(sesi)
+    db.session.commit()
+    flash('Sesi ujian berhasil dihapus.', 'success')
+    return redirect(url_for('admin.bank_soal'))
+
+
+def _pilihan_form_name(huruf):
+    return f'pilihan_{huruf.lower()}'
+
+
+def _gambar_pilihan_attr(huruf):
+    return f'gambar_pilihan_{huruf.lower()}'
+
+
+def _save_optional_soal_image(field_name, prefix, old_filename=None, enabled=False):
+    upload_folder = current_app.config['UPLOAD_FOLDER']
+    file_storage = request.files.get(field_name)
+
+    if not enabled:
+        if old_filename:
+            delete_uploaded_file(upload_folder, old_filename)
+        return None
+
+    if file_storage and file_storage.filename:
+        if old_filename:
+            delete_uploaded_file(upload_folder, old_filename)
+        return save_secure_upload(
+            file_storage,
+            upload_folder,
+            prefix,
+            IMAGE_EXTENSIONS,
+            current_app.config.get('PER_FILE_UPLOAD_LIMIT')
         )
 
+    return old_filename
+
+
+def _ambil_data_soal_dari_form(form, soal_lama=None):
+    tipe_soal = (form.get('tipe_soal') or Soal.TIPE_PG).strip().lower()
+    if tipe_soal not in [Soal.TIPE_PG, Soal.TIPE_ESAI]:
+        tipe_soal = Soal.TIPE_PG
+
+    try:
+        jumlah_pilihan = int(form.get('jumlah_pilihan') or 4)
+    except (TypeError, ValueError):
+        jumlah_pilihan = 4
+    jumlah_pilihan = 5 if jumlah_pilihan == 5 else 4
+
+    data = {
+        'tipe_soal': tipe_soal,
+        'jumlah_pilihan': jumlah_pilihan,
+        'pertanyaan': (form.get('pertanyaan') or '').strip(),
+        'jawaban_benar': (form.get('jawaban_benar') or '').strip().upper(),
+        'bobot': int(form.get('bobot') or 0),
+    }
+
+    for huruf in ['A', 'B', 'C', 'D', 'E']:
+        data[_pilihan_form_name(huruf)] = (form.get(_pilihan_form_name(huruf)) or '').strip()
+
+    if tipe_soal == Soal.TIPE_ESAI:
+        data['jumlah_pilihan'] = 0
+        data['jawaban_benar'] = ''
+        for huruf in ['A', 'B', 'C', 'D', 'E']:
+            data[_pilihan_form_name(huruf)] = ''
+
+    try:
+        data['gambar_pertanyaan'] = _save_optional_soal_image(
+            'gambar_pertanyaan',
+            'soal_pertanyaan',
+            getattr(soal_lama, 'gambar_pertanyaan', None) if soal_lama else None,
+            enabled=form.get('gunakan_gambar_pertanyaan') == '1',
+        )
+        for huruf in ['A', 'B', 'C', 'D', 'E']:
+            attr = _gambar_pilihan_attr(huruf)
+            data[attr] = _save_optional_soal_image(
+                attr,
+                f'soal_opsi_{huruf.lower()}',
+                getattr(soal_lama, attr, None) if soal_lama else None,
+                enabled=form.get(f'gunakan_{attr}') == '1',
+            )
+    except ValueError as exc:
+        data['_upload_error'] = str(exc)
+
+    return data
+
+
+def _validasi_data_soal(data):
+    if data.get('_upload_error'):
+        return data['_upload_error']
+
+    if not data['pertanyaan']:
+        return 'Pertanyaan soal wajib diisi.'
+
+    if data['tipe_soal'] == Soal.TIPE_ESAI:
+        if data.get('bobot', 0) < 0:
+            return 'Bobot esai tidak valid.'
+        return None
+
+    wajib = ['A', 'B', 'C', 'D']
+    if data.get('jumlah_pilihan') == 5:
+        wajib.append('E')
+
+    for huruf in wajib:
+        teks = data.get(_pilihan_form_name(huruf))
+        gambar = data.get(_gambar_pilihan_attr(huruf))
+        if not teks and not gambar:
+            return f'Pilihan {huruf} wajib diisi dengan teks atau gambar.'
+
+    if data['jawaban_benar'] not in wajib:
+        return 'Kunci jawaban harus sesuai jumlah pilihan yang aktif.'
+
+    return None
+
+
+def _isi_soal_dari_data(soal, data):
+    for field in [
+        'tipe_soal', 'jumlah_pilihan', 'pertanyaan', 'gambar_pertanyaan',
+        'pilihan_a', 'pilihan_b', 'pilihan_c', 'pilihan_d', 'pilihan_e',
+        'gambar_pilihan_a', 'gambar_pilihan_b', 'gambar_pilihan_c', 'gambar_pilihan_d', 'gambar_pilihan_e',
+        'jawaban_benar', 'bobot'
+    ]:
+        setattr(soal, field, data.get(field))
+
+
+def _normalisasi_soal_parsed_pdf(item):
+    tipe_soal = (item.get('tipe_soal') or '').lower()
+    punya_jawaban = bool((item.get('jawaban_benar') or '').strip())
+    punya_opsi = any((item.get(f'pilihan_{h}') or '').strip() for h in ['a', 'b', 'c', 'd', 'e'])
+
+    if tipe_soal not in [Soal.TIPE_PG, Soal.TIPE_ESAI]:
+        tipe_soal = Soal.TIPE_PG if (punya_jawaban or punya_opsi) else Soal.TIPE_ESAI
+
+    jumlah_pilihan = int(item.get('jumlah_pilihan') or (5 if item.get('pilihan_e') else 4))
+    if jumlah_pilihan not in [4, 5]:
+        jumlah_pilihan = 5 if item.get('pilihan_e') else 4
+
+    try:
+        bobot = int(item.get('bobot') or 0)
+    except (TypeError, ValueError):
+        bobot = 0
+
+    data = {
+        'tipe_soal': tipe_soal,
+        'jumlah_pilihan': jumlah_pilihan if tipe_soal == Soal.TIPE_PG else 0,
+        'pertanyaan': (item.get('pertanyaan') or '').strip(),
+        'pilihan_a': (item.get('pilihan_a') or '').strip(),
+        'pilihan_b': (item.get('pilihan_b') or '').strip(),
+        'pilihan_c': (item.get('pilihan_c') or '').strip(),
+        'pilihan_d': (item.get('pilihan_d') or '').strip(),
+        'pilihan_e': (item.get('pilihan_e') or '').strip(),
+        'jawaban_benar': (item.get('jawaban_benar') or '').strip().upper(),
+        'bobot': bobot,
+        'gambar_pertanyaan': None,
+        'gambar_pilihan_a': None,
+        'gambar_pilihan_b': None,
+        'gambar_pilihan_c': None,
+        'gambar_pilihan_d': None,
+        'gambar_pilihan_e': None,
+    }
+
+    if data['tipe_soal'] == Soal.TIPE_ESAI:
+        data['jumlah_pilihan'] = 0
+        data['jawaban_benar'] = ''
+        for huruf in ['a', 'b', 'c', 'd', 'e']:
+            data[f'pilihan_{huruf}'] = ''
+
+    return data
+
+
+def _simpan_soal_pdf_ke_sesi(sesi, daftar_soal_parsed):
+    tersimpan = 0
+    gagal = []
+    max_urutan = db.session.query(func.max(Soal.urutan)).filter_by(sesi_id=sesi.id).scalar() or 0
+
+    for index, item in enumerate(daftar_soal_parsed, start=1):
+        data = _normalisasi_soal_parsed_pdf(item)
+        error = _validasi_data_soal(data)
+        if error:
+            gagal.append(f'Soal {index}: {error}')
+            continue
+
+        max_urutan += 1
+        soal = Soal(sesi_id=sesi.id, urutan=max_urutan)
+        _isi_soal_dari_data(soal, data)
         db.session.add(soal)
-        db.session.commit()
+        tersimpan += 1
 
-        flash('Soal berhasil ditambahkan', 'success')
-        return redirect(url_for('admin.bank_soal', jenis=jenis_ujian))
-
-    jenis_default = request.args.get('jenis', Soal.JENIS_AKADEMIK)
-    if jenis_default not in [j for j, _ in Soal.JENIS_PILIHAN]:
-        jenis_default = Soal.JENIS_AKADEMIK
-
-    return render_template(
-        'admin/form_soal.html',
-        soal=None,
-        jenis_pilihan=Soal.JENIS_PILIHAN,
-        jenis_default=jenis_default
-    )
+    db.session.commit()
+    return tersimpan, gagal
 
 
-# ==================================================
-# BANK SOAL - EDIT SOAL / UPDATE
-# URL : /admin/bank-soal/edit/<id>
-# ==================================================
-@admin.route('/bank-soal/edit/<int:id>', methods=['GET', 'POST'])
+@admin.route('/bank-soal/sesi/<int:sesi_id>/soal/tambah', methods=['POST'])
 @login_required
-def edit_soal(id):
-    if current_user.role != 'admin':
+def tambah_soal_sesi(sesi_id):
+    if not _require_admin():
+        return "Akses Ditolak", 403
+
+    sesi = UjianSesi.query.get_or_404(sesi_id)
+    data = _ambil_data_soal_dari_form(request.form)
+    error = _validasi_data_soal(data)
+    if error:
+        flash(error, 'danger')
+        return redirect(url_for('admin.bank_soal', sesi_id=sesi.id))
+
+    max_urutan = db.session.query(func.max(Soal.urutan)).filter_by(sesi_id=sesi.id).scalar() or 0
+    soal = Soal(sesi_id=sesi.id, urutan=max_urutan + 1)
+    _isi_soal_dari_data(soal, data)
+    db.session.add(soal)
+    db.session.commit()
+
+    flash('Soal berhasil ditambahkan.', 'success')
+    return redirect(url_for('admin.bank_soal', sesi_id=sesi.id))
+
+
+@admin.route('/bank-soal/soal/<int:id>/update', methods=['POST'])
+@login_required
+def update_soal_inline(id):
+    if not _require_admin():
         return "Akses Ditolak", 403
 
     soal = Soal.query.get_or_404(id)
+    data = _ambil_data_soal_dari_form(request.form, soal_lama=soal)
+    error = _validasi_data_soal(data)
+    if error:
+        flash(error, 'danger')
+        return redirect(url_for('admin.bank_soal', sesi_id=soal.sesi_id, edit_id=soal.id))
 
-    if request.method == 'POST':
-        pertanyaan = request.form.get('pertanyaan')
-        pilihan_a = request.form.get('pilihan_a')
-        pilihan_b = request.form.get('pilihan_b')
-        pilihan_c = request.form.get('pilihan_c')
-        pilihan_d = request.form.get('pilihan_d')
-        jawaban_benar = request.form.get('jawaban_benar')
-        jenis_ujian = request.form.get('jenis_ujian', Soal.JENIS_AKADEMIK)
+    _isi_soal_dari_data(soal, data)
+    try:
+        soal.urutan = int(request.form.get('urutan') or soal.urutan or 0)
+    except (TypeError, ValueError):
+        pass
+    db.session.commit()
 
-        if jenis_ujian not in [j for j, _ in Soal.JENIS_PILIHAN]:
-            jenis_ujian = Soal.JENIS_AKADEMIK
-
-        if not all([pertanyaan, pilihan_a, pilihan_b, pilihan_c, pilihan_d, jawaban_benar]):
-            flash('Semua field wajib diisi', 'danger')
-            return render_template('admin/form_soal.html', soal=soal, jenis_pilihan=Soal.JENIS_PILIHAN)
-
-        soal.pertanyaan = pertanyaan
-        soal.pilihan_a = pilihan_a
-        soal.pilihan_b = pilihan_b
-        soal.pilihan_c = pilihan_c
-        soal.pilihan_d = pilihan_d
-        soal.jawaban_benar = jawaban_benar
-        soal.kategori = request.form.get('kategori')
-        soal.jenis_ujian = jenis_ujian
-
-        db.session.commit()
-
-        flash('Soal berhasil diperbarui', 'success')
-        return redirect(url_for('admin.bank_soal', jenis=jenis_ujian))
-
-    return render_template('admin/form_soal.html', soal=soal, jenis_pilihan=Soal.JENIS_PILIHAN)
+    flash('Soal berhasil disimpan.', 'success')
+    return redirect(url_for('admin.bank_soal', sesi_id=soal.sesi_id))
 
 
-# ==================================================
-# BANK SOAL - HAPUS SOAL / DELETE
-# URL : /admin/bank-soal/hapus/<id>
-# ==================================================
-@admin.route('/bank-soal/hapus/<int:id>')
+@admin.route('/bank-soal/soal/<int:id>/hapus', methods=['POST'])
 @login_required
 def hapus_soal(id):
-    if current_user.role != 'admin':
+    if not _require_admin():
         return "Akses Ditolak", 403
 
     soal = Soal.query.get_or_404(id)
-    jenis_ujian = soal.jenis_ujian
+    sesi_id = soal.sesi_id
+    upload_folder = current_app.config['UPLOAD_FOLDER']
+    for filename in [
+        soal.gambar_pertanyaan,
+        soal.gambar_pilihan_a,
+        soal.gambar_pilihan_b,
+        soal.gambar_pilihan_c,
+        soal.gambar_pilihan_d,
+        soal.gambar_pilihan_e,
+    ]:
+        delete_uploaded_file(upload_folder, filename)
 
     db.session.delete(soal)
     db.session.commit()
 
-    flash('Soal berhasil dihapus', 'success')
-    return redirect(url_for('admin.bank_soal', jenis=jenis_ujian))
+    flash('Soal berhasil dihapus.', 'success')
+    return redirect(url_for('admin.bank_soal', sesi_id=sesi_id))
 
 
-# ==================================================
-# BANK SOAL - TAMBAH SOAL VIA UPLOAD PDF
-# URL : /admin/bank-soal/upload
-#
-# Format PDF yang harus diikuti ada di
-# utils/soal_pdf_parser.py. Ringkasnya per soal:
-#
-#   1. Pertanyaan...
-#   A. Pilihan A
-#   B. Pilihan B
-#   C. Pilihan C
-#   D. Pilihan D
-#   KUNCI: A
-#   KATEGORI: Matematika   (opsional)
-# ==================================================
+@admin.route('/bank-soal/tambah', methods=['GET', 'POST'])
+@login_required
+def tambah_soal():
+    if not _require_admin():
+        return "Akses Ditolak", 403
+
+    sesi_list, sesi_aktif = _get_sesi_aktif_dari_request()
+    if request.method == 'POST':
+        sesi_id = request.form.get('sesi_id', type=int) or (sesi_aktif.id if sesi_aktif else None)
+        if not sesi_id:
+            flash('Buat sesi ujian terlebih dahulu.', 'warning')
+            return redirect(url_for('admin.bank_soal'))
+        return tambah_soal_sesi(sesi_id)
+
+    return redirect(url_for('admin.bank_soal', sesi_id=sesi_aktif.id) if sesi_aktif else url_for('admin.bank_soal'))
+
+
+@admin.route('/bank-soal/edit/<int:id>', methods=['GET', 'POST'])
+@login_required
+def edit_soal(id):
+    soal = Soal.query.get_or_404(id)
+    return redirect(url_for('admin.bank_soal', sesi_id=soal.sesi_id, edit_id=soal.id))
+
+
+@admin.route('/bank-soal/hapus/<int:id>', methods=['POST'])
+@login_required
+def hapus_soal_legacy(id):
+    return hapus_soal(id)
+
+
 @admin.route('/bank-soal/upload', methods=['GET', 'POST'])
 @login_required
 def upload_soal_pdf():
-    if current_user.role != 'admin':
+    if not _require_admin():
         return "Akses Ditolak", 403
 
+    sesi_list = UjianSesi.query.order_by(UjianSesi.urutan, UjianSesi.id).all()
     if request.method == 'POST':
         file = request.files.get('file_pdf')
-        jenis_ujian = request.form.get('jenis_ujian', Soal.JENIS_AKADEMIK)
-        kategori_default = request.form.get('kategori_default') or None
+        sesi_id = request.form.get('sesi_id', type=int)
 
-        if jenis_ujian not in [j for j, _ in Soal.JENIS_PILIHAN]:
-            jenis_ujian = Soal.JENIS_AKADEMIK
+        sesi = UjianSesi.query.get(sesi_id) if sesi_id else None
+        if not sesi:
+            flash('Pilih sesi ujian terlebih dahulu.', 'danger')
+            return redirect(url_for('admin.upload_soal_pdf'))
 
         if not file or file.filename == '':
             flash('Pilih file PDF terlebih dahulu.', 'danger')
@@ -901,11 +1242,10 @@ def upload_soal_pdf():
             flash('File harus berformat PDF.', 'danger')
             return redirect(url_for('admin.upload_soal_pdf'))
 
-        # Simpan sementara supaya bisa dibuka pdfplumber,
-        # lalu langsung dihapus lagi setelah selesai diparse.
+        temp_folder = os.path.join(current_app.instance_path, 'tmp')
+        os.makedirs(temp_folder, exist_ok=True)
         nama_file_sementara = f"{uuid.uuid4().hex}_{secure_filename(file.filename)}"
-        path_sementara = os.path.join(Config.UPLOAD_FOLDER, nama_file_sementara)
-        os.makedirs(Config.UPLOAD_FOLDER, exist_ok=True)
+        path_sementara = os.path.join(temp_folder, nama_file_sementara)
         file.save(path_sementara)
 
         try:
@@ -917,101 +1257,160 @@ def upload_soal_pdf():
             if os.path.exists(path_sementara):
                 os.remove(path_sementara)
 
-        jumlah_masuk = 0
-
-        for item in daftar_soal_parsed:
-            soal = Soal(
-                pertanyaan=item['pertanyaan'],
-                pilihan_a=item['pilihan_a'],
-                pilihan_b=item['pilihan_b'],
-                pilihan_c=item['pilihan_c'],
-                pilihan_d=item['pilihan_d'],
-                jawaban_benar=item['jawaban_benar'],
-                kategori=item['kategori'] or kategori_default,
-                jenis_ujian=jenis_ujian
-            )
-            db.session.add(soal)
-            jumlah_masuk += 1
-
-        if jumlah_masuk:
-            db.session.commit()
-
-        if jumlah_masuk:
-            flash(f'{jumlah_masuk} soal berhasil diimpor dari PDF.', 'success')
         if errors:
             pesan_error = 'Sebagian soal dilewati karena tidak sesuai format: ' + '; '.join(errors[:10])
             if len(errors) > 10:
                 pesan_error += f' (dan {len(errors) - 10} lainnya)'
             flash(pesan_error, 'warning')
 
-        if not jumlah_masuk and not errors:
-            flash('Tidak ada soal yang terdeteksi di PDF. Pastikan formatnya sesuai contoh.', 'warning')
+        if not daftar_soal_parsed:
+            flash('Tidak ada soal yang terdeteksi di PDF.', 'warning')
+            return redirect(url_for('admin.upload_soal_pdf'))
 
-        return redirect(url_for('admin.bank_soal', jenis=jenis_ujian))
+        tersimpan, gagal = _simpan_soal_pdf_ke_sesi(sesi, daftar_soal_parsed)
+        if gagal:
+            pesan_gagal = 'Sebagian soal belum tersimpan: ' + '; '.join(gagal[:10])
+            if len(gagal) > 10:
+                pesan_gagal += f' (dan {len(gagal) - 10} lainnya)'
+            flash(pesan_gagal, 'warning')
 
-    return render_template(
-        'admin/upload_soal.html',
-        jenis_pilihan=Soal.JENIS_PILIHAN
-    )
+        if tersimpan:
+            flash(f'{tersimpan} soal berhasil masuk ke bank soal.', 'success')
+        else:
+            flash('Belum ada soal PDF yang valid untuk disimpan.', 'warning')
+        return redirect(url_for('admin.bank_soal', sesi_id=sesi.id))
+
+    return render_template('admin/upload_soal.html', sesi_list=sesi_list)
 
 
-# ==================================================
-# HASIL UJIAN - MENAMPILKAN SELURUH HASIL / READ
-# URL : /admin/hasil-ujian
-# ==================================================
+@admin.route('/bank-soal/upload/preview')
+@login_required
+def preview_upload_soal_pdf():
+    if not _require_admin():
+        return "Akses Ditolak", 403
+
+    sesi_id = session.get('preview_soal_sesi_id')
+    session.pop('preview_soal_pdf', None)
+    session.pop('preview_soal_sesi_id', None)
+    return redirect(url_for('admin.bank_soal', sesi_id=sesi_id) if sesi_id else url_for('admin.bank_soal'))
+
+
+@admin.route('/bank-soal/upload/preview/simpan/<int:index>', methods=['POST'])
+@login_required
+def simpan_preview_soal_pdf(index):
+    if not _require_admin():
+        return "Akses Ditolak", 403
+
+    daftar_soal = session.get('preview_soal_pdf') or []
+    sesi_id = session.get('preview_soal_sesi_id')
+    sesi = UjianSesi.query.get(sesi_id) if sesi_id else None
+
+    if not sesi or index < 0 or index >= len(daftar_soal):
+        flash('Soal preview tidak ditemukan.', 'danger')
+        return redirect(url_for('admin.preview_upload_soal_pdf'))
+
+    item = daftar_soal[index]
+    data = {
+        'tipe_soal': (request.form.get('tipe_soal') or item.get('tipe_soal') or Soal.TIPE_PG).lower(),
+        'jumlah_pilihan': int(request.form.get('jumlah_pilihan') or item.get('jumlah_pilihan') or 4),
+        'pertanyaan': request.form.get('pertanyaan') or item.get('pertanyaan'),
+        'pilihan_a': request.form.get('pilihan_a') or item.get('pilihan_a') or '',
+        'pilihan_b': request.form.get('pilihan_b') or item.get('pilihan_b') or '',
+        'pilihan_c': request.form.get('pilihan_c') or item.get('pilihan_c') or '',
+        'pilihan_d': request.form.get('pilihan_d') or item.get('pilihan_d') or '',
+        'pilihan_e': request.form.get('pilihan_e') or item.get('pilihan_e') or '',
+        'jawaban_benar': (request.form.get('jawaban_benar') or item.get('jawaban_benar') or '').upper(),
+        'bobot': int(request.form.get('bobot') or item.get('bobot') or 0),
+        'gambar_pertanyaan': None,
+        'gambar_pilihan_a': None,
+        'gambar_pilihan_b': None,
+        'gambar_pilihan_c': None,
+        'gambar_pilihan_d': None,
+        'gambar_pilihan_e': None,
+    }
+    if data['tipe_soal'] == Soal.TIPE_ESAI:
+        data['jumlah_pilihan'] = 0
+        data['jawaban_benar'] = ''
+        for huruf in ['a', 'b', 'c', 'd', 'e']:
+            data[f'pilihan_{huruf}'] = ''
+
+    error = _validasi_data_soal(data)
+    if error:
+        flash(error, 'danger')
+        return redirect(url_for('admin.preview_upload_soal_pdf'))
+
+    max_urutan = db.session.query(func.max(Soal.urutan)).filter_by(sesi_id=sesi.id).scalar() or 0
+    soal = Soal(sesi_id=sesi.id, urutan=max_urutan + 1)
+    _isi_soal_dari_data(soal, data)
+    db.session.add(soal)
+
+    daftar_soal.pop(index)
+    session['preview_soal_pdf'] = daftar_soal
+    session.modified = True
+    db.session.commit()
+
+    flash('Satu soal berhasil disimpan.', 'success')
+    if not daftar_soal:
+        session.pop('preview_soal_pdf', None)
+        session.pop('preview_soal_sesi_id', None)
+        return redirect(url_for('admin.bank_soal', sesi_id=sesi.id))
+
+    return redirect(url_for('admin.preview_upload_soal_pdf'))
+
+
+@admin.route('/bank-soal/upload/preview/batal', methods=['POST'])
+@login_required
+def batal_preview_soal_pdf():
+    if not _require_admin():
+        return "Akses Ditolak", 403
+
+    sesi_id = session.get('preview_soal_sesi_id')
+    session.pop('preview_soal_pdf', None)
+    session.pop('preview_soal_sesi_id', None)
+    flash('Preview soal dibatalkan.', 'info')
+    return redirect(url_for('admin.bank_soal', sesi_id=sesi_id) if sesi_id else url_for('admin.bank_soal'))
+
+
 @admin.route('/hasil-ujian')
 @login_required
 def hasil_ujian():
-    if current_user.role != 'admin':
+    if not _require_admin():
         return "Akses Ditolak", 403
 
-    jenis_aktif = request.args.get('jenis', Soal.JENIS_AKADEMIK)
-    if jenis_aktif not in [j for j, _ in Soal.JENIS_PILIHAN]:
-        jenis_aktif = Soal.JENIS_AKADEMIK
+    sesi_list = UjianSesi.query.order_by(UjianSesi.urutan, UjianSesi.id).all()
+    sesi_id = request.args.get('sesi_id', type=int)
+    sesi_aktif = UjianSesi.query.get(sesi_id) if sesi_id else (sesi_list[0] if sesi_list else None)
 
-    data_hasil = HasilUjian.query.filter_by(
-        status=HasilUjian.STATUS_SELESAI,
-        jenis_ujian=jenis_aktif
-    ).order_by(HasilUjian.nilai.desc()).all()
+    query = HasilUjian.query.filter_by(status=HasilUjian.STATUS_SELESAI)
+    if sesi_aktif:
+        query = query.filter_by(sesi_id=sesi_aktif.id)
 
-    total_soal = Soal.query.filter_by(jenis_ujian=jenis_aktif).count()
+    data_hasil = query.order_by(HasilUjian.nilai.desc()).all()
+    total_soal = Soal.query.filter_by(sesi_id=sesi_aktif.id).count() if sesi_aktif else 0
 
     return render_template(
         'admin/hasil_ujian.html',
         data_hasil=data_hasil,
         total_soal=total_soal,
-        jenis_aktif=jenis_aktif,
-        jenis_pilihan=Soal.JENIS_PILIHAN
+        sesi_list=sesi_list,
+        sesi_aktif=sesi_aktif
     )
 
 
-# ==================================================
-# HASIL UJIAN - DETAIL JAWABAN SISWA
-# URL : /admin/hasil-ujian/<id>
-# ==================================================
 @admin.route('/hasil-ujian/<int:id>')
 @login_required
 def detail_hasil_ujian(id):
-    if current_user.role != 'admin':
+    if not _require_admin():
         return "Akses Ditolak", 403
 
     hasil = HasilUjian.query.get_or_404(id)
-
-    return render_template(
-        'admin/detail_hasil_ujian.html',
-        hasil=hasil
-    )
+    return render_template('admin/detail_hasil_ujian.html', hasil=hasil)
 
 
-# ==================================================
-# HASIL SELEKSI - MENAMPILKAN SISWA YANG SUDAH LOLOS
-# ADMINISTRASI UNTUK DITETAPKAN KELULUSANNYA
-# URL : /admin/hasil-seleksi
-# ==================================================
 @admin.route('/hasil-seleksi')
 @login_required
 def hasil_seleksi():
-    if current_user.role != 'admin':
+    if not _require_admin():
         return "Akses Ditolak", 403
 
     data_siswa = [
@@ -1019,24 +1418,13 @@ def hasil_seleksi():
         if cs.sudah_lolos_administrasi()
     ]
 
-    # Urutkan dari nilai akhir tertinggi (rata-rata nilai
-    # ujian Akademik & Psikotes yang sudah selesai). Siswa
-    # yang belum mengerjakan ujian sama sekali ditempatkan
-    # paling bawah.
     data_siswa.sort(
-        key=lambda cs: (
-            nilai if (nilai := cs.nilai_akhir_ujian()) is not None else -1
-        ),
+        key=lambda cs: (nilai if (nilai := cs.nilai_akhir_ujian()) is not None else -1),
         reverse=True
     )
 
-    total_diterima = CalonSiswa.query.filter_by(
-        status_kelulusan='Diterima'
-    ).count()
-
-    total_tidak_diterima = CalonSiswa.query.filter_by(
-        status_kelulusan='Tidak Diterima'
-    ).count()
+    total_diterima = CalonSiswa.query.filter_by(status_kelulusan='Diterima').count()
+    total_tidak_diterima = CalonSiswa.query.filter_by(status_kelulusan='Tidak Diterima').count()
 
     return render_template(
         'admin/hasil_seleksi.html',
@@ -1046,55 +1434,40 @@ def hasil_seleksi():
     )
 
 
-# ==================================================
-# HASIL SELEKSI - TETAPKAN DITERIMA
-# URL : /admin/hasil-seleksi/terima/<id>
-# ==================================================
-@admin.route('/hasil-seleksi/terima/<int:id>')
+@admin.route('/hasil-seleksi/terima/<int:id>', methods=['POST'])
 @login_required
 def terima_seleksi(id):
-    if current_user.role != 'admin':
+    if not _require_admin():
         return "Akses Ditolak", 403
 
     siswa = CalonSiswa.query.get_or_404(id)
     siswa.status_kelulusan = 'Diterima'
     db.session.commit()
-
     flash(f'{siswa.nama_lengkap} dinyatakan Diterima', 'success')
     return redirect(url_for('admin.hasil_seleksi'))
 
 
-# ==================================================
-# HASIL SELEKSI - TETAPKAN TIDAK DITERIMA
-# URL : /admin/hasil-seleksi/tolak/<id>
-# ==================================================
-@admin.route('/hasil-seleksi/tolak/<int:id>')
+@admin.route('/hasil-seleksi/tolak/<int:id>', methods=['POST'])
 @login_required
 def tolak_seleksi(id):
-    if current_user.role != 'admin':
+    if not _require_admin():
         return "Akses Ditolak", 403
 
     siswa = CalonSiswa.query.get_or_404(id)
     siswa.status_kelulusan = 'Tidak Diterima'
     db.session.commit()
-
     flash(f'{siswa.nama_lengkap} dinyatakan Tidak Diterima', 'warning')
     return redirect(url_for('admin.hasil_seleksi'))
 
 
-# ==================================================
-# HASIL SELEKSI - RESET KE MENUNGGU
-# URL : /admin/hasil-seleksi/reset/<id>
-# ==================================================
-@admin.route('/hasil-seleksi/reset/<int:id>')
+@admin.route('/hasil-seleksi/reset/<int:id>', methods=['POST'])
 @login_required
 def reset_seleksi(id):
-    if current_user.role != 'admin':
+    if not _require_admin():
         return "Akses Ditolak", 403
 
     siswa = CalonSiswa.query.get_or_404(id)
     siswa.status_kelulusan = 'Menunggu'
     db.session.commit()
-
     flash(f'Status kelulusan {siswa.nama_lengkap} direset ke Menunggu', 'success')
     return redirect(url_for('admin.hasil_seleksi'))

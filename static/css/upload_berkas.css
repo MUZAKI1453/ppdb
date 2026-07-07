@@ -37,23 +37,35 @@
 
 .berkas-grid {
     display: grid;
-    grid-template-columns:repeat(auto-fit, minmax(260px, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 20px;
 }
 
 .document-card {
+    position: relative;
     background: #fff;
     border: 1px solid #E2E8F0;
     border-radius: 18px;
     padding: 15px;
 }
 
+.document-preview-btn {
+    width: 100%;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    display: block;
+    text-align: inherit;
+}
+
 .document-thumb {
     width: 100%;
     height: 220px;
     object-fit: cover;
+    object-position: center;
     border-radius: 12px;
     cursor: pointer;
+    display: block;
 }
 
 .empty-document {
@@ -67,8 +79,25 @@
     color: #CBD5E1;
 }
 
+.empty-document-pdf {
+    color: #DC2626;
+}
+
+.upload-control {
+    margin-top: 15px;
+}
+
+.upload-control small {
+    display: block;
+    margin-top: 6px;
+}
+
 .document-info {
     padding-top: 15px;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
 }
 
 .document-info h6 {
@@ -155,6 +184,12 @@
     font-weight: 600;
 }
 
+@media (max-width: 992px) {
+    .berkas-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
 @media (max-width: 768px) {
 
     .detail-header {
@@ -184,4 +219,8 @@
         width: 100%;
         text-align: center;
     }
+}
+.document-card-bermasalah {
+    border-color: #FCA5A5;
+    background: #FFF7F7;
 }

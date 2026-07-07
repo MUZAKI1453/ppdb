@@ -11,7 +11,7 @@
 
 {% block content %}
 
-    <div class="ppdb-form-card detail-shell">
+    <div class="spmb-form-card detail-shell">
 
         <!-- ===================================== -->
         <!-- HEADER (selalu terlihat, tidak ikut tab) -->
@@ -193,7 +193,7 @@
 
                     <div class="section-title">
                         <i class="bi bi-person-vcard"></i>
-                        Data Pribadi Siswa
+                        Data Pribadi Calon Siswa
                     </div>
 
                     <div class="row">
@@ -782,9 +782,10 @@
                         Tolak Pendaftaran
                     </button>
 
-                    <form method="GET"
+                    <form method="POST"
                           action="{{ url_for('admin.verifikasi_siswa', id=siswa.id) }}"
                           onsubmit="return confirm('Verifikasi pendaftaran siswa ini? Pastikan seluruh data dan berkas sudah diperiksa.');">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
                         <button type="submit" class="btn btn-success">
                             <i class="bi bi-check-circle"></i>
@@ -804,6 +805,7 @@
                       id="formTolak"
                       class="reject-box"
                       style="display:none;">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
                     <label class="form-label">
                         Alasan Penolakan
@@ -826,7 +828,7 @@
                         </button>
 
                         <button type="submit" class="btn btn-danger-solid"
-                                onclick="return confirm('Tolak pendaftaran siswa ini? Siswa akan diminta memperbaiki datanya.');">
+                                onclick="return confirm('Tolak pendaftaran calon siswa ini? Calon siswa akan diminta memperbaiki datanya.');">
                             <i class="bi bi-send-fill"></i>
                             Kirim Penolakan
                         </button>

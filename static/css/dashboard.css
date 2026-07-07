@@ -243,7 +243,7 @@ body {
 }
 
 /* ==================================================
-   PROGRESS PPDB
+   PROGRESS SPMB
 ================================================== */
 
 .progress-item {
@@ -353,5 +353,66 @@ body {
 
     .stat-card i {
         font-size: 22px;
+    }
+}
+/* ==================================================
+   DYNAMIC STAGE GUIDE
+================================================== */
+
+.tahapan-welcome {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.welcome-main {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+}
+
+.welcome-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, .18);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 48px;
+}
+
+.welcome-icon i {
+    font-size: 24px;
+}
+
+.tahapan-welcome .welcome-card h3,
+.tahapan-welcome h3 {
+    font-size: clamp(20px, 2.4vw, 28px);
+    font-weight: 800;
+    margin-bottom: 8px;
+}
+
+.progress-item.current {
+    background: #FFF7ED;
+    color: #C2410C;
+    border-color: #FDBA74;
+    font-weight: 700;
+}
+
+@media (max-width: 576px) {
+    .welcome-main {
+        gap: 12px;
+    }
+
+    .welcome-icon {
+        width: 42px;
+        height: 42px;
+        border-radius: 14px;
+        flex-basis: 42px;
+    }
+
+    .welcome-icon i {
+        font-size: 20px;
     }
 }

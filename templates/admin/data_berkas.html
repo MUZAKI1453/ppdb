@@ -3,6 +3,61 @@
 {% block extra_css %}
     <link rel="stylesheet"
           href="{{ url_for('static', filename='css/table.css') }}">
+    <style>
+        #berkasTable .status-success,
+        #berkasTable .status-danger,
+        #berkasTable .status-warning {
+            white-space: nowrap;
+            display: inline-flex;
+            align-items: center;
+            gap: .25rem;
+            font-size: inherit;
+            line-height: 1.2;
+        }
+        .berkas-table-wrapper {
+            width: 100%;
+            overflow-x: visible;
+        }
+        #berkasTable {
+            table-layout: auto;
+        }
+        #berkasTable th:nth-child(1),
+        #berkasTable td:nth-child(1) {
+            width: 54px;
+        }
+        #berkasTable th:nth-child(2),
+        #berkasTable td:nth-child(2) {
+            min-width: 240px;
+        }
+        #berkasTable th:nth-child(n+3):nth-child(-n+6),
+        #berkasTable td:nth-child(n+3):nth-child(-n+6) {
+            width: 78px;
+            white-space: nowrap;
+        }
+        #berkasTable th:nth-child(7),
+        #berkasTable td:nth-child(7) {
+            width: 118px;
+            white-space: nowrap;
+        }
+        #berkasTable th:last-child,
+        #berkasTable td:last-child {
+            width: 126px;
+            min-width: 126px;
+            max-width: 126px;
+            white-space: nowrap;
+        }
+        #berkasTable .action-buttons {
+            display: inline-flex;
+            flex-wrap: nowrap;
+            gap: 4px;
+            min-width: max-content;
+        }
+        #berkasTable .action-buttons .btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+        }
+    </style>
 {% endblock %}
 
 {% block title %}
@@ -10,7 +65,7 @@
 {% endblock %}
 
 {% block page_title %}
-    Data Berkas Siswa
+    Data Berkas Calon Siswa
 {% endblock %}
 
 {% block content %}
@@ -21,7 +76,7 @@
         <div class="d-flex justify-content-between align-items-center mb-4">
 
             <h3 class="mb-0 fw-bold">
-                Data Berkas Siswa
+                Data Berkas Calon Siswa
             </h3>
 
         </div>
@@ -45,15 +100,15 @@
         </div>
 
         <!-- TABLE -->
-        <div class="table-responsive">
+        <div class="berkas-table-wrapper">
 
-            <table class="ppdb-table" id="berkasTable">
+            <table class="spmb-table" id="berkasTable">
 
                 <thead>
 
                 <tr>
                     <th width="60">No</th>
-                    <th>Nama Siswa</th>
+                    <th>Nama Calon Siswa</th>
                     <th>Pas Foto</th>
                     <th>KK</th>
                     <th>Akta</th>
@@ -81,7 +136,7 @@
                             </div>
 
                             <div class="student-subtitle">
-                                ID Berkas : {{ item.id }}
+                                NISN: {{ item.calon_siswa.nisn or '-' }}
                             </div>
 
                         </td>
@@ -190,13 +245,10 @@
 
                                 {% if item.status_verifikasi|string|lower != 'diverifikasi' %}
 
-                                    <a href="{{ url_for('admin.verifikasi_berkas', id=item.id) }}"
-                                       class="btn btn-outline-success btn-sm"
-                                       title="Verifikasi">
-
-                                        <i class="bi bi-check-lg"></i>
-
-                                    </a>
+                                    <form method="POST" action="{{ url_for('admin.verifikasi_berkas', id=item.id) }}" class="d-inline" onsubmit="return confirm('Verifikasi berkas ini?')">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <button class="btn btn-outline-success btn-sm" title="Verifikasi"><i class="bi bi-check-lg"></i></button>
+                                    </form>
 
                                 {% endif %}
 
@@ -208,14 +260,10 @@
 
                                 </a>
 
-                                <a href="{{ url_for('admin.hapus_berkas', id=item.id) }}"
-                                   class="btn btn-outline-danger btn-sm"
-                                   title="Hapus"
-                                   onclick="return confirm('Yakin ingin menghapus data ini?')">
-
-                                    <i class="bi bi-trash-fill"></i>
-
-                                </a>
+                                <form method="POST" action="{{ url_for('admin.hapus_berkas', id=item.id) }}" class="d-inline" onsubmit="return confirm('Yakin ingin menghapus data ini?')">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <button class="btn btn-outline-danger btn-sm" title="Hapus"><i class="bi bi-trash-fill"></i></button>
+                                </form>
 
                             </div>
 

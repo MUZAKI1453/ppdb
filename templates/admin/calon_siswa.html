@@ -38,11 +38,11 @@
 
         <!-- TABLE -->
         <div class="table-responsive">
-            <table class="ppdb-table" id="siswaTable">
+            <table class="spmb-table" id="siswaTable">
                 <thead>
                 <tr>
                     <th width="60">No</th>
-                    <th>Nama Siswa</th>
+                    <th>Nama Calon Siswa</th>
                     <th>Asal Sekolah</th>
                     <th>Status</th>
                     <th width="200" class="text-center">Aksi</th>
@@ -80,17 +80,16 @@
                                 </a>
 
                                 {% if siswa.status_verifikasi != 'Diverifikasi' %}
-                                    <a href="{{ url_for('admin.verifikasi_siswa', id=siswa.id) }}"
-                                       class="btn btn-outline-success btn-sm" title="Verifikasi">
-                                        <i class="bi bi-check-lg"></i>
-                                    </a>
+                                    <form method="POST" action="{{ url_for('admin.verifikasi_siswa', id=siswa.id) }}" class="d-inline">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <button class="btn btn-outline-success btn-sm" title="Verifikasi"><i class="bi bi-check-lg"></i></button>
+                                    </form>
                                 {% endif %}
 
-                                <a href="{{ url_for('admin.hapus_siswa', id=siswa.id) }}"
-                                   class="btn btn-outline-danger btn-sm"
-                                   onclick="return confirm('Yakin ingin menghapus data ini?')">
-                                    <i class="bi bi-trash-fill"></i>
-                                </a>
+                                <form method="POST" action="{{ url_for('admin.hapus_siswa', id=siswa.id) }}" class="d-inline" onsubmit="return confirm('Yakin ingin menghapus data ini?')">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <button class="btn btn-outline-danger btn-sm"><i class="bi bi-trash-fill"></i></button>
+                                </form>
                             </div>
                         </td>
                     </tr>

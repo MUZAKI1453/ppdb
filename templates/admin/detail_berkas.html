@@ -18,7 +18,7 @@
 
             <div>
 
-                <h2>Detail Berkas Siswa</h2>
+                <h2>Detail Berkas Calon Siswa</h2>
 
                 <div class="student-info">
 
@@ -250,13 +250,10 @@
 
             {% if status == 'belum diverifikasi' or status == 'revisi' %}
 
-                <a href="{{ url_for('admin.verifikasi_berkas', id=berkas.id) }}"
-                   class="btn btn-success">
-
-                    <i class="bi bi-check-circle-fill"></i>
-                    Terima Berkas
-
-                </a>
+                <form method="POST" action="{{ url_for('admin.verifikasi_berkas', id=berkas.id) }}" class="d-inline" onsubmit="return confirm('Terima dan verifikasi seluruh berkas ini?')">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button class="btn btn-success"><i class="bi bi-check-circle-fill"></i> Terima Berkas</button>
+                </form>
 
                 <button
                         type="button"
@@ -308,6 +305,7 @@
                         method="POST"
                         action="{{ url_for('admin.tolak_berkas', id=berkas.id) }}"
                         id="formTolakBerkas">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
                     <div class="modal-header">
 

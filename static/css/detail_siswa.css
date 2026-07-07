@@ -4,7 +4,7 @@
    formulir.css (gradient biru, radius, shadow)
 ========================================== */
 
-.ppdb-form-card {
+.spmb-form-card {
     background: #FFFFFF;
     border-radius: 24px;
     padding: 35px;
@@ -488,11 +488,11 @@
    CARD EFFECT
 ========================================== */
 
-.ppdb-form-card:hover {
+.spmb-form-card:hover {
     box-shadow: 0 15px 40px rgba(0, 0, 0, .08);
 }
 
-.ppdb-form-card + .ppdb-form-card {
+.spmb-form-card + .spmb-form-card {
     margin-top: 20px;
 }
 
@@ -502,7 +502,7 @@
 
 @media (max-width: 768px) {
 
-    .ppdb-form-card {
+    .spmb-form-card {
         padding: 20px;
         border-radius: 18px;
     }
@@ -551,7 +551,7 @@
 
 @media (min-width: 1400px) {
 
-    .ppdb-form-card {
+    .spmb-form-card {
         padding: 45px;
     }
 

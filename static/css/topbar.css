@@ -93,6 +93,13 @@
     flex-shrink: 0;
 }
 
+.user-avatar-img {
+    object-fit: cover;
+    object-position: center;
+    display: block;
+    background: #F8FAFC;
+}
+
 /* Nama & role */
 .user-info {
     display: flex;

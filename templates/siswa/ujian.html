@@ -1,101 +1,62 @@
 {% extends 'layouts/base_dashboard.html' %}
 
-{% block title %}
-    Ujian {{ label_jenis }}
-{% endblock %}
+{% block title %}Ujian {{ sesi.judul }}{% endblock %}
+{% block page_title %}Ujian {{ sesi.judul }}{% endblock %}
 
-{% block page_title %}
-    Ujian {{ label_jenis }}
-{% endblock %}
-
-{% block extra_css %}
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/ujian.css') }}">
-{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{{ url_for('static', filename='css/ujian.css') }}">{% endblock %}
 
 {% block content %}
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% for category, message in messages[-3:] %}
+        <div class="alert alert-{{ category }}">{{ message }}</div>
+    {% endfor %}
+{% endwith %}
 
-    {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-            {% for category, message in messages[-3:] %}
-                <div class="alert alert-{{ category }}">{{ message }}</div>
-            {% endfor %}
-        {% endif %}
-    {% endwith %}
-
-    <div class="ujian-header">
-        <div>
-            <h2>Ujian {{ label_jenis }} PPDB</h2>
-            <p>Kerjakan seluruh soal di bawah ini, lalu klik "Kumpulkan Jawaban". Ujian hanya bisa dikerjakan satu
-                kali.</p>
-        </div>
-
-        {% if daftar_soal %}
-            <span class="badge-jumlah">
-                <i class="bi bi-list-ol"></i>
-                {{ daftar_soal|length }} Soal
-            </span>
-        {% endif %}
+<div class="ujian-header">
+    <div>
+        <h2>{{ sesi.judul }}</h2>
+        <p>{{ sesi.deskripsi or 'Kerjakan seluruh soal dengan teliti. Setelah dikumpulkan, sistem akan otomatis mengarahkan ke sesi berikutnya jika tersedia.' }}</p>
     </div>
+    {% if daftar_soal %}<span class="badge-jumlah"><i class="bi bi-list-ol"></i> {{ daftar_soal|length }} Soal</span>{% endif %}
+</div>
 
-    {% if not daftar_soal %}
+{% if not daftar_soal %}
+    <div class="alert alert-warning"><i class="bi bi-exclamation-triangle-fill"></i> Belum ada soal pada sesi ini.</div>
+{% else %}
+<form method="POST" action="{{ url_for('siswa.ujian', sesi_id=sesi.id) }}" id="formUjian">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
-        <div class="alert alert-warning">
-            <i class="bi bi-exclamation-triangle-fill"></i>
-            Belum ada soal ujian yang tersedia saat ini. Silakan cek kembali nanti atau hubungi pihak sekolah.
-        </div>
-
-    {% else %}
-
-        <form method="POST" action="{{ url_for('siswa.ujian', jenis=jenis) }}" id="formUjian">
-
-            {% for soal in daftar_soal %}
-
-                <div class="soal-card">
-
-                    <div class="soal-nomor">{{ loop.index }}</div>
-
-                    <div class="soal-pertanyaan">{{ soal.pertanyaan }}</div>
-
-                    <div class="pilihan-list">
-
-                        {% for huruf, teks in [('A', soal.pilihan_a), ('B', soal.pilihan_b), ('C', soal.pilihan_c), ('D', soal.pilihan_d)] %}
-                            <label class="pilihan-item">
-                                <input type="radio"
-                                       name="soal_{{ soal.id }}"
-                                       value="{{ huruf }}"
-                                       required>
-                                <span class="pilihan-huruf">{{ huruf }}.</span>
-                                <span>{{ teks }}</span>
-                            </label>
-                        {% endfor %}
-
-                    </div>
-
-                </div>
-
-            {% endfor %}
-
-            <div class="ujian-submit-bar">
-                <div class="text-muted">
-                    Pastikan seluruh soal sudah dijawab sebelum mengumpulkan.
-                </div>
-
-                <button type="submit" class="btn btn-primary btn-lg">
-                    <i class="bi bi-check2-circle"></i>
-                    Kumpulkan Jawaban
-                </button>
+    {% for soal in daftar_soal %}
+        <div class="soal-card">
+            <div class="soal-nomor">{{ loop.index }}</div>
+            <div class="soal-pertanyaan">{{ soal.pertanyaan }}</div>
+            <div class="pilihan-list">
+                {% for huruf, teks in [('A', soal.pilihan_a), ('B', soal.pilihan_b), ('C', soal.pilihan_c), ('D', soal.pilihan_d)] %}
+                    <label class="pilihan-item">
+                        <input type="radio" name="soal_{{ soal.id }}" value="{{ huruf }}" required>
+                        <span class="pilihan-huruf">{{ huruf }}.</span>
+                        <span>{{ teks }}</span>
+                    </label>
+                {% endfor %}
             </div>
+        </div>
+    {% endfor %}
 
-        </form>
+    <div class="ujian-submit-bar">
+        <div class="text-muted">Pastikan seluruh soal sudah dijawab sebelum mengumpulkan.</div>
+        <button type="submit" class="btn btn-primary btn-lg">
+            <i class="bi bi-check2-circle"></i>
+            {% if sesi_berikutnya %}Kumpulkan & Lanjut Sesi Berikutnya{% else %}Kumpulkan Jawaban{% endif %}
+        </button>
+    </div>
+</form>
 
-        <script>
-            document.getElementById('formUjian').addEventListener('submit', function (e) {
-                if (!confirm('Yakin ingin mengumpulkan jawaban? Jawaban tidak dapat diubah setelah dikumpulkan.')) {
-                    e.preventDefault();
-                }
-            });
-        </script>
-
-    {% endif %}
-
+<script>
+document.getElementById('formUjian').addEventListener('submit', function (e) {
+    if (!confirm('Yakin ingin mengumpulkan jawaban? Jawaban tidak dapat diubah setelah dikumpulkan.')) {
+        e.preventDefault();
+    }
+});
+</script>
+{% endif %}
 {% endblock %}

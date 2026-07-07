@@ -9,7 +9,7 @@
 {% endblock %}
 
 {% block page_title %}
-    Hasil Seleksi PPDB
+    Hasil Seleksi SPMB
 {% endblock %}
 
 {% block content %}
@@ -75,14 +75,13 @@
 
         <div class="table-responsive">
 
-            <table class="ppdb-table" id="seleksiTable">
+            <table class="spmb-table" id="seleksiTable">
 
                 <thead>
                 <tr>
                     <th width="60">No</th>
-                    <th>Nama Siswa</th>
-                    <th class="text-center">Akademik</th>
-                    <th class="text-center">Psikotes</th>
+                    <th>Nama Calon Siswa</th>
+                    <th class="text-center">Sesi Selesai</th>
                     <th class="text-center">Nilai Akhir</th>
                     <th>Status Kelulusan</th>
                     <th width="220" class="text-center">Aksi</th>
@@ -101,24 +100,11 @@
                             <div class="student-subtitle">NISN: {{ siswa.nisn or '-' }}</div>
                         </td>
 
-                        {% set hasil_akademik = siswa.get_hasil_ujian('akademik') %}
-                        {% set hasil_psikotes = siswa.get_hasil_ujian('psikotes') %}
                         {% set nilai_akhir = siswa.nilai_akhir_ujian() %}
+                        {% set sesi_selesai = siswa.hasil_ujian|selectattr('status', 'equalto', 'Selesai')|list %}
 
                         <td class="text-center">
-                            {% if hasil_akademik and hasil_akademik.is_selesai() %}
-                                {{ hasil_akademik.nilai }}
-                            {% else %}
-                                <span class="text-muted">-</span>
-                            {% endif %}
-                        </td>
-
-                        <td class="text-center">
-                            {% if hasil_psikotes and hasil_psikotes.is_selesai() %}
-                                {{ hasil_psikotes.nilai }}
-                            {% else %}
-                                <span class="text-muted">-</span>
-                            {% endif %}
+                            {{ sesi_selesai|length }} sesi
                         </td>
 
                         <td class="text-center">
@@ -145,27 +131,24 @@
                             <div class="action-buttons">
 
                                 {% if siswa.status_kelulusan != 'Diterima' %}
-                                    <a href="{{ url_for('admin.terima_seleksi', id=siswa.id) }}"
-                                       class="btn btn-outline-success btn-sm" title="Terima"
-                                       onclick="return confirm('Tetapkan {{ siswa.nama_lengkap }} sebagai Diterima?')">
-                                        <i class="bi bi-check-lg"></i>
-                                    </a>
+                                    <form method="POST" action="{{ url_for('admin.terima_seleksi', id=siswa.id) }}" class="d-inline" onsubmit="return confirm('Tetapkan {{ siswa.nama_lengkap }} sebagai Diterima?')">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <button class="btn btn-outline-success btn-sm" title="Terima"><i class="bi bi-check-lg"></i></button>
+                                    </form>
                                 {% endif %}
 
                                 {% if siswa.status_kelulusan != 'Tidak Diterima' %}
-                                    <a href="{{ url_for('admin.tolak_seleksi', id=siswa.id) }}"
-                                       class="btn btn-outline-danger btn-sm" title="Tidak Diterima"
-                                       onclick="return confirm('Tetapkan {{ siswa.nama_lengkap }} sebagai Tidak Diterima?')">
-                                        <i class="bi bi-x-lg"></i>
-                                    </a>
+                                    <form method="POST" action="{{ url_for('admin.tolak_seleksi', id=siswa.id) }}" class="d-inline" onsubmit="return confirm('Tetapkan {{ siswa.nama_lengkap }} sebagai Tidak Diterima?')">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <button class="btn btn-outline-danger btn-sm" title="Tidak Diterima"><i class="bi bi-x-lg"></i></button>
+                                    </form>
                                 {% endif %}
 
                                 {% if siswa.status_kelulusan != 'Menunggu' %}
-                                    <a href="{{ url_for('admin.reset_seleksi', id=siswa.id) }}"
-                                       class="btn btn-outline-secondary btn-sm" title="Reset ke Menunggu"
-                                       onclick="return confirm('Reset status kelulusan {{ siswa.nama_lengkap }} ke Menunggu?')">
-                                        <i class="bi bi-arrow-counterclockwise"></i>
-                                    </a>
+                                    <form method="POST" action="{{ url_for('admin.reset_seleksi', id=siswa.id) }}" class="d-inline" onsubmit="return confirm('Reset status kelulusan {{ siswa.nama_lengkap }} ke Menunggu?')">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <button class="btn btn-outline-secondary btn-sm" title="Reset ke Menunggu"><i class="bi bi-arrow-counterclockwise"></i></button>
+                                    </form>
                                 {% endif %}
 
                             </div>
@@ -175,7 +158,7 @@
                 {% else %}
 
                     <tr>
-                        <td colspan="7" class="text-center py-5 text-muted">
+                        <td colspan="6" class="text-center py-5 text-muted">
                             Belum ada siswa yang lolos verifikasi administrasi & berkas.
                         </td>
                     </tr>

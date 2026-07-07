@@ -1,152 +1,60 @@
 {% extends 'layouts/base_dashboard.html' %}
 
-{% block title %}
-    Dashboard Siswa
-{% endblock %}
-
-{% block page_title %}
-    Dashboard Siswa
-{% endblock %}
+{% block title %}Dashboard Calon Siswa{% endblock %}
+{% block page_title %}Dashboard Calon Siswa{% endblock %}
 
 {% block content %}
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% for category, message in messages[-3:] %}
+        <div class="alert alert-{{ category }}">{{ message }}</div>
+    {% endfor %}
+{% endwith %}
 
-    {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-            {% for category, message in messages[-3:] %}
-                <div class="alert alert-{{ category }}">{{ message }}</div>
-            {% endfor %}
-        {% endif %}
-    {% endwith %}
-
-    <div class="welcome-card">
-
-        <h3>
-            Halo, {{ current_user.username }}
-        </h3>
-
-        <p>
-            Pantau proses pendaftaran PPDB Anda secara realtime.
-        </p>
-
-    </div>
-
-    <div class="row g-4 mb-4">
-
-        <!-- PROGRESS -->
-        <div class="col-6 col-xl-3">
-            <div class="stat-card stat-blue">
-                <div>
-                    <h2>{{ progress }}%</h2>
-                    <p>Progress Pendaftaran</p>
-                </div>
-                <i class="bi bi-bar-chart-fill"></i>
-            </div>
-        </div>
-
-        <!-- STATUS DATA -->
-        <div class="col-6 col-xl-3">
-            <div class="stat-card stat-green">
-                <div>
-                    <h2>{{ status_data }}</h2>
-                    <p>Status Data</p>
-                </div>
-                <i class="bi bi-person-check-fill"></i>
-            </div>
-        </div>
-
-        <!-- STATUS BERKAS (INI YANG DINAMIS) -->
-        <div class="col-6 col-xl-3">
-            <div class="stat-card
-            {% if berkas and berkas.status_verifikasi == 'Ditolak' %}
-                stat-red
-            {% elif berkas and berkas.status_verifikasi == 'Diverifikasi' %}
-                stat-green
-            {% else %}
-                stat-purple
-            {% endif %}
-        ">
-
-                <div>
-                    <h2>
-                        {% if berkas and berkas.status_verifikasi == 'Ditolak' %}
-                            Ditolak
-                        {% elif berkas and berkas.status_verifikasi == 'Diverifikasi' %}
-                            Diverifikasi
-                        {% else %}
-                            Menunggu
-                        {% endif %}
-                    </h2>
-                    <p>Status Berkas</p>
-                </div>
-                <i class="bi bi-file-earmark-check-fill"></i>
-            </div>
-        </div>
-
-        <!-- STATUS SELEKSI -->
-        <div class="col-6 col-xl-3">
-            <div class="stat-card
-            {% if hasil_ujian and hasil_ujian.is_selesai() %}
-                stat-green
-            {% elif boleh_ujian %}
-                stat-blue
-            {% else %}
-                stat-orange
-            {% endif %}
-        ">
-                <div>
-                    <h2>{{ status_seleksi }}</h2>
-                    <p>Status Seleksi</p>
-                </div>
-                <i class="bi bi-award-fill"></i>
-            </div>
+<div class="welcome-card tahapan-welcome">
+    <div class="welcome-main">
+        <div class="welcome-icon"><i class="bi {{ panduan_tahapan.ikon }}"></i></div>
+        <div>
+            <h3>{{ panduan_tahapan.judul }}</h3>
+            <p>{{ panduan_tahapan.deskripsi }}</p>
         </div>
     </div>
+    {% if panduan_tahapan.aksi_url %}
+        <a href="{{ panduan_tahapan.aksi_url }}" class="btn btn-light btn-sm fw-bold mt-3">
+            <i class="bi bi-arrow-right-circle-fill"></i> {{ panduan_tahapan.aksi_teks }}
+        </a>
+    {% endif %}
+</div>
 
-    <!-- TAHAPAN PPDB -->
-    <div class="content-card">
+<div class="row g-3 g-md-4 mb-4">
+    <div class="col-6 col-xl-3"><div class="stat-card stat-blue"><div><h2>{{ progress }}%</h2><p>Progress Pendaftaran</p></div><i class="bi bi-bar-chart-fill"></i></div></div>
+    <div class="col-6 col-xl-3"><div class="stat-card stat-green"><div><h2>{{ status_data }}</h2><p>Status Data</p></div><i class="bi bi-person-check-fill"></i></div></div>
+    <div class="col-6 col-xl-3"><div class="stat-card {% if berkas and berkas.status_verifikasi == 'Ditolak' %}stat-red{% elif berkas and berkas.status_verifikasi == 'Diverifikasi' %}stat-green{% else %}stat-purple{% endif %}"><div><h2>{{ status_berkas }}</h2><p>Status Berkas</p></div><i class="bi bi-file-earmark-check-fill"></i></div></div>
+    <div class="col-6 col-xl-3"><div class="stat-card {% if status_seleksi.startswith('Nilai') %}stat-green{% elif boleh_ujian %}stat-blue{% else %}stat-orange{% endif %}"><div><h2>{{ status_seleksi }}</h2><p>Status Seleksi</p></div><i class="bi bi-award-fill"></i></div></div>
+</div>
 
-        <h5 class="mb-4">
-            Tahapan PPDB
-        </h5>
+<div class="content-card">
+    <h5 class="mb-2">Tahapan SPMB Calon Siswa</h5>
+    <p class="text-muted mb-4">Ikuti tahapan berikut secara berurutan. Tanda biru berarti tahapan sudah selesai atau sedang aktif.</p>
 
-        <div class="progress-item active">
-            ✓ Akun Berhasil Dibuat
-        </div>
+    <div class="progress-item active">✓ Akun Berhasil Dibuat</div>
+    <div class="progress-item {% if progress >= 50 %}active{% endif %}">✓ Formulir SPMB</div>
+    <div class="progress-item {% if progress >= 75 %}active{% endif %}">✓ Upload Berkas</div>
+    <div class="progress-item {% if progress >= 100 %}active{% endif %}">✓ Verifikasi Administrasi</div>
 
-        <div class="progress-item {% if progress >= 50 %}active{% endif %}">
-            ✓ Formulir PPDB
-        </div>
-
-        <div class="progress-item {% if progress >= 75 %}active{% endif %}">
-            ✓ Upload Berkas
-        </div>
-
-        <div class="progress-item {% if progress >= 100 %}active{% endif %}">
-            ✓ Verifikasi Administrasi
-        </div>
-
-        {% for jenis, info in status_ujian.items() %}
-            <div class="progress-item {% if info.hasil and info.hasil.is_selesai() %}active{% endif %}">
-                {% if info.hasil and info.hasil.is_selesai() %}
-                    ✓ Ujian {{ info.label }} — selesai, nilai {{ info.hasil.nilai }}
-                {% elif boleh_ujian %}
-                    ○ Ujian {{ info.label }} —
-                    <a href="{{ url_for('siswa.ujian', jenis=jenis) }}">kerjakan sekarang</a>
-                {% else %}
-                    ○ Ujian {{ info.label }}
-                {% endif %}
-            </div>
-        {% endfor %}
-
-        <div class="progress-item {% if calon_siswa and calon_siswa.status_kelulusan != 'Menunggu' %}active{% endif %}">
-            {% if calon_siswa and calon_siswa.status_kelulusan != 'Menunggu' %}
-                ✓ Pengumuman —
-                <a href="{{ url_for('siswa.pengumuman') }}">lihat hasil</a>
-            {% else %}
-                ○ Pengumuman
+    {% for item in status_ujian %}
+        {% set sesi = item.sesi %}
+        {% set hasil = item.hasil %}
+        <div class="progress-item {% if hasil and hasil.is_selesai() %}active{% elif sesi_berikutnya and sesi.id == sesi_berikutnya.id %}current{% endif %}">
+            {% if hasil and hasil.is_selesai() %}✓{% elif sesi_berikutnya and sesi.id == sesi_berikutnya.id %}→{% else %}○{% endif %}
+            {{ sesi.judul }}
+            {% if hasil and hasil.is_selesai() %}
+                <span class="text-muted"> — Nilai {{ hasil.nilai }}</span>
+            {% elif sesi_berikutnya and sesi.id == sesi_berikutnya.id and boleh_ujian %}
+                <span class="text-muted"> — Sesi berikutnya</span>
             {% endif %}
         </div>
-
-    </div>
-
+    {% else %}
+        <div class="progress-item">○ Sesi ujian belum dibuat admin</div>
+    {% endfor %}
+</div>
 {% endblock %}
