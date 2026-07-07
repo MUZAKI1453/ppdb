@@ -1,0 +1,170 @@
+{% extends 'layouts/base_dashboard.html' %}
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/table.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/ujian.css') }}">
+{% endblock %}
+{% block title %}Koreksi Esai {{ hasil.label_sesi() }}{% endblock %}
+{% block page_title %}Koreksi Esai {{ hasil.label_sesi() }}{% endblock %}
+
+{% macro soal_image(filename, alt='Gambar soal') -%}
+    {% if filename %}
+        <div class="correction-image-preview">
+            <img src="{{ url_for('admin.uploaded_soal_file', filename=filename) }}" alt="{{ alt }}">
+        </div>
+    {% endif %}
+{%- endmacro %}
+
+{% macro option_preview(soal, huruf, status='correct', label='Jawaban Benar') -%}
+    {% if huruf %}
+        {% set teks = soal.pilihan().get(huruf) %}
+        {% set gambar = soal.gambar_pilihan(huruf) %}
+        <div class="correction-option {{ status }}">
+            <span class="correction-option-letter">{{ huruf }}</span>
+            <div class="min-w-0 flex-grow-1">
+                {{ soal_image(gambar, 'Gambar pilihan ' ~ huruf) }}
+                {% if teks %}<div class="text-break">{{ teks }}</div>{% else %}<div class="text-muted fst-italic">Pilihan kosong.</div>{% endif %}
+            </div>
+            <span class="correction-option-badge">{{ label }}</span>
+        </div>
+    {% endif %}
+{%- endmacro %}
+
+{% block content %}
+<form method="POST" class="koreksi-esai-page">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+    <div class="content-card correction-page-head">
+        <div>
+            <h3 class="mb-1 fw-bold">{{ hasil.label_sesi() }}</h3>
+            <p class="mb-0 text-muted">
+                {{ hasil.calon_siswa.nama_lengkap }} &middot; NISN {{ hasil.calon_siswa.nisn or '-' }}
+            </p>
+        </div>
+        <div class="correction-head-actions">
+            <a href="{{ url_for('admin.hasil_ujian', sesi_id=hasil.sesi_id) }}" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-arrow-left me-1"></i> Kembali ke Hasil Ujian
+            </a>
+        </div>
+    </div>
+
+    <div class="correction-summary-grid">
+        <div class="hasil-summary-box">
+            <span>Nilai PG</span>
+            <strong>{{ hasil.nilai_pg or 0 }}</strong>
+        </div>
+        <div class="hasil-summary-box">
+            <span>Nilai Esai</span>
+            <strong>{{ hasil.nilai_esai or 0 }}</strong>
+        </div>
+        <div class="hasil-summary-box">
+            <span>Nilai Akhir</span>
+            <strong>{{ hasil.nilai or 0 }}</strong>
+        </div>
+    </div>
+
+    {% if jawaban_pg %}
+        <div class="content-card correction-section-card">
+            <div class="correction-section-title">
+                <i class="bi bi-check2-square text-primary"></i>
+                <div>
+                    <h5>Ringkasan Pilihan Ganda</h5>
+                    <p>Ditampilkan hanya jawaban benar dan jawaban salah calon siswa.</p>
+                </div>
+            </div>
+            <div class="correction-question-list">
+                {% for item in jawaban_pg %}
+                    <article class="correction-question-card">
+                        <div class="correction-question-stem">
+                            <span class="question-number-inline">{{ loop.index }}.</span>
+                            <div class="min-w-0">
+                                {{ soal_image(item.soal.gambar_pertanyaan) }}
+                                <div class="preview-question-text text-break">{{ item.soal.pertanyaan }}</div>
+                            </div>
+                        </div>
+                        <div class="correction-options-list">
+                            {{ option_preview(item.soal, item.soal.jawaban_benar, 'correct', 'Jawaban Benar') }}
+                            {% if item.jawaban_dipilih and item.jawaban_dipilih != item.soal.jawaban_benar %}
+                                {{ option_preview(item.soal, item.jawaban_dipilih, 'wrong', 'Jawaban Siswa') }}
+                            {% elif not item.jawaban_dipilih %}
+                                <div class="correction-option empty">
+                                    <span class="correction-option-letter">-</span>
+                                    <div class="text-muted fw-semibold">Calon siswa tidak menjawab soal ini.</div>
+                                    <span class="correction-option-badge">Kosong</span>
+                                </div>
+                            {% else %}
+                                <div class="correction-answer-note success">
+                                    <i class="bi bi-check-circle-fill"></i> Jawaban calon siswa sesuai kunci.
+                                </div>
+                            {% endif %}
+                        </div>
+                    </article>
+                {% endfor %}
+            </div>
+        </div>
+    {% endif %}
+
+    <div class="content-card correction-section-card">
+        <div class="correction-section-title">
+            <i class="bi bi-journal-text text-warning"></i>
+            <div>
+                <h5>Jawaban Esai</h5>
+                <p>Isi skor sesuai bobot nilai pada masing-masing soal.</p>
+            </div>
+        </div>
+
+        {% if jawaban_esai %}
+            <div class="correction-question-list">
+                {% for item in jawaban_esai %}
+                    <article class="correction-question-card essay-card">
+                        <div class="correction-question-stem">
+                            <span class="question-number-inline">{{ loop.index }}.</span>
+                            <div class="min-w-0">
+                                {{ soal_image(item.soal.gambar_pertanyaan) }}
+                                <div class="preview-question-text text-break">{{ item.soal.pertanyaan }}</div>
+                            </div>
+                        </div>
+
+                        <div class="correction-essay-answer-panel {{ 'is-empty' if not item.jawaban_dipilih else '' }}">
+                            <div class="correction-essay-answer-content">{{ item.jawaban_dipilih or 'Tidak ada jawaban.' }}</div>
+                        </div>
+
+                        <div class="correction-essay-score-panel">
+                            <div class="correction-essay-score-copy">
+                                <div class="fw-bold">Skor Esai</div>
+                                <small>Masukkan nilai maksimal {{ item.soal.bobot or 0 }} poin.</small>
+                            </div>
+                            <div class="input-group correction-essay-score-input">
+                                <span class="input-group-text">Skor</span>
+                                <input type="number" step="0.01" min="0" max="{{ item.soal.bobot or 0 }}" name="skor_{{ item.id }}" class="form-control fw-bold text-center" value="{{ item.skor_esai or 0 }}" required>
+                                <span class="input-group-text">/ {{ item.soal.bobot or 0 }}</span>
+                            </div>
+                        </div>
+                    </article>
+                {% endfor %}
+            </div>
+
+            <div class="d-grid mt-4">
+                <button class="btn btn-primary btn-lg fw-bold rounded-pill">
+                    <i class="bi bi-check-circle-fill me-1"></i> Simpan Nilai Esai
+                </button>
+            </div>
+        {% else %}
+            <div class="text-center py-5 text-muted">
+                <i class="bi bi-journal-x display-3 d-block mb-2 opacity-25"></i>
+                Sesi ini tidak memiliki soal esai.
+            </div>
+        {% endif %}
+    </div>
+</form>
+
+<script>
+document.querySelectorAll('.correction-essay-score-input input').forEach((input) => {
+    input.addEventListener('input', function () {
+        const max = parseFloat(this.getAttribute('max') || '0');
+        let val = parseFloat(this.value || '0');
+        if (val < 0) this.value = 0;
+        if (max && val > max) this.value = max;
+    });
+});
+</script>
+{% endblock %}

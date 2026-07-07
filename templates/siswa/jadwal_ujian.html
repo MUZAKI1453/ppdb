@@ -1,0 +1,107 @@
+{% extends 'layouts/base_dashboard.html' %}
+
+{% block title %}Jadwal Ujian SPMB{% endblock %}
+{% block page_title %}Jadwal Ujian SPMB{% endblock %}
+
+{% block extra_css %}<link rel="stylesheet" href="{{ url_for('static', filename='css/ujian.css') }}">{% endblock %}
+
+{% block content %}
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% for category, message in messages[-3:] %}
+        <div class="alert alert-{{ category }}">{{ message }}</div>
+    {% endfor %}
+{% endwith %}
+
+<div class="exam-schedule-hero exam-schedule-hero-global exam-schedule-hero-simple">
+    <div>
+        <h3>Jadwal Ujian Calon Siswa</h3>
+        <div class="exam-global-status-row">
+            <span class="exam-status-badge status-{{ status_jadwal }}">{{ status_jadwal_label }}</span>
+            <span class="exam-global-schedule-text">
+                <i class="bi bi-calendar-event me-1"></i>{{ pengaturan_ujian.jadwal_label }}
+            </span>
+        </div>
+    </div>
+</div>
+
+<div class="exam-start-card">
+    <div>
+        <h4 class="mb-1 fw-bold">Mulai Ujian CBT</h4>
+        {% if sudah_selesai_semua %}
+            <p class="mb-0 text-muted">Seluruh sesi ujian sudah dikirim. Silakan tunggu pengumuman resmi dari panitia.</p>
+        {% elif sesi_mulai %}
+            <p class="mb-0 text-muted">Sesi berikutnya: <strong>{{ sesi_mulai.judul }}</strong>. Mode ujian aman baru aktif setelah tombol mulai ditekan.</p>
+        {% else %}
+            <p class="mb-0 text-muted">Belum ada sesi ujian aktif yang bisa dikerjakan.</p>
+        {% endif %}
+    </div>
+    <div class="exam-start-action">
+        {% if sudah_selesai_semua %}
+            <button class="btn btn-success btn-lg fw-bold rounded-pill" disabled>
+                <i class="bi bi-check-circle-fill me-1"></i> Ujian Selesai
+            </button>
+        {% elif boleh_mulai and sesi_mulai %}
+            <a href="{{ url_for('siswa.ujian', sesi_id=sesi_mulai.id) }}" class="btn btn-primary btn-lg fw-bold rounded-pill px-4">
+                <i class="bi bi-play-circle-fill me-1"></i> Mulai Ujian
+            </a>
+        {% elif status_jadwal == 'belum_dijadwalkan' %}
+            <button class="btn btn-outline-secondary btn-lg fw-bold rounded-pill" disabled>
+                <i class="bi bi-calendar-x me-1"></i> Belum Dijadwalkan
+            </button>
+        {% elif status_jadwal == 'belum_dibuka' %}
+            <button class="btn btn-outline-warning btn-lg fw-bold rounded-pill" disabled>
+                <i class="bi bi-clock-fill me-1"></i> Belum Dibuka
+            </button>
+        {% elif status_jadwal == 'ditutup' %}
+            <button class="btn btn-outline-danger btn-lg fw-bold rounded-pill" disabled>
+                <i class="bi bi-x-circle-fill me-1"></i> Jadwal Ditutup
+            </button>
+        {% else %}
+            <button class="btn btn-outline-secondary btn-lg fw-bold rounded-pill" disabled>
+                <i class="bi bi-lock-fill me-1"></i> Belum Bisa Dimulai
+            </button>
+        {% endif %}
+    </div>
+</div>
+
+<div class="exam-guide-card">
+    <div class="exam-guide-icon"><i class="bi bi-shield-check"></i></div>
+    <div>
+        <h5>Panduan Singkat CBT</h5>
+        <ul>
+            <li>Kerjakan sesi ujian sesuai urutan yang tampil pada daftar.</li>
+            <li>Mode ujian aman/fullscreen muncul setelah klik <strong>Mulai Ujian</strong>.</li>
+            <li>Jawaban tersimpan sementara di browser dan dikirim otomatis saat waktu sesi habis.</li>
+            <li>Jangan keluar tab, split screen, atau keluar fullscreen agar tidak terkena pelanggaran.</li>
+        </ul>
+    </div>
+</div>
+
+{% if sesi_ujian %}
+    <div class="exam-package-list">
+        {% for item in sesi_ujian %}
+            {% set sesi = item.sesi %}
+            <article class="exam-package-row status-{{ item.status }}">
+                <div class="exam-package-number">{{ loop.index }}</div>
+                <div class="exam-package-main">
+                    <div class="d-flex justify-content-between align-items-start gap-2 flex-wrap">
+                        <h4>{{ sesi.judul }}</h4>
+                        <span class="exam-package-badge status-{{ item.status }}">{{ item.status_label }}</span>
+                    </div>
+                    {% if sesi.deskripsi %}<p>{{ sesi.deskripsi }}</p>{% endif %}
+                    <div class="exam-package-meta">
+                        <span><i class="bi bi-list-check"></i> {{ sesi.jumlah_soal }} soal</span>
+                    </div>
+                </div>
+            </article>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="ujian-empty-card schedule-empty-card">
+        <i class="bi bi-journal-x"></i>
+        <h4>Belum ada sesi ujian</h4>
+        <p>Admin belum membuat sesi ujian aktif. Silakan cek kembali nanti.</p>
+        <a href="{{ url_for('siswa.dashboard') }}" class="btn btn-primary">Kembali ke Dashboard</a>
+    </div>
+{% endif %}
+{% endblock %}

@@ -1,5 +1,7 @@
 {% extends 'layouts/base_dashboard.html' %}
-{% block extra_css %}<link rel="stylesheet" href="{{ url_for('static', filename='css/table.css') }}">{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/table.css') }}">
+{% endblock %}
 {% block title %}Hasil Ujian{% endblock %}
 {% block page_title %}Hasil Ujian Calon Siswa{% endblock %}
 
@@ -22,7 +24,7 @@
 
     <div class="table-responsive">
         <table class="spmb-table ppdb-table" id="hasilTable">
-            <thead><tr><th width="60">No</th><th>Nama Calon Siswa</th><th>Sesi</th><th class="text-center">Benar</th><th class="text-center">Nilai</th><th>Waktu Selesai</th><th width="100" class="text-center">Aksi</th></tr></thead>
+            <thead><tr><th width="60">No</th><th>Nama Calon Siswa</th><th>Sesi</th><th class="text-center">PG Benar</th><th class="text-center">Nilai PG</th><th class="text-center">Nilai Esai</th><th class="text-center">Nilai Akhir</th><th>Waktu Selesai</th><th width="130" class="text-center">Aksi</th></tr></thead>
             <tbody>
             {% for hasil in data_hasil %}
                 <tr>
@@ -30,17 +32,41 @@
                     <td><div class="student-name">{{ hasil.calon_siswa.nama_lengkap }}</div><div class="student-subtitle">NISN: {{ hasil.calon_siswa.nisn or '-' }}</div></td>
                     <td>{{ hasil.label_sesi() }}</td>
                     <td class="text-center">{{ hasil.jumlah_benar }} / {{ hasil.jumlah_soal }}</td>
-                    <td class="text-center"><span class="status-success fw-bold">{{ hasil.nilai }}</span></td>
+                    <td class="text-center">{{ hasil.nilai_pg or 0 }}</td>
+                    <td class="text-center">
+                        {% if hasil.jumlah_soal_esai() > 0 %}
+                            <span class="fw-bold text-warning">{{ hasil.nilai_esai or 0 }}</span>
+                        {% else %}
+                            <span class="text-muted">-</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-center"><span class="status-success fw-bold">{{ hasil.nilai or 0 }}</span></td>
                     <td>{{ hasil.waktu_selesai.strftime('%d-%m-%Y %H:%M') if hasil.waktu_selesai else '-' }}</td>
-                    <td class="text-center"><a href="{{ url_for('admin.detail_hasil_ujian', id=hasil.id) }}" class="btn btn-outline-primary btn-sm" title="Detail"><i class="bi bi-eye-fill"></i></a></td>
+                    <td class="text-center">
+                        <div class="d-inline-flex gap-1">
+                            {% if hasil.jumlah_soal_esai() > 0 %}
+                                <a href="{{ url_for('admin.koreksi_esai', id=hasil.id) }}" class="btn btn-outline-warning btn-sm" title="Koreksi Esai"><i class="bi bi-pencil-square"></i></a>
+                            {% endif %}
+                            <form method="POST"
+                                  action="{{ url_for('admin.reset_ujian_siswa', id=hasil.id) }}"
+                                  class="d-inline"
+                                  data-confirm="Reset {{ hasil.label_sesi() }} untuk {{ hasil.calon_siswa.nama_lengkap }}? Jawaban dan nilai akan dihapus permanen, lalu siswa dapat mengerjakan ulang."
+                                  data-confirm-title="Reset Ujian Calon Siswa?"
+                                  data-confirm-variant="warning">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button type="submit" class="btn btn-outline-secondary btn-sm" title="Reset Ujian"><i class="bi bi-arrow-counterclockwise"></i></button>
+                            </form>
+                        </div>
+                    </td>
                 </tr>
             {% else %}
-                <tr><td colspan="7" class="text-center py-5 text-muted">Belum ada siswa yang menyelesaikan ujian pada sesi ini.</td></tr>
+                <tr><td colspan="9" class="text-center py-5 text-muted">Belum ada siswa yang menyelesaikan ujian pada sesi ini.</td></tr>
             {% endfor %}
             </tbody>
         </table>
     </div>
 </div>
+
 <script>
 document.getElementById("searchInput").addEventListener("keyup", function () {
     const filter = this.value.toLowerCase().trim();

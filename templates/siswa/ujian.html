@@ -6,57 +6,563 @@
 {% block extra_css %}<link rel="stylesheet" href="{{ url_for('static', filename='css/ujian.css') }}">{% endblock %}
 
 {% block content %}
+<script>document.body.classList.add('exam-fullscreen-mode');</script>
+
 {% with messages = get_flashed_messages(with_categories=true) %}
     {% for category, message in messages[-3:] %}
-        <div class="alert alert-{{ category }}">{{ message }}</div>
+        <div class="alert alert-{{ category }} exam-alert">{{ message }}</div>
     {% endfor %}
 {% endwith %}
 
-<div class="ujian-header">
-    <div>
-        <h2>{{ sesi.judul }}</h2>
-        <p>{{ sesi.deskripsi or 'Kerjakan seluruh soal dengan teliti. Setelah dikumpulkan, sistem akan otomatis mengarahkan ke sesi berikutnya jika tersedia.' }}</p>
-    </div>
-    {% if daftar_soal %}<span class="badge-jumlah"><i class="bi bi-list-ol"></i> {{ daftar_soal|length }} Soal</span>{% endif %}
-</div>
-
 {% if not daftar_soal %}
-    <div class="alert alert-warning"><i class="bi bi-exclamation-triangle-fill"></i> Belum ada soal pada sesi ini.</div>
+    <div class="ujian-empty-card">
+        <i class="bi bi-exclamation-triangle-fill"></i>
+        <h4>Belum ada soal pada sesi ini</h4>
+        <p>Silakan hubungi panitia sekolah untuk memastikan bank soal sudah siap.</p>
+        <a href="{{ url_for('siswa.dashboard') }}" class="btn btn-primary">Kembali ke Dashboard</a>
+    </div>
 {% else %}
-<form method="POST" action="{{ url_for('siswa.ujian', sesi_id=sesi.id) }}" id="formUjian">
-    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+{% set total_soal = daftar_soal|length %}
+{% set nama_peserta = current_user.calon_siswa.nama_lengkap if current_user.calon_siswa and current_user.calon_siswa.nama_lengkap else current_user.username %}
 
-    {% for soal in daftar_soal %}
-        <div class="soal-card">
-            <div class="soal-nomor">{{ loop.index }}</div>
-            <div class="soal-pertanyaan">{{ soal.pertanyaan }}</div>
-            <div class="pilihan-list">
-                {% for huruf, teks in [('A', soal.pilihan_a), ('B', soal.pilihan_b), ('C', soal.pilihan_c), ('D', soal.pilihan_d)] %}
-                    <label class="pilihan-item">
-                        <input type="radio" name="soal_{{ soal.id }}" value="{{ huruf }}" required>
-                        <span class="pilihan-huruf">{{ huruf }}.</span>
-                        <span>{{ teks }}</span>
-                    </label>
-                {% endfor %}
-            </div>
+<div class="exam-watermark" aria-hidden="true">
+    {% for i in range(30) %}
+        <div class="exam-watermark-item">
+            {{ nama_peserta }}<br>{{ current_user.username }}<br>DILARANG CURANG
         </div>
     {% endfor %}
+</div>
 
-    <div class="ujian-submit-bar">
-        <div class="text-muted">Pastikan seluruh soal sudah dijawab sebelum mengumpulkan.</div>
-        <button type="submit" class="btn btn-primary btn-lg">
-            <i class="bi bi-check2-circle"></i>
-            {% if sesi_berikutnya %}Kumpulkan & Lanjut Sesi Berikutnya{% else %}Kumpulkan Jawaban{% endif %}
+<div class="exam-header">
+    <div class="exam-title-wrap">
+        <h1>{{ sesi.judul }}</h1>
+        <p>{{ sesi.deskripsi or 'Kerjakan soal dengan teliti. Jawaban akan dikumpulkan otomatis saat waktu habis.' }}</p>
+    </div>
+    <div class="exam-header-actions">
+        <div class="exam-countdown" title="Sisa waktu">
+            <i class="bi bi-alarm-fill"></i>
+            <span id="countdown">Memuat...</span>
+        </div>
+        <button class="btn btn-outline-light d-lg-none exam-nav-toggle" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasSoal" aria-label="Buka navigasi soal">
+            <i class="bi bi-grid-3x3-gap-fill"></i>
+        </button>
+    </div>
+</div>
+
+<div id="security-overlay" class="exam-overlay exam-overlay-primary">
+    <i class="bi bi-shield-lock-fill display-1 mb-3"></i>
+    <div class="exam-overlay-kicker">Mode Ujian Aman</div>
+    <h2>{{ sesi.judul }}</h2>
+    <p>
+        Sesi ini akan berjalan dalam mode layar penuh dan aktivitas tab/jendela akan dipantau.<br>
+        <strong>Jangan keluar tab, split screen, membuka pop-up, atau keluar dari fullscreen.</strong>
+    </p>
+    <div class="exam-overlay-note exam-overlay-session-info">
+        <span><i class="bi bi-list-check"></i> Jumlah soal: <strong>{{ total_soal }}</strong></span>
+        <span><i class="bi bi-clock-history"></i> Durasi: <strong>{{ sesi.durasi_label }}</strong></span>
+    </div>
+    <button type="button" onclick="startExam()" class="btn btn-light btn-lg fw-bold rounded-pill px-5 shadow mt-3">
+        <i class="bi bi-play-fill"></i> Mulai Sesi
+    </button>
+</div>
+
+<div id="warning-overlay" class="exam-overlay exam-overlay-warning">
+    <div class="exam-warning-card">
+        <i class="bi bi-exclamation-triangle-fill text-warning display-1 mb-2"></i>
+        <h3>Peringatan Sistem</h3>
+        <p>Terdeteksi aktivitas mencurigakan seperti keluar tab, kehilangan fokus, atau keluar dari fullscreen.</p>
+        <div class="exam-violation-count">Pelanggaran: <span id="violationCountText">0</span>/3</div>
+        <div class="form-check text-start mb-3 bg-light p-3 rounded border">
+            <input class="form-check-input" type="checkbox" id="janjiSiswa" onchange="toggleLanjutBtn()">
+            <label class="form-check-label small fw-bold" for="janjiSiswa">
+                Saya berjanji akan jujur dan tidak mengulangi lagi.
+            </label>
+        </div>
+        <button id="btnLanjutWarning" type="button" onclick="resumeExam()" class="btn btn-warning w-100 fw-bold text-dark" disabled>
+            Lanjutkan Ujian
+        </button>
+    </div>
+</div>
+
+<div id="kick-overlay" class="exam-overlay exam-overlay-danger">
+    <div class="spinner-border text-light mb-4" style="width: 3rem; height: 3rem;"></div>
+    <h1>Ujian Dikumpulkan Otomatis</h1>
+    <p id="kickReasonText">Sistem sedang mengirim jawaban Anda.</p>
+</div>
+
+<div id="split-overlay" class="exam-overlay exam-overlay-black">
+    <i class="bi bi-arrows-angle-contract text-danger display-1 mb-3"></i>
+    <h2>Dilarang Split Screen</h2>
+    <p>Kembalikan browser ke mode layar penuh untuk melanjutkan ujian.</p>
+</div>
+
+<form method="POST" action="{{ url_for('siswa.ujian', sesi_id=sesi.id) }}" id="formUjian" class="exam-form" autocomplete="off">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <input type="hidden" name="auto_submit_reason" id="autoSubmitReason" value="">
+
+    <div class="exam-layout">
+        <main class="exam-question-panel">
+            <div class="exam-card">
+                {% for soal in daftar_soal %}
+                    {% set nomor = loop.index0 %}
+                    {% set jawaban_awal = jawaban_tersimpan.get(soal.id) if jawaban_tersimpan else '' %}
+                    <section class="soal-step" id="step-{{ nomor }}" data-key="{{ soal.id }}" data-type="{{ 'pg' if soal.is_pilihan_ganda() else 'esai' }}">
+                        <div class="soal-step-head">
+                            <span class="soal-number-badge">No. {{ loop.index }}</span>
+                            <span class="soal-type-badge {{ 'soal-type-essay' if soal.is_esai() else '' }}">
+                                {{ 'Esai' if soal.is_esai() else 'Pilihan Ganda' }}
+                            </span>
+                        </div>
+
+                        {% if soal.gambar_pertanyaan %}
+                            <div class="question-image-box">
+                                <img src="{{ url_for('siswa.uploaded_soal_file', filename=soal.gambar_pertanyaan) }}" alt="Gambar soal nomor {{ loop.index }}">
+                            </div>
+                        {% endif %}
+
+                        <div class="soal-pertanyaan text-break">{{ soal.pertanyaan }}</div>
+
+                        {% if soal.is_pilihan_ganda() %}
+                            <div class="pilihan-list">
+                                {% for huruf, teks in soal.pilihan().items() %}
+                                    {% set gambar_opsi = soal.gambar_pilihan(huruf) %}
+                                    {% if teks or gambar_opsi %}
+                                        <div class="pilihan-item-wrap">
+                                            <input type="radio"
+                                                   class="input-hidden input-jawaban"
+                                                   name="soal_{{ soal.id }}"
+                                                   id="soal_{{ soal.id }}_{{ huruf }}"
+                                                   value="{{ huruf }}"
+                                                   data-nomor="{{ nomor }}"
+                                                   onchange="saveAnswer(this)"
+                                                   {% if jawaban_awal == huruf %}checked{% endif %}>
+                                            <label class="pilihan-item" for="soal_{{ soal.id }}_{{ huruf }}">
+                                                <span class="pilihan-text-row">
+                                                    <span class="pilihan-huruf">{{ huruf }}.</span>
+                                                    <span class="pilihan-content">{{ teks|trim }}</span>
+                                                </span>
+                                                {% if gambar_opsi %}
+                                                    <div class="option-image-wrap">
+                                                        <img class="option-image" src="{{ url_for('siswa.uploaded_soal_file', filename=gambar_opsi) }}" alt="Gambar pilihan {{ huruf }}">
+                                                    </div>
+                                                {% endif %}
+                                            </label>
+                                        </div>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <textarea name="soal_{{ soal.id }}"
+                                      class="form-control essay-answer input-jawaban"
+                                      rows="9"
+                                      data-nomor="{{ nomor }}"
+                                      placeholder="Ketik jawaban esai di sini..."
+                                      oninput="saveAnswer(this)">{{ jawaban_awal }}</textarea>
+                        {% endif %}
+                    </section>
+                {% endfor %}
+            </div>
+        </main>
+
+        <aside class="exam-side-panel d-none d-lg-block">
+            <div class="exam-nav-card">
+                <div class="exam-nav-title">Navigasi Soal</div>
+                <div class="exam-nav-grid">
+                    {% for i in range(total_soal) %}
+                        <button type="button" class="btn btn-nomor" onclick="bukaSoal({{ i }})" id="nav-d-{{ i }}">{{ i + 1 }}</button>
+                    {% endfor %}
+                </div>
+                <div class="exam-nav-legend">
+                    <span><i class="legend-box legend-active"></i> Aktif</span>
+                    <span><i class="legend-box legend-answered"></i> Dijawab</span>
+                    <span><i class="legend-box legend-doubt"></i> Ragu</span>
+                </div>
+            </div>
+        </aside>
+    </div>
+
+    <div class="exam-bottom-bar">
+        <button type="button" class="btn btn-outline-secondary exam-prev-btn" id="btn-prev" onclick="gantiSoal(-1)" aria-label="Sebelumnya">
+            <i class="bi bi-chevron-left"></i>
+        </button>
+
+        <label class="exam-doubt-check" for="check-ragu">
+            <input class="form-check-input" type="checkbox" id="check-ragu">
+            <span>Ragu</span>
+        </label>
+
+        <button type="button" class="btn btn-primary exam-next-btn" id="btn-next" onclick="gantiSoal(1)">
+            Lanjut <i class="bi bi-chevron-right"></i>
+        </button>
+
+        <button type="submit" class="btn btn-success d-none exam-next-btn" id="btn-submit">
+            <i class="bi bi-send-fill me-1"></i> Kumpul
         </button>
     </div>
 </form>
 
+<div class="exam-submit-modal" id="submitConfirmModal" aria-hidden="true">
+    <div class="exam-submit-dialog" role="dialog" aria-modal="true" aria-labelledby="submitConfirmTitle">
+        <div class="exam-submit-icon"><i class="bi bi-send-check-fill"></i></div>
+        <h3 id="submitConfirmTitle">Kumpulkan Jawaban?</h3>
+        <p id="submitConfirmMessage">Yakin ingin mengumpulkan jawaban? Jawaban tidak dapat diubah setelah dikumpulkan.</p>
+        <div class="exam-submit-actions">
+            <button type="button" class="btn btn-outline-secondary fw-bold" id="btnCancelSubmit">Cek Lagi</button>
+            <button type="button" class="btn btn-success fw-bold" id="btnConfirmSubmit">Ya, Kumpulkan</button>
+        </div>
+    </div>
+</div>
+
+<div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasSoal">
+    <div class="offcanvas-header bg-primary text-white">
+        <h5 class="offcanvas-title fw-bold">Navigasi Soal</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"></button>
+    </div>
+    <div class="offcanvas-body bg-light">
+        <div class="exam-nav-grid">
+            {% for i in range(total_soal) %}
+                <button type="button" class="btn btn-nomor" onclick="bukaSoal({{ i }})" id="nav-m-{{ i }}">{{ i + 1 }}</button>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
 <script>
-document.getElementById('formUjian').addEventListener('submit', function (e) {
-    if (!confirm('Yakin ingin mengumpulkan jawaban? Jawaban tidak dapat diubah setelah dikumpulkan.')) {
-        e.preventDefault();
+(function () {
+    const SESI_ID = "{{ sesi.id }}";
+    const USER_ID = "{{ current_user.id }}";
+    const SAVE_PREFIX = `spmb_cbt_ans_${USER_ID}_${SESI_ID}_`;
+    const RAGU_PREFIX = `spmb_cbt_ragu_${USER_ID}_${SESI_ID}_`;
+    const MAX_VIOLATIONS = 3;
+
+    let violationCount = 0;
+    let isExamActive = false;
+    let isWarningActive = false;
+    let isSubmitting = false;
+    let forceSubmitting = false;
+    let currentStep = 0;
+    let sisaDetik = parseInt("{{ sisa_detik or 0 }}", 10);
+
+    const form = document.getElementById('formUjian');
+    const steps = Array.from(document.querySelectorAll('.soal-step'));
+    const totalStep = steps.length;
+    const countdownEl = document.getElementById('countdown');
+    const checkRagu = document.getElementById('check-ragu');
+    const btnPrev = document.getElementById('btn-prev');
+    const btnNext = document.getElementById('btn-next');
+    const btnSubmit = document.getElementById('btn-submit');
+    const autoSubmitReason = document.getElementById('autoSubmitReason');
+    const submitConfirmModal = document.getElementById('submitConfirmModal');
+    const submitConfirmMessage = document.getElementById('submitConfirmMessage');
+    const btnCancelSubmit = document.getElementById('btnCancelSubmit');
+    const btnConfirmSubmit = document.getElementById('btnConfirmSubmit');
+
+    let wakeLock = null;
+    async function requestWakeLock() {
+        try {
+            if ('wakeLock' in navigator) {
+                wakeLock = await navigator.wakeLock.request('screen');
+            }
+        } catch (err) {
+            console.log('Wake lock tidak aktif:', err);
+        }
     }
-});
+
+    function formatTime(totalSeconds) {
+        const safeSeconds = Math.max(0, totalSeconds);
+        const h = Math.floor(safeSeconds / 3600);
+        const m = Math.floor((safeSeconds % 3600) / 60);
+        const s = Math.floor(safeSeconds % 60);
+        return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+    }
+
+    function renderTimer() {
+        countdownEl.textContent = sisaDetik <= 0 ? 'HABIS' : formatTime(sisaDetik);
+        countdownEl.closest('.exam-countdown')?.classList.toggle('exam-countdown-danger', sisaDetik <= 300);
+    }
+
+    function saveToLocal(name, value) {
+        localStorage.setItem(SAVE_PREFIX + name, value || '');
+    }
+
+    function restoreAnswers() {
+        document.querySelectorAll('.input-jawaban').forEach((el) => {
+            const saved = localStorage.getItem(SAVE_PREFIX + el.name);
+            if (saved === null) return;
+
+            if (el.type === 'radio') {
+                el.checked = el.value === saved;
+            } else {
+                el.value = saved;
+            }
+        });
+    }
+
+    function isAnswered(stepDiv) {
+        if (!stepDiv) return false;
+        if (stepDiv.dataset.type === 'pg') {
+            return Boolean(stepDiv.querySelector('input[type="radio"]:checked'));
+        }
+        const textarea = stepDiv.querySelector('textarea');
+        return textarea && textarea.value.trim().length > 0;
+    }
+
+    function updateIndicatorStatus(idx) {
+        const stepDiv = steps[idx];
+        if (!stepDiv) return;
+
+        const questionKey = stepDiv.dataset.key;
+        const navD = document.getElementById(`nav-d-${idx}`);
+        const navM = document.getElementById(`nav-m-${idx}`);
+        const isRagu = localStorage.getItem(RAGU_PREFIX + questionKey) === 'true';
+        const answered = isAnswered(stepDiv);
+
+        [navD, navM].forEach((nav) => {
+            if (!nav) return;
+            nav.className = 'btn btn-nomor';
+            if (idx === currentStep) nav.classList.add('active');
+            if (isRagu) nav.classList.add('ragu');
+            else if (answered) nav.classList.add('dijawab');
+        });
+    }
+
+    window.saveAnswer = function (el) {
+        saveToLocal(el.name, el.value);
+        const idx = parseInt(el.dataset.nomor, 10);
+        if (el.type === 'radio') {
+            const stepDiv = steps[idx];
+            if (stepDiv) {
+                localStorage.setItem(RAGU_PREFIX + stepDiv.dataset.key, 'false');
+                if (idx === currentStep) checkRagu.checked = false;
+            }
+        }
+        updateIndicatorStatus(idx);
+    };
+
+    function updateUI() {
+        steps.forEach((el, idx) => el.style.display = idx === currentStep ? 'block' : 'none');
+
+        btnPrev.disabled = currentStep === 0;
+        if (currentStep === totalStep - 1) {
+            btnNext.classList.add('d-none');
+            btnSubmit.classList.remove('d-none');
+        } else {
+            btnNext.classList.remove('d-none');
+            btnSubmit.classList.add('d-none');
+        }
+
+        const currentStepDiv = steps[currentStep];
+        if (currentStepDiv) {
+            checkRagu.checked = localStorage.getItem(RAGU_PREFIX + currentStepDiv.dataset.key) === 'true';
+        }
+
+        for (let i = 0; i < totalStep; i++) updateIndicatorStatus(i);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    window.gantiSoal = function (arah) {
+        const next = currentStep + arah;
+        if (next < 0 || next >= totalStep) return;
+        currentStep = next;
+        updateUI();
+    };
+
+    window.bukaSoal = function (idx) {
+        currentStep = idx;
+        updateUI();
+        const offcanvasEl = document.getElementById('offcanvasSoal');
+        const instance = offcanvasEl ? bootstrap.Offcanvas.getInstance(offcanvasEl) : null;
+        if (instance) instance.hide();
+    };
+
+    checkRagu.addEventListener('change', function () {
+        const currentStepDiv = steps[currentStep];
+        if (!currentStepDiv) return;
+        localStorage.setItem(RAGU_PREFIX + currentStepDiv.dataset.key, this.checked ? 'true' : 'false');
+        updateIndicatorStatus(currentStep);
+    });
+
+    function unansweredCount() {
+        return steps.filter((step) => !isAnswered(step)).length;
+    }
+
+    function setForceSubmit(reason) {
+        forceSubmitting = true;
+        isSubmitting = true;
+        autoSubmitReason.value = reason || 'auto';
+    }
+
+    function forceSubmitNow(reason) {
+        setForceSubmit(reason);
+        document.getElementById('security-overlay').style.display = 'none';
+        document.getElementById('warning-overlay').style.display = 'none';
+        document.getElementById('split-overlay').style.display = 'none';
+        document.getElementById('kick-overlay').style.display = 'flex';
+        document.getElementById('kickReasonText').textContent = reason === 'timeout'
+            ? 'Waktu ujian habis. Sistem sedang mengirim jawaban Anda.'
+            : 'Batas pelanggaran tercapai. Sistem sedang mengirim jawaban Anda.';
+        setTimeout(() => form.submit(), 350);
+    }
+
+    const timerInterval = setInterval(() => {
+        if (!isSubmitting) {
+            sisaDetik -= 1;
+            renderTimer();
+        }
+        if (sisaDetik <= 0 && !isSubmitting) {
+            clearInterval(timerInterval);
+            forceSubmitNow('timeout');
+        }
+    }, 1000);
+
+    function checkScreenDimension() {
+        if (!isExamActive || isSubmitting) return;
+
+        const screenW = window.screen.width;
+        const screenH = window.screen.height;
+        const winW = window.innerWidth;
+        const winH = window.innerHeight;
+        const activeEl = document.activeElement;
+        const isTyping = activeEl && ['TEXTAREA', 'INPUT'].includes(activeEl.tagName);
+
+        const isNarrowWidth = winW < (screenW * 0.90);
+        let isShortHeight = winH < (screenH * 0.45);
+        if (isShortHeight && isTyping) isShortHeight = false;
+
+        document.getElementById('split-overlay').style.display = (isNarrowWidth || isShortHeight) ? 'flex' : 'none';
+    }
+
+    function playWarningSound() {
+        try {
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            if (!AudioContext) return;
+            const ctx = new AudioContext();
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.type = 'square';
+            osc.frequency.setValueAtTime(600, ctx.currentTime);
+            osc.frequency.linearRampToValueAtTime(1200, ctx.currentTime + 0.25);
+            gain.gain.setValueAtTime(0.25, ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 1.2);
+            osc.start();
+            osc.stop(ctx.currentTime + 1.25);
+        } catch (err) {
+            console.log('Audio warning tidak aktif:', err);
+        }
+    }
+
+    function recordViolation() {
+        if (isWarningActive || isSubmitting || !isExamActive) return;
+
+        violationCount += 1;
+        document.getElementById('violationCountText').textContent = violationCount;
+        playWarningSound();
+
+        if (violationCount >= MAX_VIOLATIONS) {
+            forceSubmitNow('violation');
+            return;
+        }
+
+        isExamActive = false;
+        isWarningActive = true;
+        document.getElementById('warning-overlay').style.display = 'flex';
+    }
+
+    window.startExam = function () {
+        if (document.documentElement.requestFullscreen) {
+            document.documentElement.requestFullscreen().catch((err) => console.log('Fullscreen tidak aktif:', err));
+        }
+        document.getElementById('security-overlay').style.display = 'none';
+        isExamActive = true;
+        requestWakeLock();
+        setTimeout(checkScreenDimension, 600);
+    };
+
+    window.resumeExam = function () {
+        if (document.documentElement.requestFullscreen) {
+            document.documentElement.requestFullscreen().catch((err) => console.log('Fullscreen tidak aktif:', err));
+        }
+        document.getElementById('warning-overlay').style.display = 'none';
+        document.getElementById('janjiSiswa').checked = false;
+        window.toggleLanjutBtn();
+        isWarningActive = false;
+        isExamActive = true;
+        requestWakeLock();
+        setTimeout(checkScreenDimension, 600);
+    };
+
+    window.toggleLanjutBtn = function () {
+        document.getElementById('btnLanjutWarning').disabled = !document.getElementById('janjiSiswa').checked;
+    };
+
+    window.addEventListener('resize', checkScreenDimension);
+    setInterval(checkScreenDimension, 1000);
+
+    window.addEventListener('blur', () => {
+        if (!isExamActive || isWarningActive || isSubmitting) return;
+        setTimeout(() => {
+            if (!document.hasFocus()) recordViolation();
+        }, 500);
+    });
+
+    document.addEventListener('visibilitychange', () => {
+        if (document.hidden && isExamActive && !isSubmitting) recordViolation();
+    });
+
+    document.addEventListener('fullscreenchange', () => {
+        if (!document.fullscreenElement && isExamActive && !isWarningActive && !isSubmitting) {
+            recordViolation();
+        }
+    });
+
+    document.addEventListener('contextmenu', (e) => e.preventDefault());
+    document.addEventListener('keydown', (e) => {
+        const key = (e.key || '').toLowerCase();
+        if (e.key === 'F12' || e.key === 'PrintScreen' || (e.ctrlKey && ['u', 'c', 'v', 'p', 'a', 's'].includes(key))) {
+            e.preventDefault();
+            e.stopPropagation();
+            return false;
+        }
+    });
+
+    function openSubmitModal() {
+        const belum = unansweredCount();
+        submitConfirmMessage.textContent = belum > 0
+            ? `Masih ada ${belum} soal yang belum dijawab. Jawaban tidak dapat diubah setelah dikumpulkan.`
+            : 'Yakin ingin mengumpulkan jawaban? Jawaban tidak dapat diubah setelah dikumpulkan.';
+        submitConfirmModal.classList.add('show');
+        submitConfirmModal.setAttribute('aria-hidden', 'false');
+        isWarningActive = true;
+    }
+
+    function closeSubmitModal() {
+        submitConfirmModal.classList.remove('show');
+        submitConfirmModal.setAttribute('aria-hidden', 'true');
+        isWarningActive = false;
+    }
+
+    btnCancelSubmit.addEventListener('click', closeSubmitModal);
+    btnConfirmSubmit.addEventListener('click', function () {
+        closeSubmitModal();
+        setForceSubmit('manual');
+        form.submit();
+    });
+
+    form.addEventListener('submit', function (e) {
+        if (forceSubmitting) return;
+        e.preventDefault();
+        openSubmitModal();
+    });
+
+    restoreAnswers();
+    updateUI();
+    renderTimer();
+    if (sisaDetik <= 0) {
+        forceSubmitNow('timeout');
+    }
+})();
 </script>
 {% endif %}
 {% endblock %}

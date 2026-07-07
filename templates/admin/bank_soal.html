@@ -32,6 +32,44 @@
         margin-bottom: 1.5rem;
     }
     .bank-toolbar .search-wrapper { margin-bottom: 0 !important; }
+    .session-settings-card {
+        border: 1px solid #e5e7eb;
+        border-radius: 14px;
+        background: #f8fafc;
+        padding: 1rem;
+        margin-bottom: 1.2rem;
+    }
+    .session-settings-grid {
+        display: grid;
+        grid-template-columns: minmax(220px, 1.1fr) minmax(220px, 1fr) minmax(130px, .55fr) auto;
+        gap: .75rem;
+        align-items: end;
+    }
+    .global-exam-card {
+        border: 1px solid #bfdbfe;
+        border-radius: 18px;
+        background: linear-gradient(135deg, #eff6ff, #ffffff);
+        padding: 1rem;
+        margin-bottom: 1.2rem;
+        box-shadow: 0 8px 22px rgba(37, 99, 235, .08);
+    }
+    .global-exam-grid {
+        display: grid;
+        grid-template-columns: minmax(180px, .8fr) minmax(180px, .8fr) auto;
+        gap: .75rem;
+        align-items: end;
+    }
+    .session-duration-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: .35rem;
+        padding: .35rem .65rem;
+        border-radius: 999px;
+        background: #eff6ff;
+        color: #1d4ed8;
+        font-weight: 700;
+        font-size: .85rem;
+    }
     .question-list { display: flex; flex-direction: column; gap: .85rem; }
     .question-card {
         margin: 0;
@@ -181,6 +219,33 @@
     }
     .bank-empty i { font-size: 2rem; color: #2563eb; }
     .session-add-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
+
+    .question-stem-main { min-width: 0; }
+    .question-stem-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: .75rem;
+        min-width: 0;
+    }
+    .question-stem-content { min-width: 0; flex: 1 1 auto; }
+    @media (max-width: 576px) {
+        .question-stem-head { flex-direction: column; }
+        .essay-bobot-preview { align-self: flex-start; }
+    }
+    .essay-bobot-preview {
+        display: inline-flex;
+        align-items: center;
+        border-radius: 999px;
+        padding: .28rem .65rem;
+        background: #fffbeb;
+        border: 1px solid #fde68a;
+        color: #92400e;
+        font-size: .82rem;
+        font-weight: 800;
+        white-space: nowrap;
+        flex: 0 0 auto;
+    }
     .template-download-box {
         display: flex;
         justify-content: space-between;
@@ -208,6 +273,7 @@
         .bank-toolbar { align-items: stretch; }
         .bank-toolbar .search-wrapper, .bank-toolbar .btn { width: 100%; }
         .session-add-grid { grid-template-columns: 1fr; }
+        .session-settings-grid, .global-exam-grid { grid-template-columns: 1fr; }
         .question-tools { justify-content: flex-start; flex-wrap: nowrap; }
         .question-tools .btn, .question-tools form { flex: 0 0 auto; }
         .question-tools form .btn { width: auto; }
@@ -385,8 +451,31 @@
 
     <div class="bank-page-head">
         <h3 class="mb-0 fw-bold">Bank Soal</h3>
-        <span class="bank-page-meta">{{ sesi_list|length }} sesi &middot; {{ total_soal_semua }} soal tersedia</span>
+        <span class="bank-page-meta">{{ sesi_list|length }} sesi ujian &middot; {{ total_soal_semua }} soal tersedia</span>
     </div>
+
+    <form class="global-exam-card" method="POST" action="{{ url_for('admin.update_jadwal_ujian_global') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        {% if sesi_aktif %}<input type="hidden" name="sesi_id" value="{{ sesi_aktif.id }}">{% endif %}
+        <div class="d-flex justify-content-between align-items-center gap-2 flex-wrap mb-3">
+            <div>
+                <div class="fw-bold">Jadwal Global Ujian SPMB</div>
+                <small class="text-muted">Satu jadwal untuk seluruh sesi ujian. Siswa hanya melihat satu tombol Mulai Ujian, lalu mengerjakan sesi secara berurutan.</small>
+            </div>
+            <span class="session-duration-pill"><i class="bi bi-calendar-event"></i> {{ pengaturan_ujian.jadwal_label }}</span>
+        </div>
+        <div class="global-exam-grid">
+            <div>
+                <label class="form-label fw-semibold">Jadwal Mulai</label>
+                <input type="datetime-local" name="jadwal_mulai" class="form-control" value="{{ format_datetime_local(pengaturan_ujian.jadwal_mulai) }}" required>
+            </div>
+            <div>
+                <label class="form-label fw-semibold">Jadwal Selesai</label>
+                <input type="datetime-local" name="jadwal_selesai" class="form-control" value="{{ format_datetime_local(pengaturan_ujian.jadwal_selesai) }}" required>
+            </div>
+            <button class="btn btn-primary"><i class="bi bi-save me-1"></i> Simpan Jadwal</button>
+        </div>
+    </form>
 
     <div class="bank-tabs-row">
         <ul class="nav nav-tabs">
@@ -395,6 +484,7 @@
                     <a class="nav-link {% if sesi_aktif and sesi_aktif.id == sesi.id %}active{% endif %}"
                        href="{{ url_for('admin.bank_soal', sesi_id=sesi.id) }}">
                         {{ sesi.judul }}
+                        <small class="text-muted ms-1">{{ sesi.durasi_label }}</small>
                     </a>
                 </li>
             {% endfor %}
@@ -422,7 +512,7 @@
                         <i class="bi bi-power me-1"></i>{{ 'Nonaktifkan' if sesi_aktif.aktif else 'Aktifkan' }}
                     </button>
                 </form>
-                <form method="POST" action="{{ url_for('admin.hapus_sesi_ujian', id=sesi_aktif.id) }}" onsubmit="return confirm('Hapus sesi ini beserta semua soalnya?')">
+                <form method="POST" action="{{ url_for('admin.hapus_sesi_ujian', id=sesi_aktif.id) }}" data-confirm="Hapus sesi ujian ini beserta semua soalnya?" data-confirm-title="Hapus Sesi Ujian?" data-confirm-variant="danger">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <button class="btn btn-outline-danger btn-sm"><i class="bi bi-trash me-1"></i> Hapus Sesi</button>
                 </form>
@@ -432,6 +522,35 @@
             </div>
         </div>
 
+        <form class="session-settings-card" method="POST" action="{{ url_for('admin.update_sesi_ujian', id=sesi_aktif.id) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="d-flex justify-content-between align-items-center gap-2 flex-wrap mb-3">
+                <div>
+                    <div class="fw-bold">Pengaturan Sesi Ujian Aktif</div>
+                    <small class="text-muted">Sesi dikerjakan berurutan. Durasi sesi dipakai untuk timer dan auto-submit saat sesi sedang dikerjakan.</small>
+                </div>
+                <span class="session-duration-pill"><i class="bi bi-clock-history"></i> {{ sesi_aktif.durasi_label }}</span>
+            </div>
+            <div class="session-settings-grid">
+                <div>
+                    <label class="form-label fw-semibold">Judul Sesi</label>
+                    <input type="text" name="judul" class="form-control" value="{{ sesi_aktif.judul }}" required>
+                </div>
+                <div>
+                    <label class="form-label fw-semibold">Deskripsi Singkat</label>
+                    <input type="text" name="deskripsi" class="form-control" value="{{ sesi_aktif.deskripsi }}" placeholder="Opsional">
+                </div>
+                <div>
+                    <label class="form-label fw-semibold">Durasi</label>
+                    <div class="input-group">
+                        <input type="number" name="durasi_menit" class="form-control" min="1" max="480" value="{{ sesi_aktif.durasi_menit or 60 }}" required>
+                        <span class="input-group-text">menit</span>
+                    </div>
+                </div>
+                <button class="btn btn-primary"><i class="bi bi-save me-1"></i> Simpan</button>
+            </div>
+        </form>
+
         {% if daftar_soal %}
             <div class="question-list" id="questionList">
                 {% for soal in daftar_soal %}
@@ -440,13 +559,20 @@
                             <div class="question-card-top">
                                 <div class="question-stem">
                                     <span class="question-number-inline">{{ loop.index }}.</span>
-                                    <div class="min-w-0">
-                                        {% if soal.gambar_pertanyaan %}
-                                            {{ soal_image(soal.gambar_pertanyaan) }}
-                                        {% endif %}
-                                        {% if soal.pertanyaan %}
-                                            <div class="preview-question-text text-break">{{ soal.pertanyaan }}</div>
-                                        {% endif %}
+                                    <div class="question-stem-main">
+                                        <div class="question-stem-head">
+                                            <div class="question-stem-content">
+                                                {% if soal.gambar_pertanyaan %}
+                                                    {{ soal_image(soal.gambar_pertanyaan) }}
+                                                {% endif %}
+                                                {% if soal.pertanyaan %}
+                                                    <div class="preview-question-text text-break">{{ soal.pertanyaan }}</div>
+                                                {% endif %}
+                                            </div>
+                                            {% if soal.is_esai() %}
+                                                <div class="essay-bobot-preview">Bobot Nilai: {{ soal.bobot or 0 }}</div>
+                                            {% endif %}
+                                        </div>
                                     </div>
                                 </div>
 
@@ -464,7 +590,7 @@
                                 <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#modalEditSoal{{ soal.id }}">
                                     <i class="bi bi-pencil-square me-1"></i> Edit
                                 </button>
-                                <form method="POST" action="{{ url_for('admin.hapus_soal', id=soal.id) }}" onsubmit="return confirm('Hapus soal ini?')">
+                                <form method="POST" action="{{ url_for('admin.hapus_soal', id=soal.id) }}" data-confirm="Hapus soal ini?" data-confirm-title="Hapus Soal?" data-confirm-variant="danger">
                                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                     <button class="btn btn-outline-danger btn-sm"><i class="bi bi-trash me-1"></i> Hapus</button>
                                 </form>
@@ -491,7 +617,7 @@
             <div class="bank-empty">
                 <i class="bi bi-journal-plus"></i>
                 <h5 class="fw-bold mt-3 mb-1">Belum ada soal</h5>
-                <p class="mb-0">Tambahkan soal untuk sesi ini.</p>
+                <p class="mb-0">Tambahkan soal untuk sesi ujian ini.</p>
             </div>
         {% endif %}
 
@@ -512,7 +638,7 @@
         <div class="bank-empty">
             <i class="bi bi-journal-plus"></i>
             <h5 class="fw-bold mt-3 mb-1">Belum ada sesi ujian</h5>
-            <p class="mb-0">Tambahkan sesi untuk mulai mengisi bank soal.</p>
+            <p class="mb-0">Tambahkan sesi ujian untuk mulai mengisi bank soal.</p>
         </div>
     {% endif %}
 
@@ -532,9 +658,16 @@
                                 <input type="text" name="judul" class="form-control" placeholder="Contoh: Sesi 1 - Literasi" required>
                             </div>
                             <div>
-                                <label class="form-label fw-semibold">Deskripsi Singkat</label>
-                                <input type="text" name="deskripsi" class="form-control" placeholder="Opsional">
+                                <label class="form-label fw-semibold">Durasi Sesi</label>
+                                <div class="input-group">
+                                    <input type="number" name="durasi_menit" class="form-control" min="1" max="480" value="60" required>
+                                    <span class="input-group-text">menit</span>
+                                </div>
                             </div>
+                        </div>
+                        <div class="mt-3">
+                            <label class="form-label fw-semibold">Deskripsi Singkat</label>
+                            <input type="text" name="deskripsi" class="form-control" placeholder="Opsional">
                         </div>
                         <div class="mt-3 template-download-box">
                             <div>

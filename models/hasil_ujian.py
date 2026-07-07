@@ -48,6 +48,9 @@ class HasilUjian(db.Model):
     jumlah_soal = db.Column(db.Integer, default=0)
     jumlah_benar = db.Column(db.Integer, default=0)
     nilai = db.Column(db.Float, default=0)
+    nilai_pg = db.Column(db.Float, default=0, server_default='0')
+    nilai_esai = db.Column(db.Float, default=0, server_default='0')
+    esai_dikoreksi = db.Column(db.Boolean, default=False, server_default='0')
     waktu_mulai = db.Column(db.DateTime, nullable=True)
     waktu_selesai = db.Column(db.DateTime, nullable=True)
 
@@ -67,3 +70,9 @@ class HasilUjian(db.Model):
 
     def label_jenis(self):
         return self.label_sesi()
+
+    def jumlah_soal_esai(self):
+        return sum(1 for item in self.jawaban if item.soal and item.soal.is_esai())
+
+    def perlu_koreksi_esai(self):
+        return self.jumlah_soal_esai() > 0 and not self.esai_dikoreksi

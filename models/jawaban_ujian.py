@@ -21,15 +21,22 @@ class JawabanUjian(db.Model):
         nullable=False
     )
 
-    # Nilai: 'A', 'B', 'C', 'D', atau None jika tidak dijawab
+    # Untuk PG berisi 'A', 'B', 'C', 'D', atau 'E'.
+    # Untuk esai berisi teks jawaban siswa.
     jawaban_dipilih = db.Column(
-        db.String(1),
+        db.Text,
         nullable=True
     )
 
     benar = db.Column(
         db.Boolean,
         default=False
+    )
+
+    skor_esai = db.Column(
+        db.Float,
+        default=0,
+        server_default='0'
     )
 
     # ==========================

@@ -9,10 +9,11 @@ from extensions_db import db
 from models.berkas import Berkas
 from models.soal import Soal
 from models.ujian_sesi import UjianSesi
+from models.pengaturan_ujian import PengaturanUjian
 from models.hasil_ujian import HasilUjian
 from models.user import User
 from datetime import datetime
-from sqlalchemy import func
+from sqlalchemy import func, or_
 from werkzeug.utils import secure_filename
 from utils.soal_pdf_template_parser import parse_soal_pdf
 from utils.upload_helper import IMAGE_EXTENSIONS, is_image, is_pdf, delete_uploaded_file, save_secure_upload
@@ -766,6 +767,31 @@ def _get_sesi_aktif_dari_request():
 
 
 
+def _ambil_durasi_menit(form, default=60):
+    try:
+        durasi = int(form.get('durasi_menit') or default)
+    except (TypeError, ValueError):
+        durasi = default
+
+    if durasi < 1:
+        durasi = default
+    return min(durasi, 480)
+
+
+def _ambil_datetime_local(form, field_name):
+    raw = (form.get(field_name) or '').strip()
+    if not raw:
+        return None
+    try:
+        return datetime.strptime(raw, '%Y-%m-%dT%H:%M')
+    except ValueError:
+        return None
+
+
+def _format_datetime_local(value):
+    return value.strftime('%Y-%m-%dT%H:%M') if value else ''
+
+
 @admin.route('/bank-soal/template-soal')
 @login_required
 def unduh_template_soal():
@@ -804,6 +830,7 @@ def bank_soal():
         return "Akses Ditolak", 403
 
     sesi_list, sesi_aktif = _get_sesi_aktif_dari_request()
+    pengaturan_ujian = PengaturanUjian.get_or_create()
     daftar_soal = []
     if sesi_aktif:
         daftar_soal = Soal.query.filter_by(
@@ -815,9 +842,33 @@ def bank_soal():
         sesi_list=sesi_list,
         sesi_aktif=sesi_aktif,
         daftar_soal=daftar_soal,
+        pengaturan_ujian=pengaturan_ujian,
         edit_id=request.args.get('edit_id', type=int),
         opsi_huruf=['A', 'B', 'C', 'D', 'E'],
+        format_datetime_local=_format_datetime_local,
+        now=datetime.utcnow(),
     )
+
+
+@admin.route('/bank-soal/uploads/soal/<path:filename>')
+@login_required
+def uploaded_soal_file(filename):
+    if not _require_admin():
+        return "Akses Ditolak", 403
+
+    soal_terkait = Soal.query.filter(or_(
+        Soal.gambar_pertanyaan == filename,
+        Soal.gambar_pilihan_a == filename,
+        Soal.gambar_pilihan_b == filename,
+        Soal.gambar_pilihan_c == filename,
+        Soal.gambar_pilihan_d == filename,
+        Soal.gambar_pilihan_e == filename,
+    )).first()
+
+    if not soal_terkait:
+        return 'File tidak ditemukan', 404
+
+    return send_from_directory(current_app.config['UPLOAD_FOLDER'], filename)
 
 
 @admin.route('/bank-soal/sesi/<int:sesi_id>/preview')
@@ -834,6 +885,33 @@ def preview_soal_sesi(sesi_id):
     return redirect(url_for('admin.bank_soal', sesi_id=sesi.id, edit_id=request.args.get('edit_id', type=int)))
 
 
+@admin.route('/bank-soal/jadwal/update', methods=['POST'])
+@login_required
+def update_jadwal_ujian_global():
+    if not _require_admin():
+        return "Akses Ditolak", 403
+
+    pengaturan = PengaturanUjian.get_or_create()
+    sesi_id = request.form.get('sesi_id', type=int)
+    redirect_target = url_for('admin.bank_soal', sesi_id=sesi_id) if sesi_id else url_for('admin.bank_soal')
+    jadwal_mulai = _ambil_datetime_local(request.form, 'jadwal_mulai')
+    jadwal_selesai = _ambil_datetime_local(request.form, 'jadwal_selesai')
+    if not jadwal_mulai or not jadwal_selesai:
+        flash('Jadwal mulai dan selesai ujian wajib diisi.', 'danger')
+        return redirect(redirect_target)
+
+    if jadwal_selesai <= jadwal_mulai:
+        flash('Jadwal selesai harus lebih besar dari jadwal mulai.', 'danger')
+        return redirect(redirect_target)
+
+    pengaturan.jadwal_mulai = jadwal_mulai
+    pengaturan.jadwal_selesai = jadwal_selesai
+    db.session.commit()
+
+    flash('Jadwal global ujian SPMB berhasil disimpan.', 'success')
+    return redirect(redirect_target)
+
+
 @admin.route('/bank-soal/sesi/tambah', methods=['POST'])
 @login_required
 def tambah_sesi_ujian():
@@ -842,13 +920,20 @@ def tambah_sesi_ujian():
 
     judul = (request.form.get('judul') or '').strip()
     deskripsi = (request.form.get('deskripsi') or '').strip() or None
+    durasi_menit = _ambil_durasi_menit(request.form)
 
     if not judul:
-        flash('Judul sesi wajib diisi.', 'danger')
+        flash('Judul sesi ujian wajib diisi.', 'danger')
         return redirect(url_for('admin.bank_soal'))
 
     max_urutan = db.session.query(func.max(UjianSesi.urutan)).scalar() or 0
-    sesi = UjianSesi(judul=judul, deskripsi=deskripsi, urutan=max_urutan + 1, aktif=True)
+    sesi = UjianSesi(
+        judul=judul,
+        deskripsi=deskripsi,
+        durasi_menit=durasi_menit,
+        urutan=max_urutan + 1,
+        aktif=True,
+    )
     db.session.add(sesi)
     db.session.commit()
 
@@ -897,6 +982,29 @@ def tambah_sesi_ujian():
         return redirect(url_for('admin.bank_soal', sesi_id=sesi.id))
 
     flash('Sesi ujian berhasil ditambahkan.', 'success')
+    return redirect(url_for('admin.bank_soal', sesi_id=sesi.id))
+
+
+@admin.route('/bank-soal/sesi/<int:id>/update', methods=['POST'])
+@login_required
+def update_sesi_ujian(id):
+    if not _require_admin():
+        return "Akses Ditolak", 403
+
+    sesi = UjianSesi.query.get_or_404(id)
+    judul = (request.form.get('judul') or '').strip()
+    deskripsi = (request.form.get('deskripsi') or '').strip() or None
+
+    if not judul:
+        flash('Judul sesi ujian wajib diisi.', 'danger')
+        return redirect(url_for('admin.bank_soal', sesi_id=sesi.id))
+
+    sesi.judul = judul
+    sesi.deskripsi = deskripsi
+    sesi.durasi_menit = _ambil_durasi_menit(request.form, default=sesi.durasi_menit or 60)
+    db.session.commit()
+
+    flash('Pengaturan sesi ujian berhasil disimpan.', 'success')
     return redirect(url_for('admin.bank_soal', sesi_id=sesi.id))
 
 
@@ -1396,15 +1504,77 @@ def hasil_ujian():
         sesi_aktif=sesi_aktif
     )
 
-
-@admin.route('/hasil-ujian/<int:id>')
+@admin.route('/hasil-ujian/<int:id>/koreksi-esai', methods=['GET', 'POST'])
 @login_required
-def detail_hasil_ujian(id):
+def koreksi_esai(id):
     if not _require_admin():
         return "Akses Ditolak", 403
 
     hasil = HasilUjian.query.get_or_404(id)
-    return render_template('admin/detail_hasil_ujian.html', hasil=hasil)
+    jawaban = sorted(hasil.jawaban, key=lambda item: ((item.soal.urutan or 0) if item.soal else 0, item.soal_id))
+    jawaban_pg = [item for item in jawaban if item.soal and item.soal.is_pilihan_ganda()]
+    jawaban_esai = [item for item in jawaban if item.soal and item.soal.is_esai()]
+
+    if request.method == 'POST':
+        total_esai = 0
+        for item in jawaban_esai:
+            maksimal = item.soal.bobot or 0
+            try:
+                skor = float(request.form.get(f'skor_{item.id}') or 0)
+            except (TypeError, ValueError):
+                skor = 0
+            if skor < 0:
+                skor = 0
+            if maksimal and skor > maksimal:
+                skor = maksimal
+            item.skor_esai = round(skor, 2)
+            total_esai += item.skor_esai
+
+        jumlah_benar = 0
+        for item in jawaban_pg:
+            item.benar = bool(item.jawaban_dipilih) and item.jawaban_dipilih == item.soal.jawaban_benar
+            if item.benar:
+                jumlah_benar += 1
+
+        total_bobot_esai = sum((item.soal.bobot or 0) for item in jawaban_esai)
+        max_nilai_pg = max(0, 100 - total_bobot_esai)
+        nilai_pg = round((jumlah_benar / len(jawaban_pg)) * max_nilai_pg, 2) if jawaban_pg else 0
+
+        hasil.jumlah_soal = len(jawaban)
+        hasil.jumlah_benar = jumlah_benar
+        hasil.nilai_pg = nilai_pg
+        hasil.nilai_esai = round(total_esai, 2)
+        hasil.nilai = round(nilai_pg + total_esai, 2)
+        hasil.esai_dikoreksi = True
+        db.session.commit()
+
+        flash('Nilai esai berhasil disimpan.', 'success')
+        return redirect(url_for('admin.hasil_ujian', sesi_id=hasil.sesi_id))
+
+    return render_template(
+        'admin/koreksi_esai.html',
+        hasil=hasil,
+        jawaban_pg=jawaban_pg,
+        jawaban_esai=jawaban_esai,
+    )
+
+
+@admin.route('/hasil-ujian/<int:id>/reset', methods=['POST'])
+@login_required
+def reset_ujian_siswa(id):
+    if not _require_admin():
+        return "Akses Ditolak", 403
+
+    hasil = HasilUjian.query.get_or_404(id)
+    nama_siswa = hasil.calon_siswa.nama_lengkap if hasil.calon_siswa else 'Calon siswa'
+    label_sesi = hasil.label_sesi()
+    sesi_id = hasil.sesi_id
+
+    db.session.delete(hasil)
+    db.session.commit()
+
+    flash(f'Ujian {label_sesi} untuk {nama_siswa} berhasil direset. Siswa dapat mengerjakan ulang sesi tersebut.', 'success')
+    return redirect(url_for('admin.hasil_ujian', sesi_id=sesi_id))
 
 
 @admin.route('/hasil-seleksi')

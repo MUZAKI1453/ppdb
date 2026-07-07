@@ -131,21 +131,21 @@
                             <div class="action-buttons">
 
                                 {% if siswa.status_kelulusan != 'Diterima' %}
-                                    <form method="POST" action="{{ url_for('admin.terima_seleksi', id=siswa.id) }}" class="d-inline" onsubmit="return confirm('Tetapkan {{ siswa.nama_lengkap }} sebagai Diterima?')">
+                                    <form method="POST" action="{{ url_for('admin.terima_seleksi', id=siswa.id) }}" class="d-inline" data-confirm="Tetapkan {{ siswa.nama_lengkap }} sebagai Diterima?" data-confirm-title="Tetapkan Diterima?" data-confirm-variant="success">
                                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                         <button class="btn btn-outline-success btn-sm" title="Terima"><i class="bi bi-check-lg"></i></button>
                                     </form>
                                 {% endif %}
 
                                 {% if siswa.status_kelulusan != 'Tidak Diterima' %}
-                                    <form method="POST" action="{{ url_for('admin.tolak_seleksi', id=siswa.id) }}" class="d-inline" onsubmit="return confirm('Tetapkan {{ siswa.nama_lengkap }} sebagai Tidak Diterima?')">
+                                    <form method="POST" action="{{ url_for('admin.tolak_seleksi', id=siswa.id) }}" class="d-inline" data-confirm="Tetapkan {{ siswa.nama_lengkap }} sebagai Tidak Diterima?" data-confirm-title="Tetapkan Tidak Diterima?" data-confirm-variant="danger">
                                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                         <button class="btn btn-outline-danger btn-sm" title="Tidak Diterima"><i class="bi bi-x-lg"></i></button>
                                     </form>
                                 {% endif %}
 
                                 {% if siswa.status_kelulusan != 'Menunggu' %}
-                                    <form method="POST" action="{{ url_for('admin.reset_seleksi', id=siswa.id) }}" class="d-inline" onsubmit="return confirm('Reset status kelulusan {{ siswa.nama_lengkap }} ke Menunggu?')">
+                                    <form method="POST" action="{{ url_for('admin.reset_seleksi', id=siswa.id) }}" class="d-inline" data-confirm="Reset status kelulusan {{ siswa.nama_lengkap }} ke Menunggu?" data-confirm-title="Reset Status Kelulusan?" data-confirm-variant="warning">
                                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                         <button class="btn btn-outline-secondary btn-sm" title="Reset ke Menunggu"><i class="bi bi-arrow-counterclockwise"></i></button>
                                     </form>

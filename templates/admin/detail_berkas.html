@@ -250,7 +250,7 @@
 
             {% if status == 'belum diverifikasi' or status == 'revisi' %}
 
-                <form method="POST" action="{{ url_for('admin.verifikasi_berkas', id=berkas.id) }}" class="d-inline" onsubmit="return confirm('Terima dan verifikasi seluruh berkas ini?')">
+                <form method="POST" action="{{ url_for('admin.verifikasi_berkas', id=berkas.id) }}" class="d-inline" data-confirm="Terima dan verifikasi seluruh berkas ini?" data-confirm-title="Terima Berkas?" data-confirm-variant="success">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <button class="btn btn-success"><i class="bi bi-check-circle-fill"></i> Terima Berkas</button>
                 </form>

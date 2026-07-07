@@ -142,6 +142,20 @@
     </main>
 </div>
 
+<div class="spmb-dialog-backdrop" id="spmbConfirmDialog" aria-hidden="true">
+    <div class="spmb-dialog" role="dialog" aria-modal="true" aria-labelledby="spmbConfirmTitle">
+        <div class="spmb-dialog-icon" id="spmbConfirmIcon">
+            <i class="bi bi-question-lg"></i>
+        </div>
+        <h5 id="spmbConfirmTitle">Konfirmasi Aksi</h5>
+        <p id="spmbConfirmMessage">Apakah Anda yakin?</p>
+        <div class="spmb-dialog-actions">
+            <button type="button" class="btn btn-light border" id="spmbConfirmCancel">Batal</button>
+            <button type="button" class="btn btn-primary" id="spmbConfirmOk">Ya, Lanjutkan</button>
+        </div>
+    </div>
+</div>
+
 <script>
     document.addEventListener("DOMContentLoaded", function () {
 
@@ -247,6 +261,103 @@
         /* Escape key: tutup dropdown */
         document.addEventListener("keydown", function (e) {
             if (e.key === "Escape") closeDropdown();
+        });
+
+
+        /* ── Custom Confirm Dialog ── */
+        var confirmDialog = document.getElementById("spmbConfirmDialog");
+        var confirmTitle = document.getElementById("spmbConfirmTitle");
+        var confirmMessage = document.getElementById("spmbConfirmMessage");
+        var confirmIcon = document.getElementById("spmbConfirmIcon");
+        var confirmOk = document.getElementById("spmbConfirmOk");
+        var confirmCancel = document.getElementById("spmbConfirmCancel");
+        var activeSubmitter = null;
+        var pendingResolver = null;
+
+        function setConfirmVariant(variant) {
+            var safeVariant = variant || "primary";
+            confirmIcon.className = "spmb-dialog-icon " + safeVariant;
+            confirmOk.className = "btn btn-" + (safeVariant === "danger" ? "danger" : safeVariant === "success" ? "success" : safeVariant === "warning" ? "warning" : "primary");
+            if (safeVariant === "danger") {
+                confirmIcon.innerHTML = '<i class="bi bi-exclamation-triangle-fill"></i>';
+                confirmOk.textContent = "Ya, Lanjutkan";
+            } else if (safeVariant === "success") {
+                confirmIcon.innerHTML = '<i class="bi bi-check-circle-fill"></i>';
+                confirmOk.textContent = "Ya, Simpan";
+            } else if (safeVariant === "warning") {
+                confirmIcon.innerHTML = '<i class="bi bi-arrow-counterclockwise"></i>';
+                confirmOk.textContent = "Ya, Lanjutkan";
+            } else {
+                confirmIcon.innerHTML = '<i class="bi bi-question-lg"></i>';
+                confirmOk.textContent = "Ya, Lanjutkan";
+            }
+        }
+
+        function closeConfirmDialog(result) {
+            confirmDialog.classList.remove("show");
+            confirmDialog.setAttribute("aria-hidden", "true");
+            document.body.classList.remove("spmb-dialog-open");
+            if (pendingResolver) {
+                pendingResolver(result);
+                pendingResolver = null;
+            }
+        }
+
+        window.SPMBConfirm = function (options) {
+            var opts = options || {};
+            confirmTitle.textContent = opts.title || "Konfirmasi Aksi";
+            confirmMessage.textContent = opts.message || "Apakah Anda yakin?";
+            setConfirmVariant(opts.variant || "primary");
+            confirmDialog.classList.add("show");
+            confirmDialog.setAttribute("aria-hidden", "false");
+            document.body.classList.add("spmb-dialog-open");
+            confirmOk.focus();
+            return new Promise(function (resolve) {
+                pendingResolver = resolve;
+            });
+        };
+
+        confirmOk.addEventListener("click", function () { closeConfirmDialog(true); });
+        confirmCancel.addEventListener("click", function () { closeConfirmDialog(false); });
+        confirmDialog.addEventListener("click", function (e) {
+            if (e.target === confirmDialog) closeConfirmDialog(false);
+        });
+
+        document.addEventListener("keydown", function (e) {
+            if (e.key === "Escape" && confirmDialog.classList.contains("show")) {
+                closeConfirmDialog(false);
+            }
+        });
+
+        document.addEventListener("click", function (e) {
+            var submitter = e.target.closest('button[type="submit"], input[type="submit"]');
+            if (submitter && submitter.form) {
+                activeSubmitter = submitter;
+            }
+        }, true);
+
+        document.addEventListener("submit", function (e) {
+            var form = e.target;
+            if (!form || !form.matches("form[data-confirm]")) return;
+            if (form.dataset.confirmed === "true") {
+                delete form.dataset.confirmed;
+                return;
+            }
+
+            e.preventDefault();
+            window.SPMBConfirm({
+                title: form.dataset.confirmTitle || "Konfirmasi Aksi",
+                message: form.dataset.confirm || "Apakah Anda yakin?",
+                variant: form.dataset.confirmVariant || "primary"
+            }).then(function (ok) {
+                if (!ok) return;
+                form.dataset.confirmed = "true";
+                if (form.requestSubmit) {
+                    form.requestSubmit(activeSubmitter && activeSubmitter.form === form ? activeSubmitter : undefined);
+                } else {
+                    form.submit();
+                }
+            });
         });
     });
 </script>

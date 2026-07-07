@@ -416,3 +416,118 @@ body {
         font-size: 20px;
     }
 }
+
+
+/* ==================================================
+   GLOBAL CUSTOM CONFIRM DIALOG
+================================================== */
+body.spmb-dialog-open {
+    overflow: hidden;
+}
+
+.spmb-dialog-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 3000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    background: rgba(15, 23, 42, .48);
+    backdrop-filter: blur(8px);
+}
+
+.spmb-dialog-backdrop.show {
+    display: flex;
+}
+
+.spmb-dialog {
+    width: min(430px, 100%);
+    border-radius: 24px;
+    background: #fff;
+    box-shadow: 0 24px 70px rgba(15, 23, 42, .24);
+    padding: 28px;
+    text-align: center;
+    animation: spmbDialogIn .18s ease-out;
+}
+
+.spmb-dialog-icon {
+    width: 58px;
+    height: 58px;
+    border-radius: 20px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 16px;
+    background: #EEF2FF;
+    color: #4F46E5;
+    font-size: 26px;
+}
+
+.spmb-dialog-icon.danger {
+    background: #FEF2F2;
+    color: #DC2626;
+}
+
+.spmb-dialog-icon.success {
+    background: #ECFDF5;
+    color: #16A34A;
+}
+
+.spmb-dialog-icon.warning {
+    background: #FFFBEB;
+    color: #D97706;
+}
+
+.spmb-dialog h5 {
+    margin: 0 0 8px;
+    color: #0F172A;
+    font-size: 20px;
+    font-weight: 800;
+}
+
+.spmb-dialog p {
+    margin: 0;
+    color: #64748B;
+    line-height: 1.6;
+    font-size: 14px;
+}
+
+.spmb-dialog-actions {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 24px;
+}
+
+.spmb-dialog-actions .btn {
+    min-width: 128px;
+    border-radius: 12px;
+    font-weight: 700;
+}
+
+@keyframes spmbDialogIn {
+    from {
+        opacity: 0;
+        transform: translateY(12px) scale(.98);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@media (max-width: 480px) {
+    .spmb-dialog {
+        padding: 24px 20px;
+        border-radius: 20px;
+    }
+
+    .spmb-dialog-actions {
+        flex-direction: column-reverse;
+    }
+
+    .spmb-dialog-actions .btn {
+        width: 100%;
+    }
+}

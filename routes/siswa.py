@@ -1,8 +1,9 @@
 import os
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from flask import Blueprint, render_template, request, redirect, url_for, flash, current_app, send_from_directory
 from flask_login import login_required, current_user
+from sqlalchemy import or_
 from sqlalchemy.exc import IntegrityError
 
 from extensions_db import db
@@ -14,6 +15,7 @@ from models.data_ibu import DataIbu
 from models.data_wali import DataWali
 from models.berkas import Berkas
 from models.ujian_sesi import UjianSesi
+from models.pengaturan_ujian import PengaturanUjian
 from models.soal import Soal
 from models.hasil_ujian import HasilUjian
 from models.jawaban_ujian import JawabanUjian
@@ -213,6 +215,46 @@ def _next_sesi(calon_siswa):
     return None
 
 
+def _format_durasi_menit(total_menit):
+    total_menit = int(total_menit or 0)
+    jam = total_menit // 60
+    menit = total_menit % 60
+
+    if jam and menit:
+        return f'{jam} jam {menit} menit'
+    if jam:
+        return f'{jam} jam'
+    return f'{total_menit} menit'
+
+
+def _total_durasi_ujian():
+    return sum((sesi.durasi_menit or 0) for sesi in _sesi_aktif_dengan_soal())
+
+
+def _jadwal_ujian_global():
+    return PengaturanUjian.get_or_create()
+
+
+def _deadline_sesi(hasil, sesi, pengaturan_ujian=None):
+    waktu_mulai = hasil.waktu_mulai or datetime.now()
+    deadline_durasi = waktu_mulai + timedelta(minutes=sesi.durasi_menit or 60)
+    pengaturan_ujian = pengaturan_ujian or _jadwal_ujian_global()
+    if pengaturan_ujian and pengaturan_ujian.jadwal_selesai:
+        return min(deadline_durasi, pengaturan_ujian.jadwal_selesai)
+    return deadline_durasi
+
+
+def _status_label_jadwal(status):
+    return {
+        'nonaktif': 'Nonaktif',
+        'belum_dijadwalkan': 'Belum Dijadwalkan',
+        'belum_dibuka': 'Belum Dibuka',
+        'dibuka': 'Sedang Dibuka',
+        'ditutup': 'Ditutup',
+        'selesai': 'Selesai Dikerjakan',
+    }.get(status, status)
+
+
 def _panduan_tahapan_dashboard(calon_siswa, berkas, boleh_ujian, sesi_berikutnya, status_ujian):
     """Buat teks panduan singkat yang dinamis sesuai posisi calon siswa."""
     if not calon_siswa or not calon_siswa.nik:
@@ -280,8 +322,8 @@ def _panduan_tahapan_dashboard(calon_siswa, berkas, boleh_ujian, sesi_berikutnya
             'label': 'Tahap 5 dari 5',
             'judul': f'Kerjakan {sesi_berikutnya.judul}',
             'deskripsi': 'Administrasi Anda sudah lolos. Kerjakan sesi ujian secara berurutan. Setelah satu sesi selesai, sesi berikutnya akan muncul otomatis.',
-            'aksi_url': url_for('siswa.ujian', sesi_id=sesi_berikutnya.id),
-            'aksi_teks': f'Mulai {sesi_berikutnya.judul}',
+            'aksi_url': url_for('siswa.mulai_ujian'),
+            'aksi_teks': 'Lihat Jadwal Ujian',
             'ikon': 'bi-play-circle-fill',
         }
 
@@ -299,9 +341,9 @@ def _panduan_tahapan_dashboard(calon_siswa, berkas, boleh_ujian, sesi_berikutnya
             'label': 'Menunggu Pengumuman',
             'judul': 'Semua Sesi Ujian Selesai',
             'deskripsi': 'Jawaban ujian sudah tersimpan. Tunggu panitia menetapkan hasil seleksi dan pantau menu pengumuman secara berkala.',
-            'aksi_url': url_for('siswa.hasil_ujian'),
-            'aksi_teks': 'Lihat Hasil Ujian',
-            'ikon': 'bi-award-fill',
+            'aksi_url': url_for('siswa.pengumuman'),
+            'aksi_teks': 'Pantau Pengumuman',
+            'ikon': 'bi-hourglass-split',
         }
 
     return {
@@ -358,8 +400,7 @@ def dashboard():
             })
 
         if calon_siswa.sudah_selesai_semua_ujian():
-            nilai_akhir = calon_siswa.nilai_akhir_ujian()
-            status_seleksi = f'Nilai {nilai_akhir:g}' if nilai_akhir is not None else 'Selesai'
+            status_seleksi = 'Ujian Selesai'
         elif any(item['hasil'] and item['hasil'].is_selesai() for item in status_ujian):
             status_seleksi = 'Lanjut Sesi Berikutnya'
         elif boleh_ujian:
@@ -373,6 +414,8 @@ def dashboard():
         status_ujian
     )
 
+    total_durasi_ujian = _total_durasi_ujian()
+
     return render_template(
         'siswa/dashboard.html',
         progress=progress,
@@ -384,7 +427,9 @@ def dashboard():
         sesi_berikutnya=sesi_berikutnya,
         berkas=berkas,
         calon_siswa=calon_siswa,
-        panduan_tahapan=panduan_tahapan
+        panduan_tahapan=panduan_tahapan,
+        total_durasi_ujian=total_durasi_ujian,
+        total_durasi_ujian_label=_format_durasi_menit(total_durasi_ujian) if total_durasi_ujian else None
     )
 
 
@@ -565,6 +610,31 @@ def uploaded_file(filename):
     return send_from_directory(current_app.config['UPLOAD_FOLDER'], filename)
 
 
+@siswa.route('/uploads/soal/<path:filename>')
+@login_required
+def uploaded_soal_file(filename):
+    if current_user.role != 'siswa':
+        return 'Akses Ditolak', 403
+
+    calon_siswa = current_user.calon_siswa
+    if not calon_siswa or not calon_siswa.sudah_lolos_administrasi():
+        return 'Akses Ditolak', 403
+
+    soal_terkait = Soal.query.filter(or_(
+        Soal.gambar_pertanyaan == filename,
+        Soal.gambar_pilihan_a == filename,
+        Soal.gambar_pilihan_b == filename,
+        Soal.gambar_pilihan_c == filename,
+        Soal.gambar_pilihan_d == filename,
+        Soal.gambar_pilihan_e == filename,
+    )).first()
+
+    if not soal_terkait:
+        return 'File tidak ditemukan', 404
+
+    return send_from_directory(current_app.config['UPLOAD_FOLDER'], filename)
+
+
 @siswa.route('/ujian')
 @login_required
 def mulai_ujian():
@@ -576,12 +646,50 @@ def mulai_ujian():
         flash('Ujian hanya bisa diakses setelah data dan berkas Anda diverifikasi admin.', 'warning')
         return redirect(url_for('siswa.dashboard'))
 
-    sesi = _next_sesi(calon_siswa)
-    if sesi:
-        return redirect(url_for('siswa.ujian', sesi_id=sesi.id))
+    now = datetime.now()
+    pengaturan_ujian = _jadwal_ujian_global()
+    status_jadwal = pengaturan_ujian.status_jadwal(now)
+    sesi_list = _sesi_aktif_dengan_soal()
+    sesi_berikutnya = _next_sesi(calon_siswa)
+    sesi_ujian = []
 
-    flash('Semua sesi ujian yang tersedia sudah selesai.', 'success')
-    return redirect(url_for('siswa.hasil_ujian'))
+    for sesi in sesi_list:
+        hasil = calon_siswa.get_hasil_ujian(sesi.id)
+        if hasil and hasil.is_selesai():
+            status_sesi = 'selesai'
+            status_label = 'Sudah Dikirim'
+        elif sesi_berikutnya and sesi_berikutnya.id == sesi.id:
+            status_sesi = 'siap'
+            status_label = 'Sesi Berikutnya'
+        else:
+            status_sesi = 'menunggu'
+            status_label = 'Terkunci Berurutan'
+
+        sesi_ujian.append({
+            'sesi': sesi,
+            'hasil': hasil,
+            'status': status_sesi,
+            'status_label': status_label,
+        })
+
+    boleh_mulai = bool(status_jadwal == 'dibuka' and sesi_berikutnya)
+    sudah_selesai_semua = bool(sesi_list) and all(
+        item['hasil'] and item['hasil'].is_selesai()
+        for item in sesi_ujian
+    )
+
+    return render_template(
+        'siswa/jadwal_ujian.html',
+        calon_siswa=calon_siswa,
+        sesi_ujian=sesi_ujian,
+        pengaturan_ujian=pengaturan_ujian,
+        status_jadwal=status_jadwal,
+        status_jadwal_label=_status_label_jadwal(status_jadwal),
+        boleh_mulai=boleh_mulai,
+        sesi_mulai=sesi_berikutnya,
+        sudah_selesai_semua=sudah_selesai_semua,
+        now=now,
+    )
 
 
 @siswa.route('/ujian/<int:sesi_id>', methods=['GET', 'POST'])
@@ -598,67 +706,144 @@ def ujian(sesi_id):
     sesi = UjianSesi.query.get_or_404(sesi_id)
     if not sesi.aktif:
         flash('Sesi ujian ini belum aktif.', 'warning')
-        return redirect(url_for('siswa.dashboard'))
+        return redirect(url_for('siswa.mulai_ujian'))
 
+    now = datetime.now()
+    pengaturan_ujian = _jadwal_ujian_global()
+    status_jadwal = pengaturan_ujian.status_jadwal(now)
     sesi_berikutnya = _next_sesi(calon_siswa)
     hasil = calon_siswa.get_hasil_ujian(sesi.id)
 
+    if status_jadwal != 'dibuka' and (request.method == 'GET' or not hasil):
+        if status_jadwal == 'belum_dijadwalkan':
+            flash('Jadwal ujian SPMB belum diatur admin.', 'warning')
+        elif status_jadwal == 'belum_dibuka':
+            flash('Ujian SPMB belum dibuka sesuai jadwal.', 'warning')
+        elif status_jadwal == 'ditutup':
+            flash('Jadwal ujian SPMB sudah ditutup.', 'danger')
+        else:
+            flash('Ujian belum bisa diakses.', 'warning')
+        return redirect(url_for('siswa.mulai_ujian'))
+
     if hasil and hasil.is_selesai():
-        berikut = _next_sesi(calon_siswa)
-        if berikut:
-            return redirect(url_for('siswa.ujian', sesi_id=berikut.id))
-        return redirect(url_for('siswa.hasil_ujian'))
+        flash('Sesi ujian tersebut sudah selesai dikerjakan.', 'info')
+        return redirect(url_for('siswa.mulai_ujian'))
 
     if sesi_berikutnya and sesi_berikutnya.id != sesi.id:
-        flash('Silakan ikuti urutan sesi ujian.', 'warning')
-        return redirect(url_for('siswa.ujian', sesi_id=sesi_berikutnya.id))
+        flash('Silakan kerjakan sesi ujian sesuai urutan.', 'warning')
+        return redirect(url_for('siswa.mulai_ujian'))
 
     daftar_soal = Soal.query.filter_by(sesi_id=sesi.id).order_by(Soal.urutan, Soal.id).all()
     if not daftar_soal:
         flash('Belum ada soal pada sesi ini. Silakan hubungi pihak sekolah.', 'warning')
-        return render_template('siswa/ujian.html', daftar_soal=[], sesi=sesi, sesi_berikutnya=None)
+        return render_template(
+            'siswa/ujian.html',
+            daftar_soal=[],
+            sesi=sesi,
+            sesi_berikutnya=None,
+            sisa_detik=0,
+            jawaban_tersimpan={},
+            is_sesi_terakhir=True,
+        )
+
+    if not hasil:
+        hasil = HasilUjian(
+            calon_siswa_id=calon_siswa.id,
+            sesi_id=sesi.id,
+            status=HasilUjian.STATUS_BELUM,
+            waktu_mulai=now,
+        )
+        db.session.add(hasil)
+        db.session.commit()
+    elif not hasil.waktu_mulai:
+        hasil.waktu_mulai = now
+        db.session.commit()
+
+    deadline = _deadline_sesi(hasil, sesi, pengaturan_ujian)
+    batas_submit = deadline + timedelta(minutes=2)
+
+    if request.method == 'GET' and now > deadline:
+        hasil.jumlah_soal = len(daftar_soal)
+        hasil.jumlah_benar = 0
+        hasil.nilai = 0
+        hasil.nilai_pg = 0
+        hasil.nilai_esai = 0
+        hasil.status = HasilUjian.STATUS_SELESAI
+        hasil.waktu_selesai = now
+        db.session.commit()
+        flash(f'Waktu {sesi.judul} sudah habis. Sesi ditutup otomatis.', 'danger')
+        return redirect(url_for('siswa.mulai_ujian'))
 
     if request.method == 'POST':
-        if not hasil:
-            hasil = HasilUjian(
-                calon_siswa_id=calon_siswa.id,
-                sesi_id=sesi.id,
-                waktu_mulai=datetime.utcnow()
-            )
-            db.session.add(hasil)
-            db.session.flush()
-        else:
-            JawabanUjian.query.filter_by(hasil_ujian_id=hasil.id).delete()
+        if now > batas_submit:
+            flash('Maaf, batas pengumpulan jawaban sudah terlewati.', 'danger')
+            return redirect(url_for('siswa.mulai_ujian'))
+
+        JawabanUjian.query.filter_by(hasil_ujian_id=hasil.id).delete()
 
         jumlah_benar = 0
+        jumlah_pg = 0
+        jumlah_esai = 0
         for soal in daftar_soal:
-            jawaban_dipilih = request.form.get(f'soal_{soal.id}')
-            benar = bool(jawaban_dipilih) and jawaban_dipilih == soal.jawaban_benar
-            if benar:
-                jumlah_benar += 1
+            jawaban_dipilih = (request.form.get(f'soal_{soal.id}') or '').strip()
+
+            benar = False
+            if soal.is_pilihan_ganda():
+                jumlah_pg += 1
+                jawaban_dipilih = jawaban_dipilih.upper() or None
+                benar = bool(jawaban_dipilih) and jawaban_dipilih == soal.jawaban_benar
+                if benar:
+                    jumlah_benar += 1
+            else:
+                jumlah_esai += 1
+                jawaban_dipilih = jawaban_dipilih or None
+
             db.session.add(JawabanUjian(
                 hasil_ujian_id=hasil.id,
                 soal_id=soal.id,
                 jawaban_dipilih=jawaban_dipilih,
-                benar=benar
+                benar=benar,
+                skor_esai=0,
             ))
 
+        total_bobot_esai = sum((soal.bobot or 0) for soal in daftar_soal if soal.is_esai())
+        max_nilai_pg = max(0, 100 - total_bobot_esai)
+        nilai_pg = round((jumlah_benar / jumlah_pg) * max_nilai_pg, 2) if jumlah_pg else 0
         hasil.jumlah_soal = len(daftar_soal)
         hasil.jumlah_benar = jumlah_benar
-        hasil.nilai = round((jumlah_benar / len(daftar_soal)) * 100, 2)
+        hasil.nilai_pg = nilai_pg
+        hasil.nilai_esai = 0
+        hasil.nilai = nilai_pg
+        hasil.esai_dikoreksi = jumlah_esai == 0
         hasil.status = HasilUjian.STATUS_SELESAI
-        hasil.waktu_selesai = datetime.utcnow()
+        hasil.waktu_selesai = now
         db.session.commit()
 
         berikut = _next_sesi(calon_siswa)
         if berikut:
-            flash(f'Sesi {sesi.judul} selesai. Silakan lanjut ke {berikut.judul}.', 'success')
+            flash(f'Sesi {sesi.judul} selesai. Anda otomatis diarahkan ke sesi berikutnya.', 'success')
             return redirect(url_for('siswa.ujian', sesi_id=berikut.id))
 
-        flash('Seluruh sesi ujian berhasil diselesaikan.', 'success')
-        return redirect(url_for('siswa.hasil_ujian'))
+        flash('Seluruh sesi ujian berhasil dikirim. Silakan tunggu pengumuman dari panitia.', 'success')
+        return redirect(url_for('siswa.dashboard'))
 
-    return render_template('siswa/ujian.html', daftar_soal=daftar_soal, sesi=sesi, sesi_berikutnya=sesi_berikutnya)
+    sisa_detik = max(0, int((deadline - now).total_seconds()))
+    jawaban_tersimpan = {
+        item.soal_id: item.jawaban_dipilih
+        for item in hasil.jawaban
+    }
+
+    return render_template(
+        'siswa/ujian.html',
+        daftar_soal=daftar_soal,
+        sesi=sesi,
+        sesi_berikutnya=sesi_berikutnya,
+        hasil=hasil,
+        sisa_detik=sisa_detik,
+        deadline=deadline,
+        jawaban_tersimpan=jawaban_tersimpan,
+        is_sesi_terakhir=bool(_sesi_aktif_dengan_soal() and sesi.id == _sesi_aktif_dengan_soal()[-1].id),
+    )
 
 
 @siswa.route('/hasil-ujian')
@@ -667,19 +852,8 @@ def hasil_ujian():
     if current_user.role != 'siswa':
         return 'Akses Ditolak', 403
 
-    calon_siswa = current_user.calon_siswa
-    sesi_aktif = _sesi_aktif_dengan_soal()
-    hasil_map = {}
-    if calon_siswa:
-        hasil_map = {hasil.sesi_id: hasil for hasil in calon_siswa.hasil_ujian if hasil.sesi_id}
-
-    return render_template(
-        'siswa/hasil_ujian.html',
-        calon_siswa=calon_siswa,
-        sesi_aktif=sesi_aktif,
-        hasil_map=hasil_map,
-        sesi_berikutnya=_next_sesi(calon_siswa) if calon_siswa else None
-    )
+    flash('Halaman hasil ujian peserta tidak ditampilkan. Silakan pantau pengumuman resmi dari panitia.', 'info')
+    return redirect(url_for('siswa.dashboard'))
 
 
 @siswa.route('/pengumuman')

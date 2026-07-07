@@ -57,6 +57,7 @@ def create_app():
         from models.soal import Soal
         from models.hasil_ujian import HasilUjian
         from models.jawaban_ujian import JawabanUjian
+        from models.pengaturan_ujian import PengaturanUjian
 
         db.create_all()
         ensure_sqlite_schema_updates()
@@ -87,6 +88,15 @@ def ensure_sqlite_schema_updates():
     tables = set(inspector.get_table_names())
 
     with engine.begin() as conn:
+        if 'ujian_sesi' in tables and not _has_column(inspector, 'ujian_sesi', 'durasi_menit'):
+            conn.execute(text('ALTER TABLE ujian_sesi ADD COLUMN durasi_menit INTEGER DEFAULT 60'))
+        if 'ujian_sesi' in tables and not _has_column(inspector, 'ujian_sesi', 'jadwal_mulai'):
+            conn.execute(text('ALTER TABLE ujian_sesi ADD COLUMN jadwal_mulai DATETIME'))
+        if 'ujian_sesi' in tables and not _has_column(inspector, 'ujian_sesi', 'jadwal_selesai'):
+            conn.execute(text('ALTER TABLE ujian_sesi ADD COLUMN jadwal_selesai DATETIME'))
+        if 'ujian_sesi' in tables:
+            conn.execute(text('UPDATE ujian_sesi SET durasi_menit = 60 WHERE durasi_menit IS NULL OR durasi_menit <= 0'))
+
         if 'soal' in tables and not _has_column(inspector, 'soal', 'sesi_id'):
             conn.execute(text('ALTER TABLE soal ADD COLUMN sesi_id INTEGER'))
         if 'soal' in tables and not _has_column(inspector, 'soal', 'urutan'):
@@ -109,6 +119,17 @@ def ensure_sqlite_schema_updates():
                     conn.execute(text(f'ALTER TABLE soal ADD COLUMN {column_name} {column_type}'))
         if 'hasil_ujian' in tables and not _has_column(inspector, 'hasil_ujian', 'sesi_id'):
             conn.execute(text('ALTER TABLE hasil_ujian ADD COLUMN sesi_id INTEGER'))
+        if 'hasil_ujian' in tables:
+            hasil_columns = {
+                'nilai_pg': 'REAL DEFAULT 0',
+                'nilai_esai': 'REAL DEFAULT 0',
+                'esai_dikoreksi': 'BOOLEAN DEFAULT 0',
+            }
+            for column_name, column_type in hasil_columns.items():
+                if not _has_column(inspector, 'hasil_ujian', column_name):
+                    conn.execute(text(f'ALTER TABLE hasil_ujian ADD COLUMN {column_name} {column_type}'))
+        if 'jawaban_ujian' in tables and not _has_column(inspector, 'jawaban_ujian', 'skor_esai'):
+            conn.execute(text('ALTER TABLE jawaban_ujian ADD COLUMN skor_esai REAL DEFAULT 0'))
 
     # Migrasi data ujian lama akademik/psikotes menjadi sesi dinamis.
     try:

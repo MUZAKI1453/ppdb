@@ -245,7 +245,7 @@
 
                                 {% if item.status_verifikasi|string|lower != 'diverifikasi' %}
 
-                                    <form method="POST" action="{{ url_for('admin.verifikasi_berkas', id=item.id) }}" class="d-inline" onsubmit="return confirm('Verifikasi berkas ini?')">
+                                    <form method="POST" action="{{ url_for('admin.verifikasi_berkas', id=item.id) }}" class="d-inline" data-confirm="Verifikasi berkas ini?" data-confirm-title="Verifikasi Berkas?" data-confirm-variant="success">
                                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                         <button class="btn btn-outline-success btn-sm" title="Verifikasi"><i class="bi bi-check-lg"></i></button>
                                     </form>
@@ -260,7 +260,7 @@
 
                                 </a>
 
-                                <form method="POST" action="{{ url_for('admin.hapus_berkas', id=item.id) }}" class="d-inline" onsubmit="return confirm('Yakin ingin menghapus data ini?')">
+                                <form method="POST" action="{{ url_for('admin.hapus_berkas', id=item.id) }}" class="d-inline" data-confirm="Yakin ingin menghapus data ini?" data-confirm-title="Hapus Berkas?" data-confirm-variant="danger">
                                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                     <button class="btn btn-outline-danger btn-sm" title="Hapus"><i class="bi bi-trash-fill"></i></button>
                                 </form>

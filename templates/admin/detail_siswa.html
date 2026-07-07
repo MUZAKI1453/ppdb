@@ -784,7 +784,9 @@
 
                     <form method="POST"
                           action="{{ url_for('admin.verifikasi_siswa', id=siswa.id) }}"
-                          onsubmit="return confirm('Verifikasi pendaftaran siswa ini? Pastikan seluruh data dan berkas sudah diperiksa.');">
+                          data-confirm="Verifikasi pendaftaran siswa ini? Pastikan seluruh data dan berkas sudah diperiksa."
+                          data-confirm-title="Verifikasi Pendaftaran?"
+                          data-confirm-variant="success">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
                         <button type="submit" class="btn btn-success">
@@ -804,7 +806,10 @@
                       action="{{ url_for('admin.tolak_siswa', id=siswa.id) }}"
                       id="formTolak"
                       class="reject-box"
-                      style="display:none;">
+                      style="display:none;"
+                      data-confirm="Tolak pendaftaran calon siswa ini? Calon siswa akan diminta memperbaiki datanya."
+                      data-confirm-title="Tolak Pendaftaran?"
+                      data-confirm-variant="danger">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
                     <label class="form-label">
@@ -827,8 +832,7 @@
                             Batal
                         </button>
 
-                        <button type="submit" class="btn btn-danger-solid"
-                                onclick="return confirm('Tolak pendaftaran calon siswa ini? Calon siswa akan diminta memperbaiki datanya.');">
+                        <button type="submit" class="btn btn-danger-solid">
                             <i class="bi bi-send-fill"></i>
                             Kirim Penolakan
                         </button>

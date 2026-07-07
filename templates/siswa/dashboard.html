@@ -29,12 +29,13 @@
     <div class="col-6 col-xl-3"><div class="stat-card stat-blue"><div><h2>{{ progress }}%</h2><p>Progress Pendaftaran</p></div><i class="bi bi-bar-chart-fill"></i></div></div>
     <div class="col-6 col-xl-3"><div class="stat-card stat-green"><div><h2>{{ status_data }}</h2><p>Status Data</p></div><i class="bi bi-person-check-fill"></i></div></div>
     <div class="col-6 col-xl-3"><div class="stat-card {% if berkas and berkas.status_verifikasi == 'Ditolak' %}stat-red{% elif berkas and berkas.status_verifikasi == 'Diverifikasi' %}stat-green{% else %}stat-purple{% endif %}"><div><h2>{{ status_berkas }}</h2><p>Status Berkas</p></div><i class="bi bi-file-earmark-check-fill"></i></div></div>
-    <div class="col-6 col-xl-3"><div class="stat-card {% if status_seleksi.startswith('Nilai') %}stat-green{% elif boleh_ujian %}stat-blue{% else %}stat-orange{% endif %}"><div><h2>{{ status_seleksi }}</h2><p>Status Seleksi</p></div><i class="bi bi-award-fill"></i></div></div>
+    <div class="col-6 col-xl-3"><div class="stat-card {% if status_seleksi == 'Ujian Selesai' %}stat-green{% elif boleh_ujian %}stat-blue{% else %}stat-orange{% endif %}"><div><h2>{{ status_seleksi }}</h2><p>Status Seleksi</p></div><i class="bi bi-award-fill"></i></div></div>
 </div>
 
 <div class="content-card">
     <h5 class="mb-2">Tahapan SPMB Calon Siswa</h5>
-    <p class="text-muted mb-4">Ikuti tahapan berikut secara berurutan. Tanda biru berarti tahapan sudah selesai atau sedang aktif.</p>
+    <p class="text-muted mb-2">Ikuti tahapan berikut secara berurutan. Tanda biru berarti tahapan sudah selesai atau sedang aktif.</p>
+    <div class="mb-4"></div>
 
     <div class="progress-item active">✓ Akun Berhasil Dibuat</div>
     <div class="progress-item {% if progress >= 50 %}active{% endif %}">✓ Formulir SPMB</div>
@@ -48,9 +49,9 @@
             {% if hasil and hasil.is_selesai() %}✓{% elif sesi_berikutnya and sesi.id == sesi_berikutnya.id %}→{% else %}○{% endif %}
             {{ sesi.judul }}
             {% if hasil and hasil.is_selesai() %}
-                <span class="text-muted"> — Nilai {{ hasil.nilai }}</span>
+                <span class="text-muted"> — Selesai</span>
             {% elif sesi_berikutnya and sesi.id == sesi_berikutnya.id and boleh_ujian %}
-                <span class="text-muted"> — Sesi berikutnya</span>
+                <span class="text-muted"> — Cek jadwal</span>
             {% endif %}
         </div>
     {% else %}
