@@ -6,14 +6,96 @@
     <meta charset="UTF-8">
 
     <meta name="viewport"
-          content="width=device-width, initial-scale=1.0">
+          content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 
     <title>
-        {% block title %}{% endblock %}
+        {% block title %}{% endblock %} | SMP Islam Plus Baitussalam
     </title>
 
+    <!-- ===== SEO ===== -->
+
     <meta name="description"
-          content="SPMB Online Tahun Ajaran 2026/2027. Sistem Penerimaan Peserta Didik Baru secara online, cepat, mudah dan transparan.">
+          content="{% block meta_description %}SPMB Online SMP Islam Plus Baitussalam Tahun Ajaran 2026/2027. Sistem Penerimaan Peserta Didik Baru secara online, cepat, mudah dan transparan. Akreditasi A, kuota 500 siswa.{% endblock %}">
+
+    <meta name="keywords"
+          content="SPMB, PPDB, penerimaan siswa baru, SMP Islam Plus Baitussalam, pendaftaran sekolah online 2026, SMP swasta Islam terakreditasi A">
+
+    <meta name="author" content="SMP Islam Plus Baitussalam">
+
+    <meta name="robots" content="index, follow">
+
+    <link rel="canonical" href="{{ request.url_root }}">
+
+    <!-- ===== Open Graph / Social Share ===== -->
+
+    <meta property="og:type" content="website">
+
+    <meta property="og:site_name" content="SMP Islam Plus Baitussalam">
+
+    <meta property="og:locale" content="id_ID">
+
+    <meta property="og:title"
+          content="{% block og_title %}SPMB Online SMP Islam Plus Baitussalam 2026/2027{% endblock %}">
+
+    <meta property="og:description"
+          content="{% block og_description %}Daftar sekarang, kuota 500 calon siswa, seleksi transparan berbasis komputer.{% endblock %}">
+
+    <meta property="og:image"
+          content="{{ url_for('static', filename='img/logo.png', _external=True) }}">
+
+    <meta property="og:image:alt" content="Logo SMP Islam Plus Baitussalam">
+
+    <meta property="og:url" content="{{ request.url }}">
+
+    <meta name="twitter:card" content="summary_large_image">
+
+    <meta name="twitter:title"
+          content="{% block twitter_title %}SPMB Online SMP Islam Plus Baitussalam 2026/2027{% endblock %}">
+
+    <meta name="twitter:description"
+          content="{% block twitter_description %}Daftar sekarang, kuota 500 calon siswa, seleksi transparan berbasis komputer.{% endblock %}">
+
+    <meta name="twitter:image"
+          content="{{ url_for('static', filename='img/logo.png', _external=True) }}">
+
+    <!-- ===== Favicon ===== -->
+
+    <link rel="icon" type="image/png"
+          href="{{ url_for('static', filename='img/logo.png') }}">
+
+    <link rel="apple-touch-icon"
+          href="{{ url_for('static', filename='img/logo.png') }}">
+
+    <meta name="theme-color" content="#10162B">
+
+    <!-- ===== Structured data (helps Google understand the school) ===== -->
+
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "School",
+        "name": "SMP Islam Plus Baitussalam",
+        "url": "{{ request.url_root }}",
+        "logo": "{{ url_for('static', filename='img/logo.png', _external=True) }}",
+        "sameAs": [],
+        "address": {
+            "@type": "PostalAddress",
+            "streetAddress": "Jl. Pendidikan No. 1",
+            "addressCountry": "ID"
+        },
+        "telephone": "+62-21-12345678",
+        "email": "info@sekolah.sch.id"
+    }
+    </script>
+
+    {% block structured_data %}{% endblock %}
+
+    <!-- ===== Fonts ===== -->
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <!-- ===== Styles ===== -->
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
           rel="stylesheet">
@@ -26,11 +108,15 @@
 
     <link rel="stylesheet" href="{{ url_for('static', filename='css/mobile.css') }}">
 
+    {% block extra_head %}{% endblock %}
+
 </head>
 
 <body>
 
-<nav class="navbar navbar-expand-lg navbar-custom sticky-top">
+<a href="#konten" class="visually-hidden-focusable">Lompat ke konten</a>
+
+<nav class="navbar navbar-expand-lg navbar-custom sticky-top" id="mainNavbar">
 
     <div class="container">
 
@@ -39,18 +125,21 @@
 
             <div class="logo-box">
 
-                <i class="bi bi-mortarboard-fill"></i>
+                <img src="{{ url_for('static', filename='img/logo.png') }}"
+                     alt="Logo SMP Islam Plus Baitussalam"
+                     width="48" height="48"
+                     loading="eager">
 
             </div>
 
-            <div class="ms-3">
+            <div class="ms-2 ms-lg-3">
 
                 <div class="brand-title">
-                    SPMB Online
+                    SMP IP Baitussalam
                 </div>
 
                 <div class="brand-subtitle">
-                    Tahun Ajaran 2026/2027
+                    SPMB 2026/2027
                 </div>
 
             </div>
@@ -60,7 +149,10 @@
         <button class="navbar-toggler"
                 type="button"
                 data-bs-toggle="collapse"
-                data-bs-target="#navbarMenu">
+                data-bs-target="#navbarMenu"
+                aria-controls="navbarMenu"
+                aria-expanded="false"
+                aria-label="Buka menu navigasi">
 
             <span class="navbar-toggler-icon"></span>
 
@@ -72,57 +164,45 @@
             <ul class="navbar-nav mx-auto">
 
                 <li class="nav-item">
-                    <a class="nav-link" href="#beranda">
-                        Beranda
-                    </a>
+                    <a class="nav-link" href="#beranda">Beranda</a>
                 </li>
 
                 <li class="nav-item">
-                    <a class="nav-link" href="#profil">
-                        Profil Sekolah
-                    </a>
+                    <a class="nav-link" href="#profil">Profil Sekolah</a>
                 </li>
 
                 <li class="nav-item">
-                    <a class="nav-link" href="#keunggulan">
-                        Keunggulan
-                    </a>
+                    <a class="nav-link" href="#keunggulan">Keunggulan</a>
                 </li>
 
                 <li class="nav-item">
-                    <a class="nav-link" href="#alur">
-                        Alur SPMB
-                    </a>
+                    <a class="nav-link" href="#prestasi">Prestasi</a>
                 </li>
 
                 <li class="nav-item">
-                    <a class="nav-link" href="#jadwal">
-                        Jadwal
-                    </a>
+                    <a class="nav-link" href="#alur">Alur SPMB</a>
                 </li>
 
                 <li class="nav-item">
-                    <a class="nav-link" href="#kontak">
-                        Kontak
-                    </a>
+                    <a class="nav-link" href="#jadwal">Jadwal</a>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link" href="#kontak">Kontak</a>
                 </li>
 
             </ul>
 
-            <div class="d-flex">
+            <div class="navbar-cta">
 
                 <a href="{{ url_for('auth.login') }}"
-                   class="btn btn-outline-primary me-2">
-
+                   class="btn btn-outline-primary">
                     Login
-
                 </a>
 
                 <a href="{{ url_for('auth.register') }}"
                    class="btn btn-primary">
-
                     Daftar Sekarang
-
                 </a>
 
             </div>
@@ -133,53 +213,69 @@
 
 </nav>
 
+<main id="konten">
 {% block content %}
 {% endblock %}
+</main>
 
-<footer class="footer"
-        id="kontak">
+<footer class="footer" id="kontak">
 
     <div class="container">
 
-        <div class="row">
+        <div class="row g-4">
 
-            <div class="col-lg-6 mb-4">
+            <div class="col-lg-5">
 
-                <h5>
-                    SPMB Online
-                </h5>
+                <div class="d-flex align-items-center mb-3">
+
+                    <img src="{{ url_for('static', filename='img/logo.png') }}"
+                         alt="Logo SMP Islam Plus Baitussalam"
+                         class="footer-logo"
+                         width="44" height="44"
+                         loading="lazy">
+
+                    <h5 class="mb-0 ms-3">
+                        SMP Islam Plus<br>Baitussalam
+                    </h5>
+
+                </div>
 
                 <p>
-
-                    Sistem Penerimaan Peserta Didik Baru
-                    yang memudahkan calon siswa melakukan
-                    pendaftaran, mengisi formulir,
-                    upload berkas, mengikuti ujian,
-                    dan melihat hasil seleksi secara online.
-
+                    Mencetak generasi unggul, berkarakter, dan
+                    berprestasi melalui pendidikan Islam yang
+                    berkualitas dan berbasis teknologi.
                 </p>
 
             </div>
 
-            <div class="col-lg-6 mb-4">
+            <div class="col-lg-3 col-6">
 
-                <h5>
-                    Hubungi Kami
-                </h5>
+                <h5 class="mb-3" style="font-size:16px;">Tautan Cepat</h5>
 
-                <p>
+                <p class="mb-2"><a href="#profil">Profil Sekolah</a></p>
+                <p class="mb-2"><a href="#prestasi">Prestasi Siswa</a></p>
+                <p class="mb-2"><a href="#alur">Alur SPMB</a></p>
+                <p class="mb-0"><a href="#jadwal">Jadwal SPMB</a></p>
+
+            </div>
+
+            <div class="col-lg-4 col-6">
+
+                <h5 class="mb-3" style="font-size:16px;">Hubungi Kami</h5>
+
+                <p class="mb-2">
                     <i class="bi bi-geo-alt-fill"></i>
                     Jl. Pendidikan No. 1
                 </p>
 
-                <p>
-                    <i class="bi bi-telephone-fill"></i>
-                    (021) 12345678
+                <p class="mb-2">
+                    <a href="tel:+62211234568"><i class="bi bi-telephone-fill"></i>
+                    (021) 12345678</a>
                 </p>
 
-                <p>
-                    <i class="bi bi-envelope-fill"></i>
-                    info@sekolah.sch.id
+                <p class="mb-0">
+                    <a href="mailto:info@sekolah.sch.id"><i class="bi bi-envelope-fill"></i>
+                    info@sekolah.sch.id</a>
                 </p>
 
             </div>
@@ -188,40 +284,200 @@
 
         <hr>
 
-        <div class="text-center">
-
-            © 2026 SPMB Online |
-            Seluruh Hak Cipta Dilindungi
-
+        <div class="text-center copyright">
+            © 2026 SMP Islam Plus Baitussalam &middot; Seluruh Hak Cipta Dilindungi
         </div>
 
     </div>
 
 </footer>
 
+<button type="button" class="back-to-top" id="backToTop" aria-label="Kembali ke atas">
+    <i class="bi bi-arrow-up"></i>
+</button>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
+(function () {
 
-    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+    const navbar   = document.getElementById('mainNavbar');
+    const menu     = document.getElementById('navbarMenu');
+    const backTop  = document.getElementById('backToTop');
+    const navLinks = document.querySelectorAll('.nav-link[href^="#"]');
+    const sections = Array.from(navLinks)
+        .map(link => document.querySelector(link.getAttribute('href')))
+        .filter(Boolean);
 
-        anchor.addEventListener('click', function (e) {
+    /* ---- Keep --nav-h in sync with the real navbar height,
+       so the CSS "scroll-margin-top" on every section always
+       reserves exactly the space the sticky navbar occupies.
+       This is the single source of truth for scroll offset —
+       nothing else adds extra pixels on top of it, which is
+       what used to leave a sliver of the previous section
+       showing (or hide part of the target) after a nav click. ---- */
+    function setNavHeight() {
+        const h = navbar.offsetHeight;
+        document.documentElement.style.setProperty('--nav-h', h + 'px');
+    }
+    setNavHeight();
+    window.addEventListener('resize', setNavHeight);
+    window.addEventListener('load', setNavHeight);
+    if (window.ResizeObserver) {
+        new ResizeObserver(setNavHeight).observe(navbar);
+    }
+
+    /* ---- Smooth-scroll anchor links. On mobile the menu is
+       closed first (and its collapse animation is awaited)
+       before scrolling, so the page height hasn't finished
+       changing yet when we measure the target's position —
+       that mismatch was the other cause of sections landing
+       slightly off / cut. We rely on native scrollIntoView +
+       the section's scroll-margin-top instead of hand-rolled
+       pixel math, so desktop, mobile, and direct #hash loads
+       all land in exactly the same place. ---- */
+    navLinks.forEach(function (link) {
+
+        link.addEventListener('click', function (e) {
+
+            const targetId = this.getAttribute('href');
+            const target = document.querySelector(targetId);
+            if (!target) return;
 
             e.preventDefault();
 
-            document.querySelector(
-                this.getAttribute('href')
-            ).scrollIntoView({
+            function doScroll() {
+                target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                if (history.pushState) {
+                    history.pushState(null, '', targetId);
+                }
+            }
 
-                behavior: 'smooth'
+            const isOpen = menu.classList.contains('show');
 
-            });
+            if (isOpen) {
+                const bsCollapse = bootstrap.Collapse.getOrCreateInstance(menu);
+                menu.addEventListener('hidden.bs.collapse', function handler() {
+                    menu.removeEventListener('hidden.bs.collapse', handler);
+                    setNavHeight();
+                    requestAnimationFrame(doScroll);
+                });
+                bsCollapse.hide();
+            } else {
+                doScroll();
+            }
 
         });
 
     });
 
+    /* ---- Navbar shadow once the page has scrolled ---- */
+    function toggleNavbarShadow() {
+        navbar.classList.toggle('is-scrolled', window.scrollY > 8);
+    }
+    toggleNavbarShadow();
+    window.addEventListener('scroll', toggleNavbarShadow, { passive: true });
+
+    /* ---- Highlight the nav link for the section in view ---- */
+    if (sections.length && 'IntersectionObserver' in window) {
+
+        const sectionObserver = new IntersectionObserver(function (entries) {
+
+            entries.forEach(function (entry) {
+                if (!entry.isIntersecting) return;
+                navLinks.forEach(l => l.classList.remove('active'));
+                const active = document.querySelector('.nav-link[href="#' + entry.target.id + '"]');
+                if (active) active.classList.add('active');
+            });
+
+        }, { rootMargin: '-45% 0px -50% 0px', threshold: 0 });
+
+        sections.forEach(s => sectionObserver.observe(s));
+    }
+
+    /* ---- Back-to-top button ---- */
+    function toggleBackTop() {
+        backTop.classList.toggle('is-visible', window.scrollY > 480);
+    }
+    toggleBackTop();
+    window.addEventListener('scroll', toggleBackTop, { passive: true });
+    backTop.addEventListener('click', function () {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+
+    /* ---- Scroll-reveal for elements marked .reveal ---- */
+    const revealEls = document.querySelectorAll('.reveal');
+    if (revealEls.length && 'IntersectionObserver' in window) {
+
+        const revealObserver = new IntersectionObserver(function (entries, obs) {
+            entries.forEach(function (entry) {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('is-visible');
+                    obs.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.15 });
+
+        revealEls.forEach(el => revealObserver.observe(el));
+    } else {
+        revealEls.forEach(el => el.classList.add('is-visible'));
+    }
+
+    /* ---- Animated stat counters ---- */
+    const counters = document.querySelectorAll('[data-count-to]');
+    if (counters.length && 'IntersectionObserver' in window) {
+
+        const counterObserver = new IntersectionObserver(function (entries, obs) {
+
+            entries.forEach(function (entry) {
+
+                if (!entry.isIntersecting) return;
+
+                const el     = entry.target;
+                const target = parseInt(el.dataset.countTo, 10);
+                const suffix = el.dataset.countSuffix || '';
+                const duration = 1100;
+                const start = performance.now();
+
+                function tick(now) {
+                    const p = Math.min((now - start) / duration, 1);
+                    const eased = 1 - Math.pow(1 - p, 3);
+                    el.textContent = Math.round(eased * target) + suffix;
+                    if (p < 1) requestAnimationFrame(tick);
+                }
+
+                requestAnimationFrame(tick);
+                obs.unobserve(el);
+
+            });
+
+        }, { threshold: 0.6 });
+
+        counters.forEach(el => counterObserver.observe(el));
+    }
+
+    /* ---- If the page loads with a #hash already in the URL
+       (e.g. a bookmarked link or a link from another page),
+       re-run the same offset-aware scroll once layout has
+       settled, so it lands correctly instead of relying on
+       the browser's default (which ignores scroll-margin
+       timing on first paint in some browsers). ---- */
+    if (window.location.hash) {
+        const initialTarget = document.querySelector(window.location.hash);
+        if (initialTarget) {
+            window.addEventListener('load', function () {
+                setNavHeight();
+                requestAnimationFrame(function () {
+                    initialTarget.scrollIntoView({ behavior: 'auto', block: 'start' });
+                });
+            });
+        }
+    }
+
+})();
 </script>
+
+{% block extra_scripts %}{% endblock %}
 
 </body>
 </html>

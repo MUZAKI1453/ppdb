@@ -1,21 +1,63 @@
 /* ==================================================
-   ROOT COLOR
+   DESIGN TOKENS
+
+   Brand color: #2563EB (blue-600) — single accent color
+   used consistently across buttons, links, icons and
+   section accents. Serif display type (Fraunces) stays
+   for the "established institution" voice; Plus Jakarta
+   Sans carries UI and body copy. Medal colors for
+   prestasi cards keep their gold/silver/bronze meaning
+   on purpose — that convention communicates rank at a
+   glance and isn't part of the site's main brand color.
 ================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700;9..144,900&family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,500&display=swap');
 
 :root {
 
-    --primary: #2563EB;
-    --primary-dark: #1D4ED8;
+    /* Brand blue */
+    --brand-700: #1D4ED8;
+    --brand-600: #2563EB;
+    --brand: #2563EB;
+    --brand-500: #2563EB;
+    --brand-400: #60A5FA;
+    --brand-tint: #EFF4FE;
+    --brand-tint-2: #DBEAFE;
 
-    --background: #F8FAFC;
+    /* Ink / neutrals */
+    --navy-900: #10162B;
+    --navy-800: #171E3A;
+    --ink: #10162B;
+    --text: #1B2140;
+    --muted: #5C6480;
+    --muted-on-navy: #B7C0E6;
+
+    /* Medal accents (semantic, not the brand color) */
+    --gold: #B8862E;
+    --gold-deep: #8F6A22;
+    --gold-tint: #F6ECD2;
+    --bronze: #A5673F;
+    --bronze-tint: #F3E3D6;
+
+    --surface: #F5F7FD;
+    --cream: #F5F7FD;
     --card: #FFFFFF;
 
-    --border: #E2E8F0;
+    --border: #E4E8F7;
+    --border-navy: rgba(255, 255, 255, .14);
 
-    --text: #0F172A;
-    --muted: #64748B;
+    --shadow-sm: 0 4px 14px rgba(16, 22, 43, .06);
+    --shadow: 0 20px 45px rgba(28, 43, 130, .14);
+    --shadow-brand: 0 14px 30px rgba(37, 99, 235, .28);
 
-    --shadow: 0 10px 30px rgba(0, 0, 0, .08);
+    --radius: 18px;
+
+    --font-display: 'Fraunces', Georgia, serif;
+    --font-body: 'Plus Jakarta Sans', 'Segoe UI', sans-serif;
+
+    /* Measured by JS from the real navbar height so anchor
+       scrolling never hides content under the sticky bar. */
+    --nav-h: 78px;
 
 }
 
@@ -28,26 +70,33 @@
 }
 
 html {
-    /* Prevents iOS Safari from auto-zooming text and keeps
-       rem-based scaling predictable across devices */
     -webkit-text-size-adjust: 100%;
+    scroll-behavior: smooth;
+    scroll-snap-type: y proximity;
 }
 
 body {
 
-    background: var(--background);
+    background: var(--surface);
     color: var(--text);
 
-    font-family: 'Segoe UI', sans-serif;
+    font-family: var(--font-body);
 
     overflow-x: hidden;
 
-    /* fluid base size: never below 15px, never above 16px */
-    font-size: clamp(15px, 1vw + 12px, 16px);
+    font-size: clamp(15px, 1vw + 12px, 16.5px);
+
+    line-height: 1.6;
+}
+
+h1, h2, h3, h4, .display-font {
+    font-family: var(--font-display);
+    letter-spacing: -.01em;
 }
 
 a {
     text-decoration: none;
+    color: var(--brand-600);
 }
 
 img {
@@ -55,59 +104,203 @@ img {
     height: auto;
 }
 
+a:focus-visible,
+button:focus-visible,
+.btn:focus-visible {
+    outline: 3px solid var(--brand-400);
+    outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; scroll-snap-type: none; }
+    * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
+}
+
+/* Eyebrow / kicker label above headings */
+.eyebrow {
+
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+
+    font-family: var(--font-body);
+    font-size: 12.5px;
+    font-weight: 700;
+
+    letter-spacing: .12em;
+    text-transform: uppercase;
+
+    color: var(--brand-600);
+}
+
+.eyebrow::before {
+
+    content: "";
+    width: 22px;
+    height: 2px;
+    background: var(--brand);
+    display: inline-block;
+}
+
+.eyebrow.on-navy {
+    color: var(--brand-400);
+}
+
 /* ==================================================
-   SECTION SPACING (mobile-first)
-   Root cause of the "berantakan" mobile layout:
-   the old rules forced every section[id] to
-   min-height:100vh + flex-centering, which either
-   crushed tall stacked content or left huge empty
-   gaps depending on viewport height. That is removed
-   below and replaced with sane, fluid spacing.
+   SCROLL-REVEAL (used by JS: adds .is-visible when a
+   .reveal element enters the viewport)
+================================================== */
+
+.reveal {
+    opacity: 0;
+    transform: translateY(22px);
+    transition: opacity .6s ease, transform .6s ease;
+}
+
+.reveal.is-visible {
+    opacity: 1;
+    transform: none;
+}
+
+.reveal-stagger.is-visible > * {
+    animation: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .reveal { opacity: 1; transform: none; transition: none; }
+}
+
+/* ==================================================
+   BUTTONS
+================================================== */
+
+.btn {
+    font-family: var(--font-body);
+    font-weight: 700;
+    border-radius: 999px;
+    padding: 13px 28px;
+    font-size: 15px;
+    letter-spacing: .01em;
+    transition: .25s ease;
+    border-width: 1.5px;
+}
+
+.btn-primary {
+    background: var(--brand);
+    border-color: var(--brand);
+    color: #fff;
+    box-shadow: 0 10px 22px rgba(37, 99, 235, .28);
+}
+
+.btn-primary:hover,
+.btn-primary:focus {
+    background: var(--brand-700);
+    border-color: var(--brand-700);
+    color: #fff;
+    transform: translateY(-2px);
+    box-shadow: 0 14px 28px rgba(37, 99, 235, .36);
+}
+
+.btn-outline-primary {
+    color: var(--navy-900);
+    border-color: var(--navy-900);
+    background: transparent;
+}
+
+.btn-outline-primary:hover {
+    background: var(--navy-900);
+    border-color: var(--navy-900);
+    color: #fff;
+    transform: translateY(-2px);
+}
+
+.btn-light {
+    background: #fff;
+    border-color: #fff;
+    color: var(--brand-700);
+}
+
+.btn-light:hover {
+    background: var(--brand-tint);
+    border-color: var(--brand-tint);
+    color: var(--brand-700);
+    transform: translateY(-2px);
+}
+
+.btn-lg { padding: 15px 32px; font-size: 16px; }
+
+/* Navbar-specific button sizing so Login / Daftar never
+   look oversized or cramped next to the nav links */
+.navbar-cta .btn {
+    padding: 10px 22px;
+    font-size: 14.5px;
+    white-space: nowrap;
+}
+
+/* ==================================================
+   SECTION SPACING
 ================================================== */
 
 .section {
-
     padding: 64px 0;
-
     position: relative;
 }
 
 .section + .section {
-
     margin-top: 0;
 }
 
 .section-divider {
-
     border-top: 1px solid var(--border);
 }
 
 .bg-white {
-
-    background: white;
+    background: var(--card);
 }
 
-/* Sections no longer force viewport height or vertical
-   centering — they size to their content, which is what
-   keeps things from overlapping/clipping on short mobile
-   viewports. */
-section[id] {
+.bg-light {
+    background: #EEF1FB;
+}
 
-    display: block;
+/* Anchor targets: reserve exactly the sticky navbar's
+   real height (+ a little breathing room) so a clicked
+   section always lands fully below the navbar, with no
+   sliver of the previous section left showing and no
+   part of the target itself hidden underneath it.
+
+   Each section also fills the entire remaining viewport
+   height and is a scroll-snap target, so navigating to it
+   (by menu click or by scrolling/swiping) settles exactly
+   on that section — no other section is left cut off at
+   the top or bottom of the screen. Sections with more
+   content than fits on one screen simply extend further
+   down and are scrolled into fully before the next one
+   is snapped to. */
+section[id] {
+    display: flex;
+    align-items: center;
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
+    scroll-margin-top: calc(var(--nav-h) + 16px);
+    min-height: calc(100vh - var(--nav-h));
+    min-height: calc(100dvh - var(--nav-h));
+}
+
+section[id] > .container {
+    width: 100%;
+}
+
+footer#kontak {
+    scroll-snap-align: start;
+    scroll-margin-top: calc(var(--nav-h) + 16px);
 }
 
 @media (min-width: 768px) {
-
-    .section {
-        padding: 90px 0;
-    }
+    .section { padding: 96px 0; }
 }
 
 @media (min-width: 1200px) {
-
-    .section {
-        padding: 120px 0;
-    }
+    .section { padding: 128px 0; }
 }
 
 /* ==================================================
@@ -116,120 +309,328 @@ section[id] {
 
 .navbar-custom {
 
-    background: white;
+    background: rgba(245, 247, 253, .92);
+    backdrop-filter: blur(10px);
 
     border-bottom: 1px solid var(--border);
 
-    padding: 14px 0;
+    padding: 12px 0;
 
     position: sticky;
-
     top: 0;
+    z-index: 1030;
 
-    z-index: 1000;
+    transition: box-shadow .25s ease, padding .25s ease, background .25s ease;
+}
+
+.navbar-custom.is-scrolled {
+    box-shadow: var(--shadow-sm);
+    background: rgba(255, 255, 255, .97);
+    padding: 8px 0;
+}
+
+.navbar-custom .container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.navbar-brand {
+    display: flex;
+    align-items: center;
+    margin-right: 0;
+    min-width: 0;
+    flex: 0 1 auto;
+}
+
+.navbar-brand > div {
+    min-width: 0;
 }
 
 .logo-box {
 
-    width: 52px;
-    height: 52px;
+    width: 48px;
+    height: 48px;
 
     flex-shrink: 0;
 
-    border-radius: 14px;
+    border-radius: 12px;
 
-    background: linear-gradient(
-            135deg,
-            var(--primary),
-            var(--primary-dark)
-    );
-
-    color: white;
+    background: linear-gradient(150deg, var(--navy-900) 0%, var(--brand-700) 130%);
 
     display: flex;
     align-items: center;
     justify-content: center;
 
-    font-size: 20px;
+    overflow: hidden;
+}
+
+.logo-box img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    padding: 6px;
 }
 
 .brand-title {
-
-    font-size: 20px;
+    font-family: var(--font-display);
+    font-size: 18px;
     font-weight: 700;
+    color: var(--navy-900);
+    line-height: 1.25;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .brand-subtitle {
-
-    font-size: 13px;
-    color: var(--muted);
+    font-size: 11.5px;
+    font-weight: 600;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    color: var(--brand-600);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .nav-link {
-
+    font-family: var(--font-body);
     font-weight: 600;
+    font-size: 15px;
+    color: var(--text) !important;
+    margin: 0 6px;
+    position: relative;
+    transition: .25s;
+}
 
-    color: #475569 !important;
-
-    margin: 0 8px;
-
-    transition: .3s;
+.nav-link::after {
+    content: "";
+    position: absolute;
+    left: 0; right: 0; bottom: -4px;
+    height: 2px;
+    background: var(--brand);
+    transform: scaleX(0);
+    transition: transform .25s ease;
 }
 
 .nav-link:hover {
-
-    color: var(--primary) !important;
+    color: var(--brand-700) !important;
 }
 
+.nav-link:hover::after,
+.nav-link.active::after {
+    transform: scaleX(1);
+}
+
+.nav-link.active {
+    color: var(--brand-700) !important;
+}
+
+/* Desktop CTA group in navbar */
+@media (min-width: 992px) {
+
+    .navbar-custom .navbar-cta {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-shrink: 0;
+    }
+}
+
+/* ---- Mobile collapsed menu ----
+   Rebuilt as a clean floating card instead of a bare
+   list, so it reads as one deliberate panel rather than
+   the page "falling apart" under the navbar. */
 @media (max-width: 991px) {
 
-    /* Collapsed offcanvas/dropdown menu should not force
-       horizontal scrolling and needs breathing room */
+    /* Brand and toggler always stay on the same top row —
+       the brand text is capped and truncated with an ellipsis
+       instead of being allowed to grow and push the toggler
+       button down onto a row of its own. */
+    .navbar-brand {
+        flex: 0 1 auto;
+        max-width: calc(100% - 64px);
+    }
+
+    .brand-title { font-size: 16px; max-width: 100%; }
+    .brand-subtitle { font-size: 10.5px; max-width: 100%; }
+
     .navbar-custom .navbar-collapse {
-        margin-top: 12px;
+        flex-basis: 100%;
+        margin-top: 14px;
+        padding: 14px;
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        box-shadow: var(--shadow-sm);
+        max-height: calc(100vh - 100px);
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .navbar-custom .navbar-nav {
+        gap: 2px;
     }
 
     .navbar-custom .nav-link {
-        margin: 4px 0;
+        margin: 0;
+        padding: 12px 12px !important;
+        border-radius: 10px;
+        font-size: 15.5px;
+    }
+
+    .navbar-custom .nav-link::after {
+        display: none;
+    }
+
+    .navbar-custom .nav-link:hover,
+    .navbar-custom .nav-link.active {
+        background: var(--brand-tint);
+        color: var(--brand-700) !important;
+    }
+
+    /* Login / Daftar become a clear, full-width action
+       block instead of two squeezed inline buttons. */
+    .navbar-custom .navbar-cta {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        margin-top: 12px;
+        padding-top: 12px;
+        border-top: 1px solid var(--border);
+    }
+
+    .navbar-custom .navbar-cta .btn {
+        width: 100%;
+        text-align: center;
+        padding: 12px 20px;
     }
 }
 
+@media (max-width: 360px) {
+    .brand-subtitle { display: none; }
+}
+
+.navbar-toggler {
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    padding: 0;
+    flex-shrink: 0;
+    background: var(--card);
+    transition: .2s ease;
+}
+
+.navbar-toggler-icon {
+    width: 20px;
+    height: 20px;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='%231D4ED8' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2.4' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+}
+
+.navbar-toggler:hover {
+    border-color: var(--brand-400);
+    background: var(--brand-tint);
+}
+
+.navbar-toggler:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px var(--brand-tint-2);
+}
+
+.navbar-toggler[aria-expanded="true"] {
+    background: var(--brand-tint);
+    border-color: var(--brand-400);
+}
+
+.navbar-toggler[aria-expanded="true"] .navbar-toggler-icon {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='%231D4ED8' stroke-linecap='round' stroke-width='2.4' d='M7 7l16 16M23 7L7 23'/%3e%3c/svg%3e");
+}
 
 /* ==================================================
-   HERO SECTION
+   HERO
+   Signature element: a soft blue mesh — layered radial
+   glows plus a fine geometric star lattice in the brand
+   blue (nodding to the school's Islamic-geometric crest)
+   instead of a flat navy block. The white info card and
+   stat strip still physically break the hero's bottom
+   edge, a layered device carried through the page.
 ================================================== */
+
 .hero-section {
-
-    padding: 110px 0 60px;
-
-    margin-bottom: 60px;
 
     position: relative;
 
-    /* clip the decorative circle so it can never create
-       horizontal overflow / a stray scrollbar on mobile */
+    background: linear-gradient(160deg, var(--navy-900) 0%, var(--brand-700) 130%);
+
+    padding: 44px 0 110px;
+
     overflow: hidden;
 }
 
 .hero-section::before {
 
     content: "";
-
     position: absolute;
+    inset: 0;
 
-    width: 500px;
-    height: 500px;
+    background-image:
+        repeating-linear-gradient(45deg, rgba(96,165,250,.20) 0 1px, transparent 1px 64px),
+        repeating-linear-gradient(-45deg, rgba(96,165,250,.20) 0 1px, transparent 1px 64px);
 
-    background: #DBEAFE;
+    -webkit-mask-image: radial-gradient(ellipse 90% 70% at 70% 20%, #000 40%, transparent 85%);
+    mask-image: radial-gradient(ellipse 90% 70% at 70% 20%, #000 40%, transparent 85%);
+}
 
+.hero-section::after {
+
+    content: "";
+    position: absolute;
+    left: -10%;
+    bottom: -30%;
+    width: 60%;
+    padding-top: 60%;
     border-radius: 50%;
 
-    top: -200px;
-    right: -150px;
+    background: radial-gradient(circle, rgba(96,165,250,.45), transparent 70%);
+}
 
-    opacity: .5;
+.hero-glow {
 
+    position: absolute;
+    right: -12%;
+    top: -18%;
+    width: 55%;
+    padding-top: 55%;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(37,99,235,.55), transparent 70%);
     z-index: 0;
+    pointer-events: none;
+}
+
+/* Real-photo layer: sits under the geometric pattern and
+   navy gradient, so once a real campus/activity photo is
+   dropped in, the hero reads as "this school" rather than
+   a purely decorative gradient. Kept low-opacity so text
+   contrast is preserved without extra overlay markup. */
+.hero-photo-layer {
+
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+
+    background-image: url('https://placehold.co/1600x1000/10162B/10162B?text=+');
+    background-size: cover;
+    background-position: center;
+    opacity: .35;
+    mix-blend-mode: luminosity;
 }
 
 .hero-section .container {
@@ -237,324 +638,583 @@ section[id] {
     z-index: 1;
 }
 
-.hero-badge {
-
-    display: inline-block;
-
-    background: #DBEAFE;
-
-    color: var(--primary);
-
-    padding: 12px 18px;
-
-    border-radius: 50px;
-
-    font-size: 14px;
-
-    font-weight: 700;
-}
-
 .hero-title {
 
-    font-size: clamp(30px, 5vw + 10px, 60px);
-
-    font-weight: 800;
-
+    font-family: var(--font-display);
+    font-size: clamp(30px, 4.4vw + 12px, 58px);
+    font-weight: 700;
     line-height: 1.15;
+    color: #fff;
+}
+
+.hero-title em {
+    font-style: italic;
+    color: var(--brand-400);
 }
 
 .hero-subtitle {
 
-    color: var(--muted);
-
-    font-size: clamp(15px, 1vw + 12px, 18px);
-
-    line-height: 1.9;
+    color: var(--muted-on-navy);
+    font-size: clamp(15.5px, 1vw + 12px, 18px);
+    line-height: 1.85;
+    max-width: 46ch;
 }
 
 .hero-info {
-
     display: flex;
-
     flex-wrap: wrap;
-
-    gap: 12px;
-
-    margin-top: 25px;
+    gap: 10px;
+    margin-top: 28px;
 }
 
 .hero-info span {
 
-    background: white;
-
-    border: 1px solid var(--border);
-
+    background: rgba(255, 255, 255, .08);
+    border: 1px solid var(--border-navy);
     border-radius: 30px;
-
-    padding: 10px 18px;
-
-    font-size: 14px;
-
+    padding: 9px 16px;
+    font-size: 13.5px;
     font-weight: 600;
-
-    box-shadow: 0 4px 12px rgba(0, 0, 0, .04);
-
+    color: #EAF0FF;
     display: inline-flex;
     align-items: center;
-    gap: 6px;
+    gap: 7px;
 }
 
 .hero-info i {
-
-    color: var(--primary);
+    color: var(--brand-400);
 }
 
-/* CTA buttons: side-by-side on larger screens, full width
-   stacked on small phones so long labels never wrap oddly
-   or overflow the viewport */
-.hero-section .mt-5 {
+.hero-section .cta-row {
     display: flex;
     flex-wrap: wrap;
     gap: 12px;
-}
-
-.hero-section .mt-5 .btn {
-    margin: 0 !important;
+    margin-top: 34px;
 }
 
 @media (max-width: 575px) {
-
-    .hero-section .mt-5 {
-        flex-direction: column;
-    }
-
-    .hero-section .mt-5 .btn {
-        width: 100%;
-        text-align: center;
-    }
+    .hero-section .cta-row { flex-direction: column; }
+    .hero-section .cta-row .btn { width: 100%; text-align: center; }
 }
 
-
-/* ==================================================
-   HERO CARD (ALUR SPMB)
-================================================== */
+/* Floating info card */
 
 .hero-card {
 
-    background: white;
-
+    background: var(--card);
     padding: 30px;
-
-    border-radius: 24px;
-
+    border-radius: var(--radius);
     box-shadow: var(--shadow);
+    border: 1px solid var(--border);
 }
 
 .hero-card h4 {
-
+    font-family: var(--font-display);
     font-weight: 700;
+    font-size: 20px;
+    margin-bottom: 6px;
+    color: var(--navy-900);
+}
 
-    margin-bottom: 25px;
+.hero-card .hero-card-sub {
+    color: var(--muted);
+    font-size: 13.5px;
+    margin-bottom: 20px;
 }
 
 .flow-item {
 
-    background: #EFF6FF;
+    display: flex;
+    align-items: center;
+    gap: 13px;
 
-    color: var(--primary);
+    padding: 12px 4px;
 
-    padding: 15px;
-
-    border-radius: 12px;
-
-    margin-bottom: 12px;
+    border-bottom: 1px solid var(--border);
 
     font-weight: 600;
+    font-size: 14px;
+    color: var(--text);
 
-    transition: .3s;
+    transition: transform .2s ease;
 }
 
 .flow-item:hover {
+    transform: translateX(4px);
+}
 
-    transform: translateX(5px);
+.flow-item:last-child {
+    border-bottom: none;
+}
+
+.flow-item .flow-icon {
+
+    width: 34px;
+    height: 34px;
+    border-radius: 9px;
+    background: var(--brand-tint);
+    color: var(--brand-700);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 15px;
+    flex-shrink: 0;
 }
 
 @media (max-width: 991px) {
-
-    .hero-card {
-        margin-top: 40px;
-    }
+    .hero-card { margin-top: 36px; }
 }
 
+/* Stat strip overlapping the hero's bottom edge */
 
-/* ==================================================
-   STATISTIK SEKOLAH
-================================================== */
+.stat-strip {
 
-.stat-box {
+    position: relative;
+    z-index: 2;
 
-    background: white;
-
-    border-radius: 24px;
-
-    padding: 28px 20px;
-
-    text-align: center;
-
-    box-shadow: 0 5px 20px rgba(0, 0, 0, .05);
-
-    transition: .3s;
-
-    height: 100%;
+    margin-top: -66px;
+    margin-bottom: 40px;
 }
 
-.stat-box:hover {
+.stat-strip-inner {
 
-    transform: translateY(-5px);
-}
-
-.stat-box h3 {
-
-    color: var(--primary);
-
-    font-size: clamp(30px, 3vw + 16px, 48px);
-
-    font-weight: 800;
-
-    margin-bottom: 4px;
-}
-
-.stat-box p {
-
-    margin: 0;
-
-    color: var(--muted);
-}
-
-
-/* ==================================================
-   PROFIL SEKOLAH
-================================================== */
-
-.section-title-left {
-
-    font-size: clamp(26px, 3vw + 14px, 42px);
-
-    font-weight: 800;
-
-    margin-bottom: 20px;
-}
-
-.profile-text {
-
-    color: var(--muted);
-
-    line-height: 1.9;
-}
-
-.profile-card {
-
-    background: white;
-
-    padding: 40px 28px;
-
-    text-align: center;
-
-    border-radius: 24px;
-
+    background: var(--card);
+    border-radius: var(--radius);
     box-shadow: var(--shadow);
+    border: 1px solid var(--border);
+
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
 }
 
-.profile-card i {
+.stat-strip-item {
 
-    font-size: 60px;
-
-    color: var(--primary);
-
-    margin-bottom: 20px;
+    text-align: center;
+    padding: 24px 10px;
+    border-right: 1px solid var(--border);
 }
 
+.stat-strip-item:last-child {
+    border-right: none;
+}
+
+.stat-strip-item h3 {
+
+    font-family: var(--font-display);
+    color: var(--brand-700);
+    font-size: clamp(22px, 2.4vw + 12px, 38px);
+    font-weight: 700;
+    margin-bottom: 2px;
+}
+
+.stat-strip-item p {
+    margin: 0;
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+}
+
+@media (max-width: 767px) {
+    .stat-strip { margin-top: -42px; }
+    .stat-strip-inner { grid-template-columns: repeat(2, 1fr); }
+    .stat-strip-item { padding: 16px 8px; }
+    .stat-strip-item:nth-child(2) { border-right: none; }
+    .stat-strip-item:nth-child(1),
+    .stat-strip-item:nth-child(2) { border-bottom: 1px solid var(--border); }
+}
 
 /* ==================================================
    SECTION HEADER
 ================================================== */
 
 .section-header {
-
-    text-align: center;
-
     margin-bottom: 48px;
-
     padding: 0 8px;
+}
+
+.section-header.text-center {
+    text-align: center;
 }
 
 .section-header h2 {
 
-    font-size: clamp(26px, 3vw + 12px, 40px);
-
-    font-weight: 800;
+    font-size: clamp(25px, 2.6vw + 14px, 42px);
+    font-weight: 700;
+    margin-top: 10px;
+    color: var(--navy-900);
 }
 
 .section-header p {
-
     color: var(--muted);
-
-    max-width: 700px;
-
-    margin: 12px auto 0;
+    max-width: 620px;
+    margin: 14px auto 0;
+    font-size: 16px;
 }
 
+.section-header.text-center p {
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.section-header:not(.text-center) p {
+    margin-left: 0;
+}
 
 /* ==================================================
-   KEUNGGULAN SEKOLAH
+   PROFIL SEKOLAH
 ================================================== */
 
-.feature-card {
-
-    background: white;
-
-    border-radius: 24px;
-
-    padding: 28px 20px;
-
-    text-align: center;
-
-    box-shadow: 0 5px 20px rgba(0, 0, 0, .05);
-
-    transition: .3s;
-
-    height: 100%;
-}
-
-.feature-card:hover {
-
-    transform: translateY(-8px);
-}
-
-.feature-card i {
-
-    font-size: 44px;
-
-    color: var(--primary);
-
-    margin-bottom: 18px;
-}
-
-.feature-card h5,
-.feature-card h6 {
-
-    font-weight: 700;
-
-    margin-bottom: 8px;
-}
-
-.feature-card p {
-
+.profile-text {
     color: var(--muted);
+    line-height: 1.9;
+    font-size: 16px;
+}
 
+.profile-card {
+
+    background: var(--card);
+    border-radius: var(--radius);
+    position: relative;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border);
+}
+
+.profile-card-photo {
+
+    display: block;
+    width: 100%;
+    height: 280px;
+    object-fit: cover;
+}
+
+.profile-card-caption {
+
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+
+    background: linear-gradient(160deg, var(--navy-900) 0%, var(--brand-700) 140%);
+    color: #fff;
+    padding: 28px 28px 32px;
+    position: relative;
+    overflow: hidden;
+}
+
+.profile-card-caption::before {
+
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image: repeating-linear-gradient(45deg, rgba(96,165,250,.18) 0 1px, transparent 1px 46px);
+}
+
+.profile-card-caption > * {
+    position: relative;
+    z-index: 1;
+}
+
+.profile-card-logo {
+
+    width: 56px;
+    height: 56px;
+    object-fit: contain;
+    background: #fff;
+    border-radius: 14px;
+    padding: 8px;
+    flex-shrink: 0;
+}
+
+.profile-card-caption h4 {
+
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 19px;
+    margin-bottom: 6px;
+}
+
+.profile-card-caption p {
+    color: var(--muted-on-navy);
+    margin: 0;
+    line-height: 1.7;
+    font-size: 14.5px;
+}
+
+@media (max-width: 480px) {
+    .profile-card-photo { height: 220px; }
+    .profile-card-caption { flex-direction: column; }
+}
+
+/* ==================================================
+   KEUNGGULAN — editorial list
+================================================== */
+
+.adv-list {
+    display: flex;
+    flex-direction: column;
+}
+
+.adv-item {
+
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+
+    padding: 24px 4px;
+    border-bottom: 1px solid var(--border);
+
+    transition: transform .2s ease;
+}
+
+.adv-item:hover {
+    transform: translateX(6px);
+}
+
+.adv-item:first-child { padding-top: 4px; }
+.adv-item:last-child { border-bottom: none; }
+
+.adv-number {
+
+    font-family: var(--font-display);
+    font-size: 32px;
+    font-weight: 600;
+    color: var(--brand-400);
+    line-height: 1;
+    min-width: 52px;
+}
+
+.adv-item h5 {
+
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 18.5px;
+    margin-bottom: 6px;
+    color: var(--navy-900);
+}
+
+.adv-item p {
+    color: var(--muted);
     margin: 0;
 }
 
+.keunggulan-photo {
+
+    margin-top: 32px;
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: var(--shadow);
+}
+
+.keunggulan-photo img {
+    display: block;
+    width: 100%;
+    height: 260px;
+    object-fit: cover;
+}
+
+/* ==================================================
+   PRESTASI SISWA
+   Tier accent keeps the gold / blue / bronze medal
+   convention on purpose — that reads as rank instantly,
+   independent of the site's own brand color.
+================================================== */
+
+.prestasi-card {
+
+    position: relative;
+    background: var(--card);
+    border-radius: 14px;
+    overflow: hidden;
+    height: 100%;
+    border: 1px solid var(--border);
+    border-left: 4px solid var(--tier-color, var(--brand));
+    box-shadow: var(--shadow-sm);
+    transition: .25s ease;
+}
+
+.prestasi-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow);
+}
+
+.prestasi-card.tier-nasional { --tier-color: #B8862E; }
+.prestasi-card.tier-provinsi { --tier-color: #2563EB; }
+.prestasi-card.tier-kabupaten { --tier-color: #A5673F; }
+
+.prestasi-photo {
+    display: block;
+    width: 100%;
+    height: 150px;
+    object-fit: cover;
+}
+
+.prestasi-body {
+    padding: 20px 22px 22px;
+}
+
+.prestasi-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+}
+
+.prestasi-icon {
+
+    width: 42px;
+    height: 42px;
+    border-radius: 10px;
+    background: color-mix(in srgb, var(--tier-color) 14%, white);
+    color: var(--tier-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+}
+
+.prestasi-tier {
+
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: var(--tier-color);
+    background: color-mix(in srgb, var(--tier-color) 12%, white);
+    padding: 5px 11px;
+    border-radius: 20px;
+}
+
+.prestasi-card h5 {
+
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 17px;
+    margin-bottom: 8px;
+    color: var(--navy-900);
+    line-height: 1.35;
+}
+
+.prestasi-meta {
+
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: .03em;
+    margin-bottom: 10px;
+}
+
+.prestasi-card p {
+    color: var(--muted);
+    margin: 0;
+    line-height: 1.7;
+    font-size: 14px;
+}
+
+/* ==================================================
+   ALUR SPMB — connected timeline
+================================================== */
+
+.timeline {
+
+    display: flex;
+    justify-content: space-between;
+    position: relative;
+    counter-reset: step;
+}
+
+.timeline::before {
+
+    content: "";
+    position: absolute;
+    top: 27px;
+    left: 6%;
+    right: 6%;
+    height: 2px;
+    background: var(--border);
+    z-index: 0;
+}
+
+.timeline-step {
+
+    position: relative;
+    z-index: 1;
+    flex: 1;
+    text-align: center;
+    padding: 0 6px;
+}
+
+.timeline-dot {
+
+    width: 54px;
+    height: 54px;
+    margin: 0 auto 14px;
+    border-radius: 50%;
+    background: var(--card);
+    border: 2px solid var(--brand);
+    color: var(--brand-700);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 21px;
+    transition: .25s ease;
+}
+
+.timeline-step:hover .timeline-dot {
+    background: var(--brand);
+    color: #fff;
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-brand);
+}
+
+.timeline-step h6 {
+
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 14.5px;
+    color: var(--navy-900);
+    margin-bottom: 3px;
+}
+
+.timeline-step span {
+    font-size: 12px;
+    color: var(--muted);
+    font-weight: 600;
+}
+
+@media (max-width: 767px) {
+
+    .timeline {
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    .timeline::before {
+        top: 6%;
+        bottom: 6%;
+        left: 26px;
+        right: auto;
+        width: 2px;
+        height: auto;
+    }
+
+    .timeline-step {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        text-align: left;
+        padding: 0;
+    }
+
+    .timeline-dot {
+        margin: 0;
+        flex-shrink: 0;
+        width: 52px;
+        height: 52px;
+    }
+}
 
 /* ==================================================
    JADWAL SPMB
@@ -562,57 +1222,54 @@ section[id] {
 
 .schedule-card {
 
-    background: white;
-
-    border-radius: 24px;
-
+    background: var(--card);
+    border-radius: var(--radius);
     overflow: hidden;
-
-    box-shadow: var(--shadow);
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border);
 }
 
 .schedule-card table {
-
     margin: 0;
-
     width: 100%;
 }
 
 .schedule-card td {
-
-    padding: 16px 18px;
-
+    padding: 18px 24px;
     vertical-align: middle;
+    border-color: var(--border) !important;
 }
 
 .schedule-card td:first-child {
-
-    font-weight: 600;
-
+    font-weight: 700;
+    color: var(--navy-900);
     white-space: nowrap;
+}
+
+.schedule-card td:last-child {
+    color: var(--muted);
+    font-weight: 600;
+}
+
+.schedule-card tr:hover td {
+    background: var(--brand-tint);
 }
 
 @media (max-width: 575px) {
 
-    /* Stack label/value pairs instead of squeezing two
-       columns onto a very narrow screen */
     .schedule-card td {
         display: block;
-        padding: 10px 18px;
+        padding: 8px 20px;
     }
 
     .schedule-card td:first-child {
         padding-top: 16px;
         padding-bottom: 2px;
-        color: var(--muted);
         font-size: 13px;
-        text-transform: uppercase;
-        letter-spacing: .04em;
     }
 
     .schedule-card td:last-child {
         padding-bottom: 16px;
-        font-weight: 600;
     }
 
     .schedule-card tr:not(:last-child) {
@@ -620,86 +1277,62 @@ section[id] {
     }
 }
 
-
 /* ==================================================
-   FAQ SPMB
-================================================== */
-
-.faq-card {
-
-    background: white;
-
-    border-radius: 20px;
-
-    padding: 25px;
-
-    margin-bottom: 15px;
-
-    box-shadow: 0 3px 15px rgba(0, 0, 0, .05);
-}
-
-.faq-card h5 {
-
-    font-weight: 700;
-
-    margin-bottom: 10px;
-}
-
-.faq-card p {
-
-    color: var(--muted);
-
-    margin: 0;
-}
-
-
-/* ==================================================
-   CTA PENDAFTARAN
+   CTA
 ================================================== */
 
 .cta-section {
 
-    background: linear-gradient(
-            135deg,
-            var(--primary),
-            var(--primary-dark)
-    );
+    background: linear-gradient(160deg, var(--navy-900) 0%, var(--brand-700) 140%);
+    color: #fff;
+    padding: 76px 0;
+    position: relative;
+    overflow: hidden;
+}
 
-    color: white;
+.cta-section::before {
 
-    padding: 70px 0;
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image: repeating-linear-gradient(45deg, rgba(96,165,250,.16) 0 1px, transparent 1px 56px),
+                       repeating-linear-gradient(-45deg, rgba(96,165,250,.16) 0 1px, transparent 1px 56px);
+}
+
+.cta-section .container {
+    position: relative;
+    z-index: 1;
+}
+
+.cta-logo {
+
+    width: 60px;
+    height: 60px;
+    object-fit: contain;
+    margin-bottom: 18px;
+    background: #fff;
+    border-radius: 16px;
+    padding: 8px;
 }
 
 .cta-section h2 {
 
-    font-size: clamp(26px, 3vw + 14px, 46px);
-
-    font-weight: 800;
+    font-family: var(--font-display);
+    font-size: clamp(25px, 2.8vw + 14px, 44px);
+    font-weight: 700;
 }
 
 .cta-section p {
-
-    font-size: clamp(15px, 1vw + 12px, 18px);
-}
-
-.cta-section .btn {
-    width: auto;
+    color: var(--muted-on-navy);
+    font-size: clamp(15.5px, 1vw + 12px, 18px);
+    max-width: 480px;
+    margin-left: auto;
+    margin-right: auto;
 }
 
 @media (max-width: 575px) {
-
-    .cta-section .btn {
-        width: 100%;
-    }
+    .cta-section .btn { width: 100%; }
 }
-
-@media (min-width: 1200px) {
-
-    .cta-section {
-        padding: 100px 0;
-    }
-}
-
 
 /* ==================================================
    FOOTER
@@ -707,84 +1340,93 @@ section[id] {
 
 .footer {
 
-    background: white;
+    background: var(--navy-900);
+    color: var(--muted-on-navy);
+    padding: 60px 0 26px;
+}
 
-    border-top: 1px solid var(--border);
-
-    padding: 40px 0;
+.footer-logo {
+    width: 44px;
+    height: 44px;
+    object-fit: contain;
+    background: #fff;
+    border-radius: 10px;
+    padding: 6px;
+    flex-shrink: 0;
 }
 
 .footer h5 {
-
+    font-family: var(--font-display);
     font-weight: 700;
+    color: #fff;
+    font-size: 18px;
 }
 
-.footer p {
-
-    color: var(--muted);
+.footer p, .footer a {
+    color: var(--muted-on-navy);
 }
 
+.footer a:hover {
+    color: var(--brand-400);
+}
+
+.footer hr {
+    border-color: var(--border-navy);
+    margin: 30px 0 20px;
+}
+
+.footer .copyright {
+    font-size: 13px;
+    color: var(--muted-on-navy);
+}
 
 /* ==================================================
-   RESPONSIVE — GRID DENSITY
-   Bootstrap's col-md-* already stacks to one column
-   below 768px; on phones that makes long lists (4
-   feature cards, 4 stats, 6 alur steps) feel like an
-   endless scroll. Give those a 2-up grid on small
-   screens instead of a full single column.
+   BACK TO TOP
 ================================================== */
 
-@media (max-width: 767.98px) {
+.back-to-top {
 
-    #keunggulan .row.g-4.mb-5 > [class*="col-"],
-    #keunggulan .row.g-4:last-child > [class*="col-"],
-    #alur .row.g-4 > [class*="col-"] {
-        flex: 0 0 50%;
-        max-width: 50%;
-    }
+    position: fixed;
+    right: 18px;
+    bottom: 18px;
+    bottom: calc(18px + env(safe-area-inset-bottom, 0px));
+
+    width: 46px;
+    height: 46px;
+
+    border-radius: 50%;
+    background: var(--brand);
+    color: #fff;
+    border: none;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+
+    box-shadow: var(--shadow-brand);
+
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(12px);
+    transition: .25s ease;
+
+    z-index: 1040;
 }
 
-@media (max-width: 420px) {
-
-    /* Very small phones: fall back to a single column so
-       card text never gets cramped */
-    #keunggulan .row.g-4.mb-5 > [class*="col-"],
-    #keunggulan .row.g-4:last-child > [class*="col-"],
-    #alur .row.g-4 > [class*="col-"] {
-        flex: 0 0 100%;
-        max-width: 100%;
-    }
+.back-to-top.is-visible {
+    opacity: 1;
+    visibility: visible;
+    transform: none;
 }
 
+.back-to-top:hover {
+    background: var(--brand-700);
+}
 
 /* ==================================================
-   RESPONSIVE — TYPOGRAPHY / LAYOUT TWEAKS
+   RESPONSIVE POLISH
 ================================================== */
-
-@media (max-width: 992px) {
-
-    .hero-card {
-
-        margin-top: 40px;
-    }
-}
-
-@media (max-width: 768px) {
-
-    .hero-section {
-
-        text-align: center;
-    }
-
-    .hero-info {
-
-        justify-content: center;
-    }
-
-    .hero-section .mt-5 {
-        justify-content: center;
-    }
-}
 
 @media (max-width: 575px) {
 
@@ -793,12 +1435,13 @@ section[id] {
         padding-right: 18px;
     }
 
-    .hero-badge {
-        font-size: 12px;
-        padding: 10px 14px;
+    .section-header {
+        margin-bottom: 30px;
     }
 
-    .section-header {
-        margin-bottom: 32px;
+    .back-to-top {
+        width: 42px;
+        height: 42px;
+        right: 14px;
     }
 }

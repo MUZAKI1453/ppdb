@@ -1,8 +1,6 @@
 {% extends 'layouts/base_public.html' %}
 
-{% block title %}
-    SPMB Online Tahun Ajaran 2026/2027
-{% endblock %}
+{% block title %}SPMB Online Tahun Ajaran 2026/2027{% endblock %}
 
 {% block content %}
 
@@ -10,8 +8,10 @@
          HERO
     ===================================== -->
 
-    <section class="hero-section"
-             id="beranda">
+    <section class="hero-section" id="beranda">
+
+        <div class="hero-glow" aria-hidden="true"></div>
+        <div class="hero-photo-layer" aria-hidden="true"></div>
 
         <div class="container">
 
@@ -19,63 +19,33 @@
 
                 <div class="col-lg-7">
 
-                <span class="hero-badge">
+                    <span class="eyebrow on-navy">SPMB Tahun Ajaran 2026/2027</span>
 
-                    SPMB ONLINE TAHUN AJARAN 2026/2027
-
-                </span>
-
-                    <h1 class="hero-title mt-4">
-
-                        Penerimaan Peserta Didik Baru
-                        Secara Online
-
+                    <h1 class="hero-title mt-3">
+                        Menyiapkan Generasi
+                        <em>Unggul &amp; Berakhlak</em>
                     </h1>
 
                     <p class="hero-subtitle mt-4">
-
-                        Bergabunglah bersama sekolah unggulan
-                        dengan fasilitas modern, tenaga pendidik
-                        profesional, serta lingkungan belajar yang
-                        mendukung perkembangan akademik dan karakter siswa.
-
+                        Bergabunglah bersama SMP Islam Plus Baitussalam —
+                        sekolah terakreditasi A dengan tenaga pendidik
+                        profesional dan lingkungan belajar yang mendukung
+                        perkembangan akademik serta karakter siswa.
                     </p>
 
-                    <div class="hero-info mt-4">
-
-                    <span>
-                        <i class="bi bi-patch-check-fill"></i>
-                        Akreditasi A
-                    </span>
-
-                        <span>
-                        <i class="bi bi-mortarboard-fill"></i>
-                        Sekolah Unggulan
-                    </span>
-
-                        <span>
-                        <i class="bi bi-laptop-fill"></i>
-                        Berbasis Teknologi
-                    </span>
-
+                    <div class="hero-info">
+                        <span><i class="bi bi-patch-check-fill"></i> Akreditasi A</span>
+                        <span><i class="bi bi-mortarboard-fill"></i> Sekolah Unggulan</span>
+                        <span><i class="bi bi-laptop-fill"></i> Ujian Berbasis Komputer</span>
                     </div>
 
-                    <div class="mt-5">
-
-                        <a href="{{ url_for('auth.register') }}"
-                           class="btn btn-primary btn-lg me-2">
-
+                    <div class="cta-row">
+                        <a href="{{ url_for('auth.register') }}" class="btn btn-primary btn-lg">
                             Daftar Sekarang
-
                         </a>
-
-                        <a href="{{ url_for('auth.login') }}"
-                           class="btn btn-outline-primary btn-lg">
-
-                            Login
-
+                        <a href="{{ url_for('auth.login') }}" class="btn btn-outline-primary btn-lg" style="color:#fff;border-color:rgba(255,255,255,.5);">
+                            Masuk Akun
                         </a>
-
                     </div>
 
                 </div>
@@ -84,30 +54,32 @@
 
                     <div class="hero-card">
 
-                        <h4 class="mb-4">
-
-                            Informasi SPMB
-
-                        </h4>
+                        <h4>Alur Singkat SPMB</h4>
+                        <p class="hero-card-sub">Lima langkah menuju kelulusan seleksi</p>
 
                         <div class="flow-item">
-                            Kuota Penerimaan : 500 Calon Siswa
+                            <span class="flow-icon"><i class="bi bi-people-fill"></i></span>
+                            Kuota 500 calon siswa
                         </div>
 
                         <div class="flow-item">
-                            Pendaftaran Online
+                            <span class="flow-icon"><i class="bi bi-globe2"></i></span>
+                            Pendaftaran sepenuhnya online
                         </div>
 
                         <div class="flow-item">
-                            Seleksi Transparan
+                            <span class="flow-icon"><i class="bi bi-eye-fill"></i></span>
+                            Proses seleksi transparan
                         </div>
 
                         <div class="flow-item">
-                            Ujian Berbasis Komputer
+                            <span class="flow-icon"><i class="bi bi-pc-display"></i></span>
+                            Ujian berbasis komputer
                         </div>
 
                         <div class="flow-item">
-                            Pengumuman Online
+                            <span class="flow-icon"><i class="bi bi-megaphone-fill"></i></span>
+                            Pengumuman kelulusan online
                         </div>
 
                     </div>
@@ -120,67 +92,94 @@
 
     </section>
 
+    <!-- Stat strip overlapping the hero -->
+
+    <div class="container stat-strip">
+        <div class="stat-strip-inner reveal">
+
+            <div class="stat-strip-item">
+                <h3><span data-count-to="1500" data-count-suffix="+">0</span></h3>
+                <p>Peserta Didik Aktif</p>
+            </div>
+
+            <div class="stat-strip-item">
+                <h3><span data-count-to="80" data-count-suffix="+">0</span></h3>
+                <p>Guru Profesional</p>
+            </div>
+
+            <div class="stat-strip-item">
+                <h3><span data-count-to="30" data-count-suffix="+">0</span></h3>
+                <p>Prestasi Nasional</p>
+            </div>
+
+            <div class="stat-strip-item">
+                <h3>A</h3>
+                <p>Akreditasi</p>
+            </div>
+
+        </div>
+    </div>
+
 
     <!-- =====================================
          PROFIL SEKOLAH
     ===================================== -->
 
-    <section id="profil"
-             class="section section-divider">
+    <section id="profil" class="section section-divider">
 
         <div class="container">
 
-            <div class="row align-items-center">
+            <div class="row align-items-center g-5">
 
-                <div class="col-lg-6">
+                <div class="col-lg-6 reveal">
 
-                    <h2 class="section-title-left">
+                    <span class="eyebrow">Tentang Kami</span>
 
+                    <h2 class="section-header-title mt-2 mb-4" style="font-size:clamp(26px,3vw+14px,42px);font-weight:700;color:var(--navy-900);">
                         Tentang Sekolah Kami
-
                     </h2>
 
-                    <p class="profile-text">
-
-                        Sekolah kami berkomitmen mencetak
-                        generasi yang unggul, berkarakter,
-                        berprestasi dan siap menghadapi
-                        tantangan masa depan.
-
+                    <p class="profile-text mb-3">
+                        Sekolah kami berkomitmen mencetak generasi yang
+                        unggul, berkarakter, berprestasi, dan siap
+                        menghadapi tantangan masa depan.
                     </p>
 
                     <p class="profile-text">
-
-                        Dengan dukungan tenaga pendidik
-                        profesional, fasilitas modern,
-                        serta kurikulum yang adaptif,
-                        kami menghadirkan pendidikan
-                        yang berkualitas bagi seluruh siswa.
-
+                        Dengan dukungan tenaga pendidik profesional,
+                        fasilitas modern, serta kurikulum yang adaptif,
+                        kami menghadirkan pendidikan berkualitas bagi
+                        seluruh siswa.
                     </p>
 
                 </div>
 
-                <div class="col-lg-6">
+                <div class="col-lg-6 reveal">
 
                     <div class="profile-card">
 
-                        <i class="bi bi-building"></i>
+                        <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS4tynd80g86AdRv5ObVzTXrX4B3cfoJcGqW9cdF9f2Xw&s=10"
+                             alt="Gedung SMP Islam Plus Baitussalam tampak depan"
+                             class="profile-card-photo"
+                             width="640" height="520" loading="lazy">
 
-                        <h4>
+                        <div class="profile-card-caption">
 
-                            Sekolah Unggulan
+                            <img src="{{ url_for('static', filename='img/logo.png') }}"
+                                 alt="Logo SMP Islam Plus Baitussalam"
+                                 class="profile-card-logo"
+                                 width="56" height="56" loading="lazy">
 
-                        </h4>
+                            <div>
+                                <h4>Sekolah Unggulan</h4>
+                                <p>
+                                    Menjadi tempat berkembangnya generasi
+                                    masa depan yang cerdas, berprestasi,
+                                    dan berakhlak mulia.
+                                </p>
+                            </div>
 
-                        <p>
-
-                            Menjadi tempat berkembangnya
-                            generasi masa depan yang
-                            cerdas, berprestasi,
-                            dan berakhlak mulia.
-
-                        </p>
+                        </div>
 
                     </div>
 
@@ -197,176 +196,201 @@
          KEUNGGULAN SEKOLAH
     ===================================== -->
 
-    <section id="keunggulan"
-             class="section section-divider bg-light">
+    <section id="keunggulan" class="section section-divider bg-light">
 
         <div class="container">
 
-            <div class="section-header">
+            <div class="row g-5">
 
-                <h2>
-                    Keunggulan Sekolah Kami
-                </h2>
+                <div class="col-lg-5 reveal">
 
+                    <span class="eyebrow">Kenapa Memilih Kami</span>
+
+                    <h2 class="mt-2" style="font-size:clamp(26px,3vw+14px,40px);font-weight:700;color:var(--navy-900);">
+                        Keunggulan Sekolah Kami
+                    </h2>
+
+                    <p class="profile-text mt-3">
+                        Sekolah unggulan dengan fasilitas modern,
+                        tenaga pendidik profesional, serta berbagai
+                        prestasi akademik dan non akademik.
+                    </p>
+
+                    <div class="keunggulan-photo">
+                        <img src="https://placehold.co/560x420/10162B/FFFFFF?font=raleway&text=Foto+Fasilitas+Sekolah"
+                             alt="Fasilitas laboratorium dan ruang belajar SMP Islam Plus Baitussalam"
+                             width="560" height="420" loading="lazy">
+                    </div>
+
+                </div>
+
+                <div class="col-lg-7 reveal">
+
+                    <div class="adv-list">
+
+                        <div class="adv-item">
+                            <span class="adv-number">01</span>
+                            <div>
+                                <h5>Akreditasi A</h5>
+                                <p>Mutu pendidikan terjamin dan diakui secara nasional.</p>
+                            </div>
+                        </div>
+
+                        <div class="adv-item">
+                            <span class="adv-number">02</span>
+                            <div>
+                                <h5>Guru Profesional</h5>
+                                <p>Didukung tenaga pendidik berpengalaman dan kompeten.</p>
+                            </div>
+                        </div>
+
+                        <div class="adv-item">
+                            <span class="adv-number">03</span>
+                            <div>
+                                <h5>Fasilitas Modern</h5>
+                                <p>Laboratorium dan sarana belajar berbasis teknologi.</p>
+                            </div>
+                        </div>
+
+                        <div class="adv-item">
+                            <span class="adv-number">04</span>
+                            <div>
+                                <h5>Banyak Prestasi</h5>
+                                <p>Prestasi akademik maupun non akademik tingkat nasional.</p>
+                            </div>
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- =====================================
+         PRESTASI SISWA
+    ===================================== -->
+
+    <section id="prestasi" class="section section-divider bg-white">
+
+        <div class="container">
+
+            <div class="section-header text-center reveal">
+                <span class="eyebrow" style="justify-content:center;">Prestasi</span>
+                <h2>Prestasi Siswa Kami</h2>
                 <p>
-
-                    Sekolah unggulan dengan fasilitas modern,
-                    tenaga pendidik profesional,
-                    serta berbagai prestasi akademik
-                    dan non akademik.
-
+                    Sebagian pencapaian membanggakan siswa/siswi kami
+                    di bidang akademik dan non akademik, dari tingkat
+                    kabupaten hingga nasional.
                 </p>
-
             </div>
-
-            <!-- KEUNGGULAN -->
-
-            <div class="row g-4 mb-5">
-
-                <div class="col-6 col-md-3">
-
-                    <div class="feature-card">
-
-                        <i class="bi bi-award-fill"></i>
-
-                        <h5>
-                            Akreditasi A
-                        </h5>
-
-                        <p>
-                            Mutu pendidikan terjamin dan
-                            diakui secara nasional.
-                        </p>
-
-                    </div>
-
-                </div>
-
-                <div class="col-6 col-md-3">
-
-                    <div class="feature-card">
-
-                        <i class="bi bi-person-workspace"></i>
-
-                        <h5>
-                            Guru Profesional
-                        </h5>
-
-                        <p>
-                            Didukung tenaga pendidik
-                            berpengalaman dan kompeten.
-                        </p>
-
-                    </div>
-
-                </div>
-
-                <div class="col-6 col-md-3">
-
-                    <div class="feature-card">
-
-                        <i class="bi bi-laptop"></i>
-
-                        <h5>
-                            Fasilitas Modern
-                        </h5>
-
-                        <p>
-                            Laboratorium dan sarana belajar
-                            berbasis teknologi.
-                        </p>
-
-                    </div>
-
-                </div>
-
-                <div class="col-6 col-md-3">
-
-                    <div class="feature-card">
-
-                        <i class="bi bi-trophy-fill"></i>
-
-                        <h5>
-                            Banyak Prestasi
-                        </h5>
-
-                        <p>
-                            Prestasi akademik maupun
-                            non akademik tingkat nasional.
-                        </p>
-
-                    </div>
-
-                </div>
-
-            </div>
-
-            <!-- STATISTIK -->
 
             <div class="row g-4">
 
-                <div class="col-6 col-md-3">
-
-                    <div class="stat-box">
-
-                        <h3>
-                            1500+
-                        </h3>
-
-                        <p>
-                            Peserta Didik Aktif
-                        </p>
-
+                <div class="col-md-6 col-lg-4 reveal">
+                    <div class="prestasi-card tier-nasional">
+                        <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS1n9sVjrszs8OP0vaxBDpPqmrwFCQUqwApqp5Dci1YzQ&s=10"
+                             alt="Siswa juara Olimpiade Sains Nasional bidang IPA"
+                             class="prestasi-photo" width="400" height="220" loading="lazy">
+                        <div class="prestasi-body">
+                            <div class="prestasi-top">
+                                <span class="prestasi-icon"><i class="bi bi-trophy-fill"></i></span>
+                                <span class="prestasi-tier">Nasional</span>
+                            </div>
+                            <div class="prestasi-meta">Akademik</div>
+                            <h5>Juara 1 Olimpiade Sains Nasional (OSN)</h5>
+                            <p>Bidang IPA — mewakili sekolah di ajang OSN tingkat nasional.</p>
+                        </div>
                     </div>
-
                 </div>
 
-                <div class="col-6 col-md-3">
-
-                    <div class="stat-box">
-
-                        <h3>
-                            80+
-                        </h3>
-
-                        <p>
-                            Guru Profesional
-                        </p>
-
+                <div class="col-md-6 col-lg-4 reveal">
+                    <div class="prestasi-card tier-provinsi">
+                        <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQvz9p3uhdTHFh1LUmdrUGbC1XLjPdvEw7bX5S2lGXVDw&s=10"
+                             alt="Siswa juara Lomba Debat Bahasa Inggris tingkat provinsi"
+                             class="prestasi-photo" width="400" height="220" loading="lazy">
+                        <div class="prestasi-body">
+                            <div class="prestasi-top">
+                                <span class="prestasi-icon"><i class="bi bi-mic-fill"></i></span>
+                                <span class="prestasi-tier">Provinsi</span>
+                            </div>
+                            <div class="prestasi-meta">Akademik</div>
+                            <h5>Juara 2 Lomba Debat Bahasa Inggris</h5>
+                            <p>Kompetisi debat pelajar tingkat provinsi antar SMP/MTs.</p>
+                        </div>
                     </div>
-
                 </div>
 
-                <div class="col-6 col-md-3">
-
-                    <div class="stat-box">
-
-                        <h3>
-                            30+
-                        </h3>
-
-                        <p>
-                            Prestasi Nasional
-                        </p>
-
+                <div class="col-md-6 col-lg-4 reveal">
+                    <div class="prestasi-card tier-kabupaten">
+                        <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTGnCAz7LoscjtCmfZqerXHw8-yFxlUd6TSSvIW5KZucg&s=10"
+                             alt="Siswa juara Musabaqah Tilawatil Quran tingkat kabupaten"
+                             class="prestasi-photo" width="400" height="220" loading="lazy">
+                        <div class="prestasi-body">
+                            <div class="prestasi-top">
+                                <span class="prestasi-icon"><i class="bi bi-book-fill"></i></span>
+                                <span class="prestasi-tier">Kabupaten</span>
+                            </div>
+                            <div class="prestasi-meta">Keagamaan</div>
+                            <h5>Juara 1 Musabaqah Tilawatil Qur'an</h5>
+                            <p>Lomba tilawah pelajar tingkat kabupaten/kota.</p>
+                        </div>
                     </div>
-
                 </div>
 
-                <div class="col-6 col-md-3">
-
-                    <div class="stat-box">
-
-                        <h3>
-                            A
-                        </h3>
-
-                        <p>
-                            Akreditasi
-                        </p>
-
+                <div class="col-md-6 col-lg-4 reveal">
+                    <div class="prestasi-card tier-provinsi">
+                        <img src="https://majalahsora.com/wp-content/uploads/2023/09/IMG-20230919-WA0020.jpg"
+                             alt="Tim futsal juara turnamen antar SMP tingkat provinsi"
+                             class="prestasi-photo" width="400" height="220" loading="lazy">
+                        <div class="prestasi-body">
+                            <div class="prestasi-top">
+                                <span class="prestasi-icon"><i class="bi bi-dribbble"></i></span>
+                                <span class="prestasi-tier">Provinsi</span>
+                            </div>
+                            <div class="prestasi-meta">Non Akademik</div>
+                            <h5>Juara 1 Futsal Antar SMP</h5>
+                            <p>Turnamen futsal pelajar se-provinsi tahun 2025.</p>
+                        </div>
                     </div>
+                </div>
 
+                <div class="col-md-6 col-lg-4 reveal">
+                    <div class="prestasi-card tier-nasional">
+                        <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSd2nEG6gpSeGaZpoh4wiB6-E6tXFfHJq09VejIFgkWcQ&s=10"
+                             alt="Siswa juara Lomba Karya Tulis Ilmiah tingkat nasional"
+                             class="prestasi-photo" width="400" height="220" loading="lazy">
+                        <div class="prestasi-body">
+                            <div class="prestasi-top">
+                                <span class="prestasi-icon"><i class="bi bi-file-earmark-richtext-fill"></i></span>
+                                <span class="prestasi-tier">Nasional</span>
+                            </div>
+                            <div class="prestasi-meta">Akademik</div>
+                            <h5>Juara 3 Lomba Karya Tulis Ilmiah</h5>
+                            <p>Kompetisi karya tulis ilmiah remaja tingkat nasional.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6 col-lg-4 reveal">
+                    <div class="prestasi-card tier-kabupaten">
+                        <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTV9CmPDmRATbUb1QdE9YYNYVNiYph9Rv_AxKMcvzgRy_FktvM0geia61Ki&s=10"
+                             alt="Siswa juara Tahfidz Quran Juz 30 tingkat kabupaten"
+                             class="prestasi-photo" width="400" height="220" loading="lazy">
+                        <div class="prestasi-body">
+                            <div class="prestasi-top">
+                                <span class="prestasi-icon"><i class="bi bi-stars"></i></span>
+                                <span class="prestasi-tier">Kabupaten</span>
+                            </div>
+                            <div class="prestasi-meta">Keagamaan</div>
+                            <h5>Juara 1 Tahfidz Qur'an Juz 30</h5>
+                            <p>Lomba hafalan Al-Qur'an pelajar tingkat kabupaten.</p>
+                        </div>
+                    </div>
                 </div>
 
             </div>
@@ -380,110 +404,52 @@
          ALUR SPMB
     ===================================== -->
 
-    <section id="alur"
-             class="section section-divider bg-white">
+    <section id="alur" class="section section-divider bg-light">
 
         <div class="container">
 
-            <div class="section-header">
-
-                <h2>
-                    Alur Pendaftaran SPMB
-                </h2>
-
-                <p>
-
-                    Ikuti tahapan berikut untuk menjadi
-                    peserta didik baru.
-
-                </p>
-
+            <div class="section-header text-center reveal">
+                <span class="eyebrow" style="justify-content:center;">Prosedur</span>
+                <h2>Alur Pendaftaran SPMB</h2>
+                <p>Ikuti tahapan berikut untuk menjadi peserta didik baru.</p>
             </div>
 
-            <div class="row g-4">
+            <div class="timeline reveal">
 
-                <div class="col-4 col-md-2">
-
-                    <div class="feature-card">
-
-                        <i class="bi bi-person-plus-fill"></i>
-
-                        <h6>
-                            Registrasi
-                        </h6>
-
-                    </div>
-
+                <div class="timeline-step">
+                    <div class="timeline-dot"><i class="bi bi-person-plus-fill"></i></div>
+                    <h6>Registrasi</h6>
+                    <span>Langkah 01</span>
                 </div>
 
-                <div class="col-4 col-md-2">
-
-                    <div class="feature-card">
-
-                        <i class="bi bi-file-earmark-text-fill"></i>
-
-                        <h6>
-                            Formulir
-                        </h6>
-
-                    </div>
-
+                <div class="timeline-step">
+                    <div class="timeline-dot"><i class="bi bi-file-earmark-text-fill"></i></div>
+                    <h6>Formulir</h6>
+                    <span>Langkah 02</span>
                 </div>
 
-                <div class="col-4 col-md-2">
-
-                    <div class="feature-card">
-
-                        <i class="bi bi-cloud-upload-fill"></i>
-
-                        <h6>
-                            Upload Berkas
-                        </h6>
-
-                    </div>
-
+                <div class="timeline-step">
+                    <div class="timeline-dot"><i class="bi bi-cloud-upload-fill"></i></div>
+                    <h6>Upload Berkas</h6>
+                    <span>Langkah 03</span>
                 </div>
 
-                <div class="col-4 col-md-2">
-
-                    <div class="feature-card">
-
-                        <i class="bi bi-pencil-square"></i>
-
-                        <h6>
-                            Ujian
-                        </h6>
-
-                    </div>
-
+                <div class="timeline-step">
+                    <div class="timeline-dot"><i class="bi bi-pencil-square"></i></div>
+                    <h6>Ujian</h6>
+                    <span>Langkah 04</span>
                 </div>
 
-                <div class="col-4 col-md-2">
-
-                    <div class="feature-card">
-
-                        <i class="bi bi-patch-check-fill"></i>
-
-                        <h6>
-                            Verifikasi
-                        </h6>
-
-                    </div>
-
+                <div class="timeline-step">
+                    <div class="timeline-dot"><i class="bi bi-patch-check-fill"></i></div>
+                    <h6>Verifikasi</h6>
+                    <span>Langkah 05</span>
                 </div>
 
-                <div class="col-4 col-md-2">
-
-                    <div class="feature-card">
-
-                        <i class="bi bi-trophy-fill"></i>
-
-                        <h6>
-                            Pengumuman
-                        </h6>
-
-                    </div>
-
+                <div class="timeline-step">
+                    <div class="timeline-dot"><i class="bi bi-trophy-fill"></i></div>
+                    <h6>Pengumuman</h6>
+                    <span>Langkah 06</span>
                 </div>
 
             </div>
@@ -497,53 +463,44 @@
          JADWAL SPMB
     ===================================== -->
 
-    <section id="jadwal"
-             class="section section-divider">
+    <section id="jadwal" class="section section-divider bg-white">
 
         <div class="container">
 
-            <div class="section-header">
-
-                <h2>
-                    Jadwal SPMB
-                </h2>
-
+            <div class="section-header text-center reveal">
+                <span class="eyebrow" style="justify-content:center;">Kalender</span>
+                <h2>Jadwal SPMB</h2>
             </div>
 
-            <div class="schedule-card">
+            <div class="row justify-content-center">
+                <div class="col-lg-8 reveal">
 
-                <div class="table-responsive">
-
-                    <table class="table mb-0">
-
-                        <tbody>
-
-                        <tr>
-                            <td>Pendaftaran</td>
-                            <td>01 Mei - 30 Juni 2026</td>
-                        </tr>
-
-                        <tr>
-                            <td>Verifikasi Berkas</td>
-                            <td>01 Juli - 05 Juli 2026</td>
-                        </tr>
-
-                        <tr>
-                            <td>Ujian Online</td>
-                            <td>10 Juli 2026</td>
-                        </tr>
-
-                        <tr>
-                            <td>Pengumuman</td>
-                            <td>15 Juli 2026</td>
-                        </tr>
-
-                        </tbody>
-
-                    </table>
+                    <div class="schedule-card">
+                        <div class="table-responsive">
+                            <table class="table mb-0">
+                                <tbody>
+                                <tr>
+                                    <td>Pendaftaran</td>
+                                    <td>01 Mei &ndash; 30 Juni 2026</td>
+                                </tr>
+                                <tr>
+                                    <td>Verifikasi Berkas</td>
+                                    <td>01 Juli &ndash; 05 Juli 2026</td>
+                                </tr>
+                                <tr>
+                                    <td>Ujian Online</td>
+                                    <td>10 Juli 2026</td>
+                                </tr>
+                                <tr>
+                                    <td>Pengumuman</td>
+                                    <td>15 Juli 2026</td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
 
                 </div>
-
             </div>
 
         </div>
@@ -557,26 +514,21 @@
 
     <section class="cta-section">
 
-        <div class="container text-center">
+        <div class="container text-center reveal">
 
-            <h2>
+            <img src="{{ url_for('static', filename='img/logo.png') }}"
+                 alt="Logo SMP Islam Plus Baitussalam"
+                 class="cta-logo"
+                 width="64" height="64" loading="lazy">
 
-                Siap Menjadi Bagian Dari Sekolah Kami?
+            <h2>Siap Menjadi Bagian Dari Sekolah Kami?</h2>
 
-            </h2>
-
-            <p class="mt-3">
-
-                Daftarkan diri Anda sekarang dan
-                raih masa depan yang lebih baik.
-
+            <p class="mt-3 mx-auto">
+                Daftarkan diri Anda sekarang dan raih masa depan yang lebih baik.
             </p>
 
-            <a href="{{ url_for('auth.register') }}"
-               class="btn btn-light btn-lg mt-3">
-
+            <a href="{{ url_for('auth.register') }}" class="btn btn-primary btn-lg mt-4">
                 Daftar Sekarang
-
             </a>
 
         </div>
