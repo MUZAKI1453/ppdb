@@ -16,39 +16,41 @@
         }
         .berkas-table-wrapper {
             width: 100%;
-            overflow-x: visible;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
         }
         #berkasTable {
-            table-layout: auto;
+            table-layout: fixed;
+            width: 100%;
+            min-width: 900px;
         }
         #berkasTable th:nth-child(1),
         #berkasTable td:nth-child(1) {
-            width: 54px;
+            width: 5%;
         }
         #berkasTable th:nth-child(2),
         #berkasTable td:nth-child(2) {
-            min-width: 240px;
+            width: 24%;
         }
         #berkasTable th:nth-child(n+3):nth-child(-n+6),
         #berkasTable td:nth-child(n+3):nth-child(-n+6) {
-            width: 78px;
+            width: 9%;
             white-space: nowrap;
         }
         #berkasTable th:nth-child(7),
         #berkasTable td:nth-child(7) {
-            width: 118px;
+            width: 14%;
             white-space: nowrap;
         }
         #berkasTable th:last-child,
         #berkasTable td:last-child {
-            width: 126px;
-            min-width: 126px;
-            max-width: 126px;
+            width: 21%;
             white-space: nowrap;
         }
         #berkasTable .action-buttons {
             display: inline-flex;
             flex-wrap: nowrap;
+            justify-content: center;
             gap: 4px;
             min-width: max-content;
         }
@@ -107,14 +109,14 @@
                 <thead>
 
                 <tr>
-                    <th width="60">No</th>
+                    <th>No</th>
                     <th>Nama Calon Siswa</th>
-                    <th>Pas Foto</th>
-                    <th>KK</th>
-                    <th>Akta</th>
-                    <th>Ijazah</th>
-                    <th>Status</th>
-                    <th width="220" class="text-center">Aksi</th>
+                    <th class="text-center">Pas Foto</th>
+                    <th class="text-center">KK</th>
+                    <th class="text-center">Akta</th>
+                    <th class="text-center">Ijazah</th>
+                    <th class="text-center">Status</th>
+                    <th class="text-center">Aksi</th>
                 </tr>
 
                 </thead>
@@ -198,7 +200,7 @@
                         </td>
 
                         <!-- STATUS -->
-                        <td>
+                        <td class="text-center">
 
                             {% set status = item.status_verifikasi|string|lower %}
 
