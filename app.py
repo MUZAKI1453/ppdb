@@ -40,10 +40,12 @@ def create_app():
     from routes.auth import auth
     from routes.admin import admin
     from routes.siswa import siswa
+    from routes.formulir import formulir_bp
 
     app.register_blueprint(auth)
     app.register_blueprint(admin)
     app.register_blueprint(siswa)
+    app.register_blueprint(formulir_bp)
 
     with app.app_context():
         from models.user import User

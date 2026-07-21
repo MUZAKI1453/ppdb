@@ -1,0 +1,244 @@
+"""
+Route unduh formulir PPDB — DISESUAIKAN dengan models asli repo MUZAKI1453/ppdb
+(models/calon_siswa.py, alamat_siswa.py, data_ayah.py, data_ibu.py, data_wali.py,
+berkas.py, user.py).
+
+- /formulir/<id>/download          -> siswa & admin: 1 PDF formulir (Formulir A + B)
+- /admin/formulir/bulk-download    -> admin: pilih beberapa id -> 1 file ZIP
+- /admin/formulir/export-excel     -> admin: rekap SEMUA (atau id terpilih) -> 1 Excel
+
+id di sini = CalonSiswa.id (bukan User.id).
+"""
+import io
+import zipfile
+from datetime import datetime
+
+import pandas as pd
+from flask import Blueprint, render_template, send_file, request, abort
+from flask_login import login_required, current_user
+
+from xhtml2pdf import pisa
+from models.calon_siswa import CalonSiswa
+
+formulir_bp = Blueprint("formulir", __name__)
+
+import re
+
+SEKOLAH = {
+    "nama": "SMA ISLAM PLUS BAITUSSALAM KUNINGAN",
+    "alamat": "Jl. Ir. Soekarno (Jalan Baru), Blok Cikedung Rt.02 Rw.01 Kel. Cirendang Kec. Kuningan - Kuningan",
+}
+LOGO_KIRI = "static/img/logo.png"
+LOGO_KANAN = "static/img/logo_yayasan.png"
+
+# Mapping teks bebas di database -> kode angka seperti di form kertas asli.
+# Ini best-effort: kalau teks di DB tidak persis cocok, kotak kode dibiarkan kosong
+# (bukan error) supaya PDF tetap ke-generate dengan aman.
+AGAMA_KODE = {
+    "islam": "01", "kristen": "02", "protestan": "02", "kristen protestan": "02",
+    "katolik": "03", "katholik": "03", "hindu": "04", "budha": "05", "buddha": "05",
+    "khonghucu": "06", "konghucu": "06", "khong hu chu": "06",
+}
+STATUS_TINGGAL_KODE = {
+    "bersama orang tua": "1", "wali": "2", "kos": "3", "asrama": "4",
+    "panti asuhan": "5", "pesantren": "6", "lainnya": "9",
+}
+MODA_KODE = {
+    "jalan kaki": "01", "kendaraan umum": "02", "angkutan umum": "02",
+    "kendaraan pribadi": "03",
+}
+PENDIDIKAN_KODE = {
+    "sd": "01", "sd/sederajat": "01", "smp": "02", "smp/sederajat": "02",
+    "sma": "03", "sma/sederajat": "03", "d1": "04", "d2": "05", "d3": "06",
+    "s1": "07", "s2": "08", "s3": "09",
+}
+
+
+def _kode(mapping, value):
+    if not value:
+        return ""
+    return mapping.get(str(value).strip().lower(), "")
+
+
+def _angka(value):
+    """Ambil digit pertama dari string seperti '4 km' atau '24 menit' -> '4' / '24'."""
+    if not value:
+        return ""
+    match = re.search(r"\d+", str(value))
+    return match.group() if match else ""
+
+
+def _tanggal_parts(d):
+    """Pecah date object jadi (dd, mm, yyyy) string, atau ('','','') kalau kosong."""
+    if not d:
+        return "", "", ""
+    return f"{d.day:02d}", f"{d.month:02d}", f"{d.year:04d}"
+
+
+def _resolve_local_path(uri, rel):
+    """
+    xhtml2pdf tidak otomatis tahu di mana file statis di-serve (beda dengan
+    WeasyPrint yang bisa pakai base_url). Fungsi ini menerjemahkan path
+    seperti 'static/img/logo.png' jadi path absolut di disk, supaya <img>
+    di template bisa ketemu filenya saat render PDF.
+    """
+    import os
+    from flask import current_app
+
+    if uri.startswith("http://") or uri.startswith("https://"):
+        return uri  # url luar dibiarkan apa adanya
+
+    path = os.path.join(current_app.root_path, uri.lstrip("/"))
+    return path
+
+
+def _build_pdf_bytes(siswa: CalonSiswa) -> bytes:
+    """Render formulir 1 siswa (pakai relationship bawaan model, bukan query manual)."""
+    tgl_lahir_dd, tgl_lahir_mm, tgl_lahir_yyyy = _tanggal_parts(siswa.tanggal_lahir)
+    tanggal_now = datetime.now()
+
+    ayah_tgl_dd, ayah_tgl_mm, ayah_tgl_yyyy = _tanggal_parts(siswa.ayah.tanggal_lahir if siswa.ayah else None)
+    ibu_tgl_dd, ibu_tgl_mm, ibu_tgl_yyyy = _tanggal_parts(siswa.ibu.tanggal_lahir if siswa.ibu else None)
+    wali_tgl_dd, wali_tgl_mm, wali_tgl_yyyy = _tanggal_parts(siswa.wali.tanggal_lahir if siswa.wali else None)
+
+    html_str = render_template(
+        "formulir_pdf.html",
+        siswa=siswa,
+        alamat=siswa.alamat,     # relationship uselist=False di CalonSiswa
+        ayah=siswa.ayah,         # relationship uselist=False
+        ibu=siswa.ibu,           # relationship uselist=False
+        wali=siswa.wali,         # relationship uselist=False
+        berkas=siswa.berkas,     # relationship uselist=False
+        sekolah=SEKOLAH,
+        logo_kiri=LOGO_KIRI,
+        logo_kanan=LOGO_KANAN,
+        tanggal_cetak=tanggal_now.strftime("%d / %m / %Y"),
+        tanggal_cetak_dd=f"{tanggal_now.day:02d}",
+        tanggal_cetak_mm=f"{tanggal_now.month:02d}",
+        tanggal_cetak_yyyy=f"{tanggal_now.year:04d}",
+        tgl_lahir_dd=tgl_lahir_dd,
+        tgl_lahir_mm=tgl_lahir_mm,
+        tgl_lahir_yyyy=tgl_lahir_yyyy,
+        ayah_tgl_dd=ayah_tgl_dd, ayah_tgl_mm=ayah_tgl_mm, ayah_tgl_yyyy=ayah_tgl_yyyy,
+        ibu_tgl_dd=ibu_tgl_dd, ibu_tgl_mm=ibu_tgl_mm, ibu_tgl_yyyy=ibu_tgl_yyyy,
+        wali_tgl_dd=wali_tgl_dd, wali_tgl_mm=wali_tgl_mm, wali_tgl_yyyy=wali_tgl_yyyy,
+        agama_kode=_kode(AGAMA_KODE, siswa.agama),
+        status_tinggal_kode=_kode(STATUS_TINGGAL_KODE, siswa.status_tinggal),
+        moda_kode=_kode(MODA_KODE, siswa.moda_transportasi),
+        jarak_angka=_angka(siswa.jarak_ke_sekolah),
+        waktu_menit=_angka(siswa.waktu_tempuh),
+        pendidikan_ayah_kode=_kode(PENDIDIKAN_KODE, siswa.ayah.pendidikan if siswa.ayah else None),
+        pendidikan_ibu_kode=_kode(PENDIDIKAN_KODE, siswa.ibu.pendidikan if siswa.ibu else None),
+        pendidikan_wali_kode=_kode(PENDIDIKAN_KODE, siswa.wali.pendidikan if siswa.wali else None),
+    )
+
+    output = io.BytesIO()
+    pisa_status = pisa.CreatePDF(
+        src=html_str,
+        dest=output,
+        link_callback=_resolve_local_path,
+    )
+    if pisa_status.err:
+        raise RuntimeError(f"Gagal membuat PDF untuk siswa id={siswa.id}")
+
+    return output.getvalue()
+
+
+# ---------- 1) SISWA & ADMIN: unduh 1 formulir ----------
+@formulir_bp.route("/formulir/<int:id>/download")
+@login_required
+def download_single(id):
+    siswa = CalonSiswa.query.get_or_404(id)
+
+    # guard: siswa cuma boleh unduh miliknya sendiri (dicek lewat user_id)
+    if current_user.role == "siswa" and siswa.user_id != current_user.id:
+        abort(403)
+
+    pdf_bytes = _build_pdf_bytes(siswa)
+    filename = f"Formulir_{siswa.nama_lengkap.replace(' ', '_')}.pdf"
+    return send_file(
+        io.BytesIO(pdf_bytes),
+        mimetype="application/pdf",
+        as_attachment=True,
+        download_name=filename,
+    )
+
+
+# ---------- 2) ADMIN: unduh banyak (checkbox) -> 1 ZIP ----------
+@formulir_bp.route("/admin/formulir/bulk-download", methods=["POST"])
+@login_required
+def bulk_download():
+    if current_user.role != "admin":
+        abort(403)
+
+    ids = request.form.getlist("siswa_ids")
+    if not ids:
+        abort(400, "Tidak ada siswa yang dipilih")
+
+    siswa_list = CalonSiswa.query.filter(CalonSiswa.id.in_(ids)).all()
+
+    zip_buffer = io.BytesIO()
+    with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zf:
+        for siswa in siswa_list:
+            pdf_bytes = _build_pdf_bytes(siswa)
+            identitas = siswa.nisn or siswa.id
+            fname = f"{identitas}_{siswa.nama_lengkap.replace(' ', '_')}.pdf"
+            zf.writestr(fname, pdf_bytes)
+    zip_buffer.seek(0)
+
+    tanggal = datetime.now().strftime("%Y%m%d_%H%M")
+    return send_file(
+        zip_buffer,
+        mimetype="application/zip",
+        as_attachment=True,
+        download_name=f"Formulir_Terpilih_{tanggal}.zip",
+    )
+
+
+# ---------- 3) ADMIN: export rekap ke Excel ----------
+@formulir_bp.route("/admin/formulir/export-excel", methods=["GET", "POST"])
+@login_required
+def export_excel():
+    if current_user.role != "admin":
+        abort(403)
+
+    ids = request.form.getlist("siswa_ids") if request.method == "POST" else None
+    query = CalonSiswa.query
+    if ids:
+        query = query.filter(CalonSiswa.id.in_(ids))
+    siswa_list = query.all()
+
+    rows = []
+    for s in siswa_list:
+        alamat = s.alamat
+        rows.append({
+            "Nama Lengkap": s.nama_lengkap,
+            "Jenis Kelamin": s.jenis_kelamin,
+            "NISN": s.nisn,
+            "NIK": s.nik,
+            "Tempat, Tanggal Lahir": f"{s.tempat_lahir}, {s.tanggal_lahir}" if s.tanggal_lahir else s.tempat_lahir,
+            "Agama": s.agama,
+            "Alamat Jalan": alamat.alamat_jalan if alamat else "",
+            "Desa/Kelurahan": alamat.desa_kelurahan if alamat else "",
+            "Kecamatan": alamat.kecamatan if alamat else "",
+            "Kabupaten": alamat.kabupaten if alamat else "",
+            "Asal Sekolah": s.asal_sekolah,
+            "No HP": s.no_hp,
+            "Status Verifikasi Data": s.status_verifikasi,
+            "Status Kelulusan": s.status_kelulusan,
+            "Status Verifikasi Berkas": s.berkas.status_verifikasi if s.berkas else "-",
+        })
+
+    df = pd.DataFrame(rows)
+    excel_buffer = io.BytesIO()
+    with pd.ExcelWriter(excel_buffer, engine="openpyxl") as writer:
+        df.to_excel(writer, index=False, sheet_name="Rekap Pendaftar")
+    excel_buffer.seek(0)
+
+    tanggal = datetime.now().strftime("%Y%m%d_%H%M")
+    return send_file(
+        excel_buffer,
+        mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        as_attachment=True,
+        download_name=f"Rekap_Pendaftar_{tanggal}.xlsx",
+    )

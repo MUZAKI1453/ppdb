@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>Formulir Peserta Didik - {{ siswa.nama_lengkap }}</title>
+<style>
+    @page { size: A4; margin: 12mm 10mm; }
+    body {
+        font-family: "DejaVu Sans", Arial, sans-serif;
+        font-size: 12px;
+        color: #111;
+        line-height: 2;
+        margin: 0;
+    }
+
+    table.kop-table { width: 100%; border-collapse: collapse; margin-bottom: 6px; }
+    .kop-yayasan { font-size: 8.8px; font-weight: bold; text-align: center; margin: 1px 0; }
+    .kop-sekolah { font-size: 11.5px; font-weight: bold; text-align: center; text-transform: uppercase; margin: 2px 0; }
+    .kop-alamat { font-size: 8.3px; text-align: center; margin: 2px 0; line-height: 1.1; }
+
+    .kop-divider-tebal { border-top: 3px solid #000; margin: 6px 0 2px 0; }
+    .kop-divider-tipis { border-top: 1px solid #000; margin-bottom: 10px; }
+
+    .titlebar {
+        background: #E8A812;
+        color: #1a2b6d;
+        text-align: center;
+        font-weight: bold;
+        font-size: 13.5px;
+        padding: 6px 0;
+        margin: 8px 0 6px 0;
+    }
+
+    .form-code {
+        border: 2px solid #222;
+        padding: 4px 12px;
+        font-weight: bold;
+        font-size: 11.5px;
+    }
+
+    .section-title {
+        background: #B8C6E8;
+        font-weight: bold;
+        padding: 4px 8px;
+        margin: 10px 0 5px 0;
+        font-size: 10.5px;
+    }
+
+    table.formfields {
+        width: 100%;
+        border-collapse: collapse;
+        table-layout: fixed;
+    }
+    table.formfields td {
+        padding: 2px 2px;
+        vertical-align: middle;
+    }
+    td.label {
+        width: 168px;
+        font-size: 9px;
+        white-space: nowrap;
+    }
+    td.kotak {
+        border: 1px solid #333;
+        width: 10.5px;
+        height: 15.5px;
+        text-align: center;
+        font-size: 8.5px;
+        line-height: 1;
+    }
+    td.pemisah {
+        width: 8px;
+        text-align: center;
+        font-weight: bold;
+        font-size: 9px;
+    }
+    td.satuan {
+        font-size: 9px;
+        padding-left: 4px;
+        white-space: nowrap;
+    }
+    td.hint {
+        font-size: 7.4px;
+        color: #2f5aa8;
+        font-style: italic;
+        padding: 1px 4px;
+    }
+
+    .kotak-pilihan {
+        display: inline-block;
+        border: 1px solid #333;
+        padding: 2px 8px;
+        margin-right: 8px;
+        font-size: 9px;
+    }
+    .kotak-pilihan.terpilih {
+        background: #dbe6ff;
+        font-weight: bold;
+    }
+
+    .page-break { page-break-before: always; }
+</style>
+</head>
+<body>
+
+<!-- ==================== HALAMAN 1 - FORMULIR A ==================== -->
+<table class="kop-table">
+    <tr>
+        <td style="width:65px;text-align:center;">
+            <img src="{{ logo_kiri }}" alt="logo kiri" width="55" height="55">
+        </td>
+        <td style="text-align:center; vertical-align:middle;">
+            <div class="kop-yayasan">YAYASAN PENDIDIKAN ISLAM BAITUSSALAM</div>
+            <div class="kop-sekolah">SMA ISLAM PLUS BAITUSSALAM KUNINGAN</div>
+            <div class="kop-alamat">
+                Jl. B. Soekarno (Jalan Baru), Blok Cikadongdong Rt 02 Rw 01<br>
+                Kel. Cipedung Kec. Kuningan - Kuningan
+            </div>
+        </td>
+        <td style="width:65px;text-align:center;">
+            <img src="{{ logo_kanan }}" alt="logo kanan" width="55" height="55">
+        </td>
+    </tr>
+</table>
+
+<div class="kop-divider-tebal"></div>
+<div class="kop-divider-tipis"></div>
+
+<div class="titlebar">FORMULIR PESERTA DIDIK</div>
+
+<table style="width:100%; margin-bottom:8px;">
+    <tr>
+        <td></td>
+        <td style="text-align:right;"><span class="form-code">FORMULIR A</span></td>
+    </tr>
+</table>
+
+<div class="section-title">DATA PRIBADI</div>
+
+<table class="formfields">
+    <tr>
+        <td class="label">Tanggal</td>
+        {% for i in range(2) %}<td class="kotak">{{ tanggal_cetak_dd[i] if tanggal_cetak_dd else '' }}</td>{% endfor %}
+        <td class="pemisah">/</td>
+        {% for i in range(2) %}<td class="kotak">{{ tanggal_cetak_mm[i] if tanggal_cetak_mm else '' }}</td>{% endfor %}
+        <td class="pemisah">/</td>
+        {% for i in range(4) %}<td class="kotak">{{ tanggal_cetak_yyyy[i] if tanggal_cetak_yyyy else '' }}</td>{% endfor %}
+    </tr>
+
+    <tr>
+        <td class="label">1. Nama Lengkap</td>
+        {% set v = (siswa.nama_lengkap or '')|string %}
+        {% for i in range(28) %}<td class="kotak">{{ v[i] if i < v|length else '' }}</td>{% endfor %}
+    </tr>
+    <tr><td colspan="35" class="hint">Nama peserta didik sesuai dokumen resmi yang berlaku (Akta atau Ijazah sebelumnya)</td></tr>
+
+    <tr>
+        <td class="label">2. Jenis Kelamin</td>
+        <td colspan="30">
+            <span class="kotak-pilihan{{ ' terpilih' if siswa.jenis_kelamin and 'l' in siswa.jenis_kelamin|lower else '' }}">Laki - laki</span>
+            <span class="kotak-pilihan{{ ' terpilih' if siswa.jenis_kelamin and 'p' in siswa.jenis_kelamin|lower else '' }}">Perempuan</span>
+        </td>
+    </tr>
+
+    <tr>
+        <td class="label">3. NISN</td>
+        {% set v = (siswa.nisn or '')|string %}
+        {% for i in range(10) %}<td class="kotak">{{ v[i] if i < v|length else '' }}</td>{% endfor %}
+    </tr>
+
+    <tr>
+        <td class="label">4. NIK</td>
+        {% set v = (siswa.nik or '')|string %}
+        {% for i in range(16) %}<td class="kotak">{{ v[i] if i < v|length else '' }}</td>{% endfor %}
+    </tr>
+
+    <tr>
+        <td class="label">5. Tempat Lahir</td>
+        {% set v = (siswa.tempat_lahir or '')|string %}
+        {% for i in range(20) %}<td class="kotak">{{ v[i] if i < v|length else '' }}</td>{% endfor %}
+    </tr>
+
+    <tr>
+        <td class="label">6. Tanggal Lahir</td>
+        {% for i in range(2) %}<td class="kotak">{{ tgl_lahir_dd[i] if tgl_lahir_dd else '' }}</td>{% endfor %}
+        <td class="pemisah">/</td>
+        {% for i in range(2) %}<td class="kotak">{{ tgl_lahir_mm[i] if tgl_lahir_mm else '' }}</td>{% endfor %}
+        <td class="pemisah">/</td>
+        {% for i in range(4) %}<td class="kotak">{{ tgl_lahir_yyyy[i] if tgl_lahir_yyyy else '' }}</td>{% endfor %}
+    </tr>
+
+    <tr>
+        <td class="label">7. No. Registrasi Akta Lahir</td>
+        {% set v = (siswa.no_registrasi_akta or '')|string %}
+        {% for i in range(18) %}<td class="kotak">{{ v[i] if i < v|length else '' }}</td>{% endfor %}
+    </tr>
+
+    <tr>
+        <td class="label">8. Agama/Kepercayaan</td>
+        {% set v = (agama_kode or '')|string %}
+        {% for i in range(2) %}<td class="kotak">{{ v[i] if i < v|length else '' }}</td>{% endfor %}
+    </tr>
+    <tr><td colspan="35" class="hint">01) Islam &nbsp; 02) Kristen Protestan &nbsp; 03) Katholik &nbsp; 04) Hindu &nbsp; 05) Budha &nbsp; 06) Khong Hu Chu</td></tr>
+
+    <tr>
+        <td class="label">9. Kewarganegaraan</td>
+        {% set v = (siswa.kewarganegaraan or '')|string %}
+        {% for i in range(12) %}<td class="kotak">{{ v[i] if i < v|length else '' }}</td>{% endfor %}
+    </tr>
+
+    <tr>
+        <td class="label">10. Berkebutuhan Khusus</td>
+        {% set v = (siswa.kebutuhan_khusus or '')|string %}
+        {% for i in range(18) %}<td class="kotak">{{ v[i] if i < v|length else '' }}</td>{% endfor %}
+    </tr>
+
+    <tr>
+        <td class="label">11. Alamat Jalan</td>
+        {% set v = (alamat.alamat_jalan or '')|string %}
+        {% for i in range(25) %}<td class="kotak">{{ v[i] if i < v|length else '' }}</td>{% endfor %}
+    </tr>
+
+    <tr>
+        <td class="label">12. Dusun/Blok</td>
+        {% set v = (alamat.dusun or '')|string %}
+        {% for i in range(15) %}<td class="kotak">{{ v[i] if i < v|length else '' }}</td>{% endfor %}
+    </tr>
+
+    <tr>
+        <td class="label">13. RT</td>
+        {% set v = (alamat.rt or '')|string %}
+        {% for i in range(3) %}<td class="kotak">{{ v[i] if i < v|length else '' }}</td>{% endfor %}
+    </tr>
+
+    <tr>
+        <td class="label">14. RW</td>
+        {% set v = (alamat.rw or '')|string %}
+        {% for i in range(3) %}<td class="kotak">{{ v[i] if i < v|length else '' }}</td>{% endfor %}
+    </tr>
+
+    <tr>
+        <td class="label">15. Desa/Kelurahan</td>
+        {% set v = (alamat.desa_kelurahan or '')|string %}
+        {% for i in range(20) %}<td class="kotak">{{ v[i] if i < v|length else '' }}</td>{% endfor %}
+    </tr>
+
+    <tr>
+        <td class="label">16. Kecamatan</td>
+        {% set v = (alamat.kecamatan or '')|string %}
+        {% for i in range(18) %}<td class="kotak">{{ v[i] if i < v|length else '' }}</td>{% endfor %}
+    </tr>
+
+    <tr>
+        <td class="label">17. Kabupaten</td>
+        {% set v = (alamat.kabupaten or '')|string %}
+        {% for i in range(18) %}<td class="kotak">{{ v[i] if i < v|length else '' }}</td>{% endfor %}
+    </tr>
+
+    <tr>
+        <td class="label">18. Kode POS</td>
+        {% set v = (alamat.kode_pos or '')|string %}
+        {% for i in range(5) %}<td class="kotak">{{ v[i] if i < v|length else '' }}</td>{% endfor %}
+    </tr>
+
+    <tr>
+        <td class="label">19. Status Tinggal</td>
+        {% set v = (status_tinggal_kode or '')|string %}
+        {% for i in range(1) %}<td class="kotak">{{ v[i] if i < v|length else '' }}</td>{% endfor %}
+    </tr>
+    <tr><td colspan="35" class="hint">1 Bersama orang tua &nbsp; 2 Wali &nbsp; 3 Kos &nbsp; 4 Asrama &nbsp; 5 Panti Asuhan &nbsp; 6 Pesantren &nbsp; 9 Lainnya</td></tr>
+
+    <tr>
+        <td class="label">20. Moda Transportasi</td>
+        {% set v = (moda_kode or '')|string %}
+        {% for i in range(2) %}<td class="kotak">{{ v[i] if i < v|length else '' }}</td>{% endfor %}
+    </tr>
+    <tr><td colspan="35" class="hint">01) Jalan Kaki &nbsp; 02) Kendaraan Umum &nbsp; 03) Kendaraan Pribadi</td></tr>
+
+    <tr>
+        <td class="label">21. No HP</td>
+        {% set v = (siswa.no_hp or '')|string %}
+        {% for i in range(13) %}<td class="kotak">{{ v[i] if i < v|length else '' }}</td>{% endfor %}
+    </tr>
+
+    <tr>
+        <td class="label">22. Anak Ke Berapa</td>
+        {% set v = (siswa.anak_ke or '')|string %}
+        {% for i in range(2) %}<td class="kotak">{{ v[i] if i < v|length else '' }}</td>{% endfor %}
+    </tr>
+
+    <tr>
+        <td class="label">23. Sekolah Asal</td>
+        {% set v = (siswa.asal_sekolah or '')|string %}
+        {% for i in range(22) %}<td class="kotak">{{ v[i] if i < v|length else '' }}</td>{% endfor %}
+    </tr>
+
+    <tr>
+        <td class="label">24. Tinggi Badan</td>
+        {% set v = (siswa.tinggi_badan or '')|string %}
+        {% for i in range(3) %}<td class="kotak">{{ v[i] if i < v|length else '' }}</td>{% endfor %}
+        <td class="satuan">cm</td>
+    </tr>
+
+    <tr>
+        <td class="label">25. Berat Badan</td>
+        {% set v = (siswa.berat_badan or '')|string %}
+        {% for i in range(3) %}<td class="kotak">{{ v[i] if i < v|length else '' }}</td>{% endfor %}
+        <td class="satuan">Kg</td>
+    </tr>
+
+    <tr>
+        <td class="label">26. Jarak Tempat Tinggal ke Sekolah</td>
+        {% set v = (jarak_angka or '')|string %}
+        {% for i in range(3) %}<td class="kotak">{{ v[i] if i < v|length else '' }}</td>{% endfor %}
+        <td class="satuan">km</td>
+    </tr>
+
+    <tr>
+        <td class="label">27. Waktu Tempuh ke Sekolah</td>
+        {% set v = (waktu_jam or '')|string %}<td class="kotak">{{ v[0] if v else '' }}</td>
+        <td class="satuan">Jam</td>
+        {% set v = (waktu_menit or '')|string %}
+        {% for i in range(2) %}<td class="kotak">{{ v[i] if i < v|length else '' }}</td>{% endfor %}
+        <td class="satuan">Menit</td>
+    </tr>
+
+    <tr>
+        <td class="label">28. Jumlah Saudara Kandung</td>
+        {% set v = (siswa.jumlah_saudara_kandung or '')|string %}
+        {% for i in range(2) %}<td class="kotak">{{ v[i] if i < v|length else '' }}</td>{% endfor %}
+    </tr>
+</table>
+
+<!-- ==================== HALAMAN 2 - FORMULIR B ==================== -->
+<div class="page-break"></div>
+
+<div class="titlebar">DATA ORANG TUA / WALI PESERTA DIDIK</div>
+
+<table style="width:100%; margin-bottom:8px;">
+    <tr>
+        <td style="font-weight:bold;">{{ siswa.nama_lengkap }}</td>
+        <td style="text-align:right;"><span class="form-code">FORMULIR B</span></td>
+    </tr>
+</table>
+
+{% for role, ortu, kode_pend, tgl_dd, tgl_mm, tgl_yyyy in [
+    ('DATA AYAH KANDUNG', ayah, pendidikan_ayah_kode, ayah_tgl_dd, ayah_tgl_mm, ayah_tgl_yyyy),
+    ('DATA IBU KANDUNG', ibu, pendidikan_ibu_kode, ibu_tgl_dd, ibu_tgl_mm, ibu_tgl_yyyy),
+    ('DATA WALI', wali, pendidikan_wali_kode, wali_tgl_dd, wali_tgl_mm, wali_tgl_yyyy)
+] %}
+<div class="section-title">{{ role }}</div>
+<table class="formfields">
+    <tr>
+        <td class="label">1. Nama Lengkap</td>
+        {% set v = (ortu.nama if ortu else '')|string %}
+        {% for i in range(25) %}<td class="kotak">{{ v[i] if i < v|length else '' }}</td>{% endfor %}
+    </tr>
+    <tr>
+        <td class="label">2. NIK</td>
+        {% set v = (ortu.nik if ortu else '')|string %}
+        {% for i in range(16) %}<td class="kotak">{{ v[i] if i < v|length else '' }}</td>{% endfor %}
+    </tr>
+    <tr>
+        <td class="label">3. Tempat/Tgl Lahir</td>
+        {% set v = (ortu.tempat_lahir if ortu else '')|string %}
+        {% for i in range(15) %}<td class="kotak">{{ v[i] if i < v|length else '' }}</td>{% endfor %}
+        <!-- Tanggal Lahir -->
+        {% for i in range(2) %}<td class="kotak">{{ tgl_dd[i] if tgl_dd else '' }}</td>{% endfor %}
+        <td class="pemisah">/</td>
+        {% for i in range(2) %}<td class="kotak">{{ tgl_mm[i] if tgl_mm else '' }}</td>{% endfor %}
+        <td class="pemisah">/</td>
+        {% for i in range(4) %}<td class="kotak">{{ tgl_yyyy[i] if tgl_yyyy else '' }}</td>{% endfor %}
+    </tr>
+    <tr>
+        <td class="label">4. Pendidikan Terakhir</td>
+        {% set v = (kode_pend or '')|string %}
+        {% for i in range(2) %}<td class="kotak">{{ v[i] if i < v|length else '' }}</td>{% endfor %}
+    </tr>
+    <tr><td colspan="35" class="hint">01)SD 02)SMP 03)SMA 04)D1 05)D2 06)D3 07)S1 08)S2 09)S3</td></tr>
+
+    <tr>
+        <td class="label">5. Pekerjaan</td>
+        {% set v = (ortu.pekerjaan if ortu else '')|string %}
+        {% for i in range(18) %}<td class="kotak">{{ v[i] if i < v|length else '' }}</td>{% endfor %}
+    </tr>
+
+    <tr>
+        <td class="label">6. Penghasilan Bulanan</td>
+        <td colspan="30">{{ ortu.penghasilan if ortu else '-' }}</td>
+    </tr>
+
+    <tr>
+        <td class="label">7. Berkebutuhan Khusus</td>
+        {% set v = (ortu.kebutuhan_khusus if ortu else '')|string %}
+        {% for i in range(15) %}<td class="kotak">{{ v[i] if i < v|length else '' }}</td>{% endfor %}
+    </tr>
+
+    <tr>
+        <td class="label">8. No HP</td>
+        {% set v = (ortu.no_hp if ortu else '')|string %}
+        {% for i in range(13) %}<td class="kotak">{{ v[i] if i < v|length else '' }}</td>{% endfor %}
+    </tr>
+</table>
+{% endfor %}
+
+</body>
+</html>

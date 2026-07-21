@@ -32,9 +32,15 @@
                     <h2>Formulir Pendaftaran SPMB</h2>
                     <p>Lengkapi seluruh data calon peserta didik dengan benar.</p>
                 </div>
+                <div class="header-actions">
+                    {% if calon_siswa %}
+                        <a href="{{ url_for('formulir.download_single', id=calon_siswa.id) }}"
+                           class="btn btn-outline-success btn-sm">
+                            <i class="bi bi-file-earmark-pdf-fill"></i> Unduh Formulir PDF
+                        </a>
+                    {% endif %}
 
-                {% if calon_siswa and not is_locked %}
-                    <div class="header-actions">
+                    {% if calon_siswa and not is_locked %}
                         {% if edit_mode %}
                             <span class="edit-mode-badge"><i class="bi bi-pencil-square"></i> Mode Edit</span>
                             <a href="{{ url_for('siswa.formulir') }}" class="btn btn-outline-secondary btn-sm">
@@ -45,8 +51,9 @@
                                 <i class="bi bi-pencil-square"></i> Edit Data Saya
                             </a>
                         {% endif %}
-                    </div>
-                {% endif %}
+                    {% endif %}
+                </div>
+
             </div>
         </div>
 
@@ -475,7 +482,8 @@
 
                     <div class="section-title"><i class="bi bi-people-fill"></i> Data Wali (Opsional)</div>
 
-                    <div class="alert alert-info">Isi bagian ini hanya jika calon siswa tidak tinggal bersama ayah atau ibu
+                    <div class="alert alert-info">Isi bagian ini hanya jika calon siswa tidak tinggal bersama ayah atau
+                        ibu
                         kandung.
                     </div>
 
@@ -675,7 +683,9 @@
         }
 
         showStep(0, false);
-        window.setTimeout(function () { window.scrollTo(0, 0); }, 0);
+        window.setTimeout(function () {
+            window.scrollTo(0, 0);
+        }, 0);
 
     </script>
 

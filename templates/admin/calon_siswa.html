@@ -1,122 +1,169 @@
 {% extends 'layouts/base_dashboard.html' %}
 
 {% block extra_css %}
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/table.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/table.css') }}">
 {% endblock %}
 
 {% block title %}
-    Data Calon Siswa
+Data Calon Siswa
 {% endblock %}
 
 {% block page_title %}
-    Data Calon Siswa
+Data Calon Siswa
 {% endblock %}
 
 {% block content %}
+<div class="content-card">
 
-    <div class="content-card">
+  <!-- HEADER -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h3 class="mb-0 fw-bold">
+      Data Calon Siswa
+    </h3>
+  </div>
 
-        <!-- HEADER -->
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h3 class="mb-0 fw-bold">
-                Data Calon Siswa
-            </h3>
-        </div>
-
-        <!-- SEARCH BAR -->
-        <div class="search-wrapper mb-4">
-            <div class="input-group">
-            <span class="input-group-text bg-white">
-                <i class="bi bi-search"></i>
-            </span>
-                <input type="text"
-                       id="searchInput"
-                       class="form-control"
-                       placeholder="Cari nama siswa, NISN, atau sekolah...">
-            </div>
-        </div>
-
-        <!-- TABLE -->
-        <div class="table-responsive">
-            <table class="spmb-table" id="siswaTable">
-                <thead>
-                <tr>
-                    <th width="60">No</th>
-                    <th>Nama Calon Siswa</th>
-                    <th>Asal Sekolah</th>
-                    <th>Status</th>
-                    <th width="200" class="text-center">Aksi</th>
-                </tr>
-                </thead>
-                <tbody>
-                {% for siswa in data_siswa %}
-                    <tr>
-                        <td class="text-center fw-medium">{{ loop.index }}</td>
-
-                        <td>
-                            <div class="student-name">{{ siswa.nama_lengkap }}</div>
-                            <div class="student-subtitle">NISN : {{ siswa.nisn }}</div>
-                        </td>
-
-                        <td>{{ siswa.asal_sekolah }}</td>
-
-                        <td>
-                            {% if siswa.status_verifikasi == 'Diverifikasi' %}
-                                <span class="status-success">✓ Diverifikasi</span>
-                            {% else %}
-                                <span class="status-warning">⏳ Menunggu</span>
-                            {% endif %}
-                        </td>
-
-                        <td class="text-center">
-                            <div class="action-buttons">
-                                <a href="{{ url_for('admin.detail_siswa', id=siswa.id) }}"
-                                   class="btn btn-outline-primary btn-sm" title="Detail">
-                                    <i class="bi bi-eye-fill"></i>
-                                </a>
-                                <a href="{{ url_for('admin.edit_siswa', id=siswa.id) }}"
-                                   class="btn btn-outline-warning btn-sm" title="Edit">
-                                    <i class="bi bi-pencil-fill"></i>
-                                </a>
-
-                                {% if siswa.status_verifikasi != 'Diverifikasi' %}
-                                    <form method="POST" action="{{ url_for('admin.verifikasi_siswa', id=siswa.id) }}" class="d-inline">
-                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                        <button class="btn btn-outline-success btn-sm" title="Verifikasi"><i class="bi bi-check-lg"></i></button>
-                                    </form>
-                                {% endif %}
-
-                                <form method="POST" action="{{ url_for('admin.hapus_siswa', id=siswa.id) }}" class="d-inline" data-confirm="Yakin ingin menghapus data ini?" data-confirm-title="Hapus Data Calon Siswa?" data-confirm-variant="danger">
-                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                    <button class="btn btn-outline-danger btn-sm"><i class="bi bi-trash-fill"></i></button>
-                                </form>
-                            </div>
-                        </td>
-                    </tr>
-                {% else %}
-                    <tr>
-                        <td colspan="5" class="text-center py-5 text-muted">
-                            Belum ada data pendaftar
-                        </td>
-                    </tr>
-                {% endfor %}
-                </tbody>
-            </table>
-        </div>
+  <!-- SEARCH BAR -->
+  <div class="search-wrapper mb-4">
+    <div class="input-group">
+      <span class="input-group-text bg-white">
+        <i class="bi bi-search"></i>
+      </span>
+      <input type="text"
+             id="searchInput"
+             class="form-control"
+             placeholder="Cari nama siswa, NISN, atau sekolah...">
     </div>
+  </div>
 
-    <!-- CLIENT SIDE SEARCH -->
-    <script>
-        document.getElementById("searchInput").addEventListener("keyup", function () {
-            const filter = this.value.toLowerCase().trim();
-            const rows = document.querySelectorAll("#siswaTable tbody tr");
+  <!-- TOOLBAR UNDUH FORMULIR -->
+  <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+    <div>
+      <button type="button" id="btnPilihSemua" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-check2-square"></i> Pilih Semua
+      </button>
+      <button type="submit" form="bulkDownloadForm" class="btn btn-success btn-sm">
+        <i class="bi bi-file-earmark-zip-fill"></i> Unduh Terpilih (ZIP)
+      </button>
+    </div>
+    <a href="{{ url_for('formulir.export_excel') }}" class="btn btn-outline-primary btn-sm">
+      <i class="bi bi-file-earmark-excel-fill"></i> Export Semua ke Excel
+    </a>
+  </div>
 
-            rows.forEach(row => {
-                if (row.cells.length === 1) return;
-                const text = row.textContent.toLowerCase();
-                row.style.display = text.includes(filter) ? "" : "none";
-            });
-        });
-    </script>
+  <!-- FORM PEMBUNGKUS UNTUK BULK DOWNLOAD -->
+  <form id="bulkDownloadForm" method="POST" action="{{ url_for('formulir.bulk_download') }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
+    <!-- TABLE -->
+    <div class="table-responsive">
+      <table class="spmb-table" id="siswaTable">
+        <thead>
+          <tr>
+            <th width="40">
+              <input type="checkbox" id="checkAllHeader">
+            </th>
+            <th width="60">No</th>
+            <th>Nama Calon Siswa</th>
+            <th>Asal Sekolah</th>
+            <th>Status</th>
+            <th width="240" class="text-center">Aksi</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for siswa in data_siswa %}
+          <tr>
+            <td>
+              <input type="checkbox" name="siswa_ids" value="{{ siswa.id }}" class="chk-siswa">
+            </td>
+            <td class="text-center fw-medium">{{ loop.index }}</td>
+            <td>
+              <div class="student-name">{{ siswa.nama_lengkap }}</div>
+              <div class="student-subtitle">NISN : {{ siswa.nisn }}</div>
+            </td>
+            <td>{{ siswa.asal_sekolah }}</td>
+            <td>
+              {% if siswa.status_verifikasi == 'Diverifikasi' %}
+              <span class="status-success">✓ Diverifikasi</span>
+              {% else %}
+              <span class="status-warning">⏳ Menunggu</span>
+              {% endif %}
+            </td>
+            <td class="text-center">
+              <div class="action-buttons">
+                <a href="{{ url_for('admin.detail_siswa', id=siswa.id) }}"
+                   class="btn btn-outline-primary btn-sm" title="Detail">
+                  <i class="bi bi-eye-fill"></i>
+                </a>
+                <a href="{{ url_for('admin.edit_siswa', id=siswa.id) }}"
+                   class="btn btn-outline-warning btn-sm" title="Edit">
+                  <i class="bi bi-pencil-fill"></i>
+                </a>
+                <a href="{{ url_for('formulir.download_single', id=siswa.id) }}"
+                   class="btn btn-outline-success btn-sm" title="Unduh Formulir PDF">
+                  <i class="bi bi-file-earmark-pdf-fill"></i>
+                </a>
+                {% if siswa.status_verifikasi != 'Diverifikasi' %}
+                <button type="submit"
+                        formaction="{{ url_for('admin.verifikasi_siswa', id=siswa.id) }}"
+                        formmethod="POST"
+                        class="btn btn-outline-success btn-sm" title="Verifikasi">
+                  <i class="bi bi-check-lg"></i>
+                </button>
+                {% endif %}
+                <button type="submit"
+                        formaction="{{ url_for('admin.hapus_siswa', id=siswa.id) }}"
+                        formmethod="POST"
+                        class="btn btn-outline-danger btn-sm"
+                        data-confirm="Yakin ingin menghapus data ini?"
+                        data-confirm-title="Hapus Data Calon Siswa?"
+                        data-confirm-variant="danger">
+                  <i class="bi bi-trash-fill"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="6" class="text-center py-5 text-muted">
+              Belum ada data pendaftar
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </form>
+
+</div>
+
+<!-- CLIENT SIDE SEARCH + CHECKBOX HANDLER -->
+<script>
+  document.getElementById("searchInput").addEventListener("keyup", function () {
+    const filter = this.value.toLowerCase().trim();
+    const rows = document.querySelectorAll("#siswaTable tbody tr");
+    rows.forEach(row => {
+      if (row.cells.length === 1) return;
+      const text = row.textContent.toLowerCase();
+      row.style.display = text.includes(filter) ? "" : "none";
+    });
+  });
+
+  function toggleAll(checked) {
+    document.querySelectorAll(".chk-siswa").forEach(c => c.checked = checked);
+  }
+
+  document.getElementById("checkAllHeader").addEventListener("change", function () {
+    toggleAll(this.checked);
+  });
+
+  let semuaTerpilih = false;
+  document.getElementById("btnPilihSemua").addEventListener("click", function () {
+    semuaTerpilih = !semuaTerpilih;
+    toggleAll(semuaTerpilih);
+    document.getElementById("checkAllHeader").checked = semuaTerpilih;
+    this.innerHTML = semuaTerpilih
+      ? '<i class="bi bi-x-square"></i> Batal Pilih Semua'
+      : '<i class="bi bi-check2-square"></i> Pilih Semua';
+  });
+</script>
 {% endblock %}

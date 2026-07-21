@@ -5,3 +5,6 @@ Flask-WTF
 Werkzeug~=3.1.8
 pdfplumber
 python-dotenv
+xhtml2pdf
+pandas
+openpyxl
