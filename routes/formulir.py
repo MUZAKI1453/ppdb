@@ -10,19 +10,18 @@ berkas.py, user.py).
 id di sini = CalonSiswa.id (bukan User.id).
 """
 import io
+import re
 import zipfile
 from datetime import datetime
 
 import pandas as pd
-from flask import Blueprint, render_template, send_file, request, abort
+from flask import Blueprint, render_template, send_file, request, abort, flash, redirect, url_for
 from flask_login import login_required, current_user
 
 from xhtml2pdf import pisa
 from models.calon_siswa import CalonSiswa
 
 formulir_bp = Blueprint("formulir", __name__)
-
-import re
 
 SEKOLAH = {
     "nama": "SMA ISLAM PLUS BAITUSSALAM KUNINGAN",
@@ -32,8 +31,6 @@ LOGO_KIRI = "static/img/logo.png"
 LOGO_KANAN = "static/img/logo_yayasan.png"
 
 # Mapping teks bebas di database -> kode angka seperti di form kertas asli.
-# Ini best-effort: kalau teks di DB tidak persis cocok, kotak kode dibiarkan kosong
-# (bukan error) supaya PDF tetap ke-generate dengan aman.
 AGAMA_KODE = {
     "islam": "01", "kristen": "02", "protestan": "02", "kristen protestan": "02",
     "katolik": "03", "katholik": "03", "hindu": "04", "budha": "05", "buddha": "05",
@@ -69,16 +66,7 @@ def _angka(value):
 
 
 def _extract_waktu(waktu_str):
-    """Extract jam dan menit dari string seperti '2 jam 30 menit' atau '1 Jam 45 Menit'
-
-    Format yang didukung:
-    - '2 jam 30 menit'
-    - '2 Jam 30 Menit'
-    - '120 menit' (jika hanya menit)
-    - '1' (jika hanya angka, anggap menit)
-
-    Returns: (jam_str, menit_str) atau ('', '') jika kosong
-    """
+    """Extract jam dan menit dari string seperti '2 jam 30 menit'."""
     if not waktu_str:
         return "", ""
 
@@ -86,17 +74,14 @@ def _extract_waktu(waktu_str):
     jam = ""
     menit = ""
 
-    # Cari pattern "X jam"
     jam_match = re.search(r'(\d+)\s*[jJ]am', waktu_str)
     if jam_match:
         jam = jam_match.group(1)
 
-    # Cari pattern "X menit"
     menit_match = re.search(r'(\d+)\s*[mM]enit', waktu_str)
     if menit_match:
         menit = menit_match.group(1)
 
-    # Jika hanya angka tanpa label, anggap sebagai menit
     if not jam and not menit:
         digit_match = re.search(r'\d+', waktu_str)
         if digit_match:
@@ -113,42 +98,41 @@ def _tanggal_parts(d):
 
 
 def _resolve_local_path(uri, rel):
-    """
-    xhtml2pdf tidak otomatis tahu di mana file statis di-serve (beda dengan
-    WeasyPrint yang bisa pakai base_url). Fungsi ini menerjemahkan path
-    seperti 'static/img/logo.png' jadi path absolut di disk, supaya <img>
-    di template bisa ketemu filenya saat render PDF.
-    """
+    """Menerjemahkan path 'static/img/logo.png' jadi path absolut di disk."""
     import os
     from flask import current_app
 
     if uri.startswith("http://") or uri.startswith("https://"):
-        return uri  # url luar dibiarkan apa adanya
+        return uri
 
     path = os.path.join(current_app.root_path, uri.lstrip("/"))
     return path
 
 
 def _build_pdf_bytes(siswa: CalonSiswa) -> bytes:
-    """Render formulir 1 siswa (pakai relationship bawaan model, bukan query manual)."""
-    tgl_lahir_dd, tgl_lahir_mm, tgl_lahir_yyyy = _tanggal_parts(siswa.tanggal_lahir)
+    """Render formulir 1 siswa (pakai relationship bawaan model)."""
+    tgl_lahir_dd, tgl_lahir_mm, tgl_lahir_yyyy = _tanggal_parts(getattr(siswa, 'tanggal_lahir', None))
     tanggal_now = datetime.now()
 
-    ayah_tgl_dd, ayah_tgl_mm, ayah_tgl_yyyy = _tanggal_parts(siswa.ayah.tanggal_lahir if siswa.ayah else None)
-    ibu_tgl_dd, ibu_tgl_mm, ibu_tgl_yyyy = _tanggal_parts(siswa.ibu.tanggal_lahir if siswa.ibu else None)
-    wali_tgl_dd, wali_tgl_mm, wali_tgl_yyyy = _tanggal_parts(siswa.wali.tanggal_lahir if siswa.wali else None)
+    # Safe extraction data ORTU
+    ayah_obj = getattr(siswa, 'ayah', None)
+    ibu_obj = getattr(siswa, 'ibu', None)
+    wali_obj = getattr(siswa, 'wali', None)
 
-    # PERBAIKAN: Extract jam dan menit terpisah dari waktu_tempuh
-    waktu_jam, waktu_menit = _extract_waktu(siswa.waktu_tempuh)
+    ayah_tgl_dd, ayah_tgl_mm, ayah_tgl_yyyy = _tanggal_parts(getattr(ayah_obj, 'tanggal_lahir', None))
+    ibu_tgl_dd, ibu_tgl_mm, ibu_tgl_yyyy = _tanggal_parts(getattr(ibu_obj, 'tanggal_lahir', None))
+    wali_tgl_dd, wali_tgl_mm, wali_tgl_yyyy = _tanggal_parts(getattr(wali_obj, 'tanggal_lahir', None))
+
+    waktu_jam, waktu_menit = _extract_waktu(getattr(siswa, 'waktu_tempuh', ''))
 
     html_str = render_template(
         "formulir_pdf.html",
         siswa=siswa,
-        alamat=siswa.alamat,     # relationship uselist=False di CalonSiswa
-        ayah=siswa.ayah,         # relationship uselist=False
-        ibu=siswa.ibu,           # relationship uselist=False
-        wali=siswa.wali,         # relationship uselist=False
-        berkas=siswa.berkas,     # relationship uselist=False
+        alamat=getattr(siswa, 'alamat', None),
+        ayah=ayah_obj,
+        ibu=ibu_obj,
+        wali=wali_obj,
+        berkas=getattr(siswa, 'berkas', None),
         sekolah=SEKOLAH,
         logo_kiri=LOGO_KIRI,
         logo_kanan=LOGO_KANAN,
@@ -162,15 +146,15 @@ def _build_pdf_bytes(siswa: CalonSiswa) -> bytes:
         ayah_tgl_dd=ayah_tgl_dd, ayah_tgl_mm=ayah_tgl_mm, ayah_tgl_yyyy=ayah_tgl_yyyy,
         ibu_tgl_dd=ibu_tgl_dd, ibu_tgl_mm=ibu_tgl_mm, ibu_tgl_yyyy=ibu_tgl_yyyy,
         wali_tgl_dd=wali_tgl_dd, wali_tgl_mm=wali_tgl_mm, wali_tgl_yyyy=wali_tgl_yyyy,
-        agama_kode=_kode(AGAMA_KODE, siswa.agama),
-        status_tinggal_kode=_kode(STATUS_TINGGAL_KODE, siswa.status_tinggal),
-        moda_kode=_kode(MODA_KODE, siswa.moda_transportasi),
-        jarak_angka=_angka(siswa.jarak_ke_sekolah),
-        waktu_jam=waktu_jam,              # PERBAIKAN: Extract jam
-        waktu_menit=waktu_menit,          # PERBAIKAN: Extract menit
-        pendidikan_ayah_kode=_kode(PENDIDIKAN_KODE, siswa.ayah.pendidikan if siswa.ayah else None),
-        pendidikan_ibu_kode=_kode(PENDIDIKAN_KODE, siswa.ibu.pendidikan if siswa.ibu else None),
-        pendidikan_wali_kode=_kode(PENDIDIKAN_KODE, siswa.wali.pendidikan if siswa.wali else None),
+        agama_kode=_kode(AGAMA_KODE, getattr(siswa, 'agama', '')),
+        status_tinggal_kode=_kode(STATUS_TINGGAL_KODE, getattr(siswa, 'status_tinggal', '')),
+        moda_kode=_kode(MODA_KODE, getattr(siswa, 'moda_transportasi', '')),
+        jarak_angka=_angka(getattr(siswa, 'jarak_ke_sekolah', '')),
+        waktu_jam=waktu_jam,
+        waktu_menit=waktu_menit,
+        pendidikan_ayah_kode=_kode(PENDIDIKAN_KODE, getattr(ayah_obj, 'pendidikan', '') if ayah_obj else ''),
+        pendidikan_ibu_kode=_kode(PENDIDIKAN_KODE, getattr(ibu_obj, 'pendidikan', '') if ibu_obj else ''),
+        pendidikan_wali_kode=_kode(PENDIDIKAN_KODE, getattr(wali_obj, 'pendidikan', '') if wali_obj else ''),
     )
 
     output = io.BytesIO()
@@ -191,7 +175,6 @@ def _build_pdf_bytes(siswa: CalonSiswa) -> bytes:
 def download_single(id):
     siswa = CalonSiswa.query.get_or_404(id)
 
-    # guard: siswa cuma boleh unduh miliknya sendiri (dicek lewat user_id)
     if current_user.role == "siswa" and siswa.user_id != current_user.id:
         abort(403)
 
@@ -214,7 +197,8 @@ def bulk_download():
 
     ids = request.form.getlist("siswa_ids")
     if not ids:
-        abort(400, "Tidak ada siswa yang dipilih")
+        flash("Tidak ada siswa yang dipilih!", "warning")
+        return redirect(request.referrer or url_for('admin.calon_siswa'))
 
     siswa_list = CalonSiswa.query.filter(CalonSiswa.id.in_(ids)).all()
 
@@ -251,7 +235,8 @@ def export_excel():
 
     rows = []
     for s in siswa_list:
-        alamat = s.alamat
+        alamat = getattr(s, 'alamat', None)
+        berkas = getattr(s, 'berkas', None)
         rows.append({
             "Nama Lengkap": s.nama_lengkap,
             "Jenis Kelamin": s.jenis_kelamin,
@@ -265,9 +250,9 @@ def export_excel():
             "Kabupaten": alamat.kabupaten if alamat else "",
             "Asal Sekolah": s.asal_sekolah,
             "No HP": s.no_hp,
-            "Status Verifikasi Data": s.status_verifikasi,
-            "Status Kelulusan": s.status_kelulusan,
-            "Status Verifikasi Berkas": s.berkas.status_verifikasi if s.berkas else "-",
+            "Status Verifikasi Data": getattr(s, 'status_verifikasi', '-'),
+            "Status Kelulusan": getattr(s, 'status_kelulusan', '-'),
+            "Status Verifikasi Berkas": berkas.status_verifikasi if berkas else "-",
         })
 
     df = pd.DataFrame(rows)

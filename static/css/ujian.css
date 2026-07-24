@@ -1764,3 +1764,282 @@ body.exam-fullscreen-mode .main-content {
         justify-self: stretch;
     }
 }
+
+/* ==================================================
+   MOBILE UX IMPROVEMENTS - HALAMAN UJIAN SISWA
+================================================== */
+.exam-progress-chip {
+    min-height: 38px;
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    padding: .45rem .75rem;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, .16);
+    border: 1px solid rgba(255, 255, 255, .2);
+    color: #fff;
+    font-size: .88rem;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.exam-progress-chip strong {
+    font-size: 1rem;
+}
+
+@media (max-width: 991.98px) {
+    body.exam-fullscreen-mode {
+        min-height: 100dvh;
+    }
+
+    .exam-header {
+        min-height: 64px;
+        padding: max(.6rem, env(safe-area-inset-top)) .75rem .6rem;
+        flex-direction: row;
+        align-items: center;
+        gap: .65rem;
+    }
+
+    .exam-title-wrap {
+        flex: 1 1 auto;
+        overflow: hidden;
+    }
+
+    .exam-title-wrap h1 {
+        max-width: none;
+        font-size: .98rem;
+    }
+
+    .exam-title-wrap p {
+        display: none;
+    }
+
+    .exam-header-actions {
+        width: auto;
+        flex: 0 0 auto;
+        justify-content: flex-end;
+        flex-wrap: nowrap;
+        gap: .4rem;
+    }
+
+    .exam-progress-chip,
+    .exam-countdown {
+        min-height: 38px;
+        padding: .4rem .62rem;
+        font-size: .8rem;
+    }
+
+    .exam-progress-chip i,
+    .exam-countdown i {
+        font-size: .9rem;
+    }
+
+    .exam-nav-toggle {
+        width: 38px;
+        height: 38px;
+        flex: 0 0 38px;
+        padding: 0;
+    }
+
+    .exam-layout {
+        width: 100%;
+        margin: 76px auto calc(92px + env(safe-area-inset-bottom));
+        padding: 0 .6rem;
+        gap: 0;
+    }
+
+    .exam-card {
+        min-height: calc(100dvh - 176px);
+        padding: 1rem;
+        border-radius: 18px;
+    }
+
+    .soal-step-head {
+        margin-bottom: .9rem;
+    }
+
+    .soal-pertanyaan {
+        margin-bottom: 1rem;
+        font-size: 1rem;
+        line-height: 1.6;
+    }
+
+    .pilihan-list {
+        gap: .65rem;
+    }
+
+    .pilihan-item {
+        min-height: 52px;
+        padding: .8rem .85rem;
+        border-radius: 14px;
+    }
+
+    .essay-answer {
+        min-height: 220px;
+        font-size: 16px;
+    }
+
+    .exam-bottom-bar {
+        display: grid;
+        grid-template-columns: 46px minmax(88px, auto) minmax(112px, 1fr);
+        gap: .5rem;
+        padding: .6rem .65rem max(.6rem, env(safe-area-inset-bottom));
+    }
+
+    .exam-prev-btn,
+    .exam-next-btn,
+    .exam-doubt-check {
+        height: 44px;
+    }
+
+    .exam-next-btn {
+        width: 100%;
+    }
+
+    .exam-doubt-check {
+        justify-content: center;
+        padding: .45rem .65rem;
+    }
+
+    #offcanvasSoal {
+        width: min(88vw, 360px);
+    }
+
+    #offcanvasSoal .offcanvas-body {
+        padding: 1rem;
+    }
+
+    #offcanvasSoal .exam-nav-grid {
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: .6rem;
+    }
+
+    #offcanvasSoal .btn-nomor {
+        min-height: 48px;
+        border-radius: 13px;
+    }
+
+    .exam-overlay {
+        min-height: 100dvh;
+        padding: max(1rem, env(safe-area-inset-top)) 1rem max(1rem, env(safe-area-inset-bottom));
+        overflow-y: auto;
+    }
+
+    .exam-overlay-primary h2 {
+        font-size: 1.45rem;
+    }
+
+    .exam-overlay-primary p {
+        font-size: .92rem;
+    }
+
+    .exam-overlay-session-info {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: .5rem 1rem;
+        border-radius: 18px;
+    }
+}
+
+@media (max-width: 575.98px) {
+    .exam-header {
+        padding-left: .55rem;
+        padding-right: .55rem;
+    }
+
+    .exam-title-wrap h1 {
+        font-size: .88rem;
+    }
+
+    .exam-progress-chip {
+        display: none;
+    }
+
+    .exam-countdown {
+        font-size: .78rem;
+    }
+
+    .exam-countdown i {
+        display: none;
+    }
+
+    .exam-layout {
+        padding: 0 .4rem;
+        margin-top: 72px;
+    }
+
+    .exam-card {
+        padding: .85rem;
+        border-radius: 15px;
+        box-shadow: 0 6px 18px rgba(15, 23, 42, .07);
+    }
+
+    .soal-number-badge,
+    .soal-type-badge {
+        padding: .32rem .58rem;
+        font-size: .76rem;
+    }
+
+    .pilihan-text-row {
+        gap: .35rem;
+    }
+
+    .pilihan-huruf {
+        flex-basis: 24px;
+        width: 24px;
+    }
+
+    .option-image-wrap {
+        padding-left: 24px;
+    }
+
+    .exam-bottom-bar {
+        grid-template-columns: 44px 80px minmax(100px, 1fr);
+        padding-left: .45rem;
+        padding-right: .45rem;
+    }
+
+    .exam-bottom-bar .btn,
+    .exam-doubt-check {
+        font-size: .84rem;
+    }
+
+    .exam-doubt-check input {
+        transform: scale(1.05);
+    }
+
+    .exam-warning-card {
+        width: calc(100vw - 1rem);
+        padding: 1rem;
+        border-radius: 18px;
+    }
+
+    .ujian-empty-card {
+        width: calc(100vw - 1rem);
+        margin: 72px auto;
+        padding: 1.5rem 1rem;
+    }
+}
+
+@media (max-width: 380px) {
+    .exam-title-wrap h1 {
+        max-width: 104px;
+    }
+
+    .exam-nav-toggle {
+        width: 36px;
+        height: 36px;
+        flex-basis: 36px;
+    }
+
+    .exam-bottom-bar {
+        grid-template-columns: 42px 72px minmax(92px, 1fr);
+        gap: .35rem;
+    }
+
+    .exam-doubt-check {
+        padding-left: .4rem;
+        padding-right: .4rem;
+    }
+}

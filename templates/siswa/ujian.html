@@ -39,6 +39,10 @@
         <p>{{ sesi.deskripsi or 'Kerjakan soal dengan teliti. Jawaban akan dikumpulkan otomatis saat waktu habis.' }}</p>
     </div>
     <div class="exam-header-actions">
+        <div class="exam-progress-chip" title="Progres soal">
+            <i class="bi bi-file-earmark-check-fill"></i>
+            <span><strong id="currentQuestionNumber">1</strong>/{{ total_soal }}</span>
+        </div>
         <div class="exam-countdown" title="Sisa waktu">
             <i class="bi bi-alarm-fill"></i>
             <span id="countdown">Memuat...</span>
@@ -247,6 +251,7 @@
     const steps = Array.from(document.querySelectorAll('.soal-step'));
     const totalStep = steps.length;
     const countdownEl = document.getElementById('countdown');
+    const currentQuestionNumber = document.getElementById('currentQuestionNumber');
     const checkRagu = document.getElementById('check-ragu');
     const btnPrev = document.getElementById('btn-prev');
     const btnNext = document.getElementById('btn-next');
@@ -350,6 +355,8 @@
             btnNext.classList.remove('d-none');
             btnSubmit.classList.add('d-none');
         }
+
+        if (currentQuestionNumber) currentQuestionNumber.textContent = currentStep + 1;
 
         const currentStepDiv = steps[currentStep];
         if (currentStepDiv) {
