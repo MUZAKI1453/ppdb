@@ -68,6 +68,43 @@ def _angka(value):
     return match.group() if match else ""
 
 
+def _extract_waktu(waktu_str):
+    """Extract jam dan menit dari string seperti '2 jam 30 menit' atau '1 Jam 45 Menit'
+
+    Format yang didukung:
+    - '2 jam 30 menit'
+    - '2 Jam 30 Menit'
+    - '120 menit' (jika hanya menit)
+    - '1' (jika hanya angka, anggap menit)
+
+    Returns: (jam_str, menit_str) atau ('', '') jika kosong
+    """
+    if not waktu_str:
+        return "", ""
+
+    waktu_str = str(waktu_str).strip()
+    jam = ""
+    menit = ""
+
+    # Cari pattern "X jam"
+    jam_match = re.search(r'(\d+)\s*[jJ]am', waktu_str)
+    if jam_match:
+        jam = jam_match.group(1)
+
+    # Cari pattern "X menit"
+    menit_match = re.search(r'(\d+)\s*[mM]enit', waktu_str)
+    if menit_match:
+        menit = menit_match.group(1)
+
+    # Jika hanya angka tanpa label, anggap sebagai menit
+    if not jam and not menit:
+        digit_match = re.search(r'\d+', waktu_str)
+        if digit_match:
+            menit = digit_match.group()
+
+    return jam, menit
+
+
 def _tanggal_parts(d):
     """Pecah date object jadi (dd, mm, yyyy) string, atau ('','','') kalau kosong."""
     if not d:
@@ -101,6 +138,9 @@ def _build_pdf_bytes(siswa: CalonSiswa) -> bytes:
     ibu_tgl_dd, ibu_tgl_mm, ibu_tgl_yyyy = _tanggal_parts(siswa.ibu.tanggal_lahir if siswa.ibu else None)
     wali_tgl_dd, wali_tgl_mm, wali_tgl_yyyy = _tanggal_parts(siswa.wali.tanggal_lahir if siswa.wali else None)
 
+    # PERBAIKAN: Extract jam dan menit terpisah dari waktu_tempuh
+    waktu_jam, waktu_menit = _extract_waktu(siswa.waktu_tempuh)
+
     html_str = render_template(
         "formulir_pdf.html",
         siswa=siswa,
@@ -126,7 +166,8 @@ def _build_pdf_bytes(siswa: CalonSiswa) -> bytes:
         status_tinggal_kode=_kode(STATUS_TINGGAL_KODE, siswa.status_tinggal),
         moda_kode=_kode(MODA_KODE, siswa.moda_transportasi),
         jarak_angka=_angka(siswa.jarak_ke_sekolah),
-        waktu_menit=_angka(siswa.waktu_tempuh),
+        waktu_jam=waktu_jam,              # PERBAIKAN: Extract jam
+        waktu_menit=waktu_menit,          # PERBAIKAN: Extract menit
         pendidikan_ayah_kode=_kode(PENDIDIKAN_KODE, siswa.ayah.pendidikan if siswa.ayah else None),
         pendidikan_ibu_kode=_kode(PENDIDIKAN_KODE, siswa.ibu.pendidikan if siswa.ibu else None),
         pendidikan_wali_kode=_kode(PENDIDIKAN_KODE, siswa.wali.pendidikan if siswa.wali else None),
