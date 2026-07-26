@@ -2,6 +2,175 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/table.css') }}">
+<style>
+  /* ========== TOOLBAR ========== */
+  .toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+
+  .search-box {
+    position: relative;
+    flex: 1 1 240px;
+    max-width: 360px;
+  }
+  .search-box input {
+    width: 100%;
+    height: 38px;
+    padding: 0 14px 0 38px;
+    border: 1px solid #e5e7eb;
+    border-radius: 9px;
+    background: #fff;
+    font-size: 13.5px;
+    color: #111827;
+    transition: all 0.15s ease;
+  }
+  .search-box input::placeholder { color: #9ca3af; }
+  .search-box input:focus {
+    outline: none;
+    border-color: #93c5fd;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
+  }
+  .search-box i {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #9ca3af;
+    font-size: 14px;
+    pointer-events: none;
+  }
+
+  .actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-left: auto;
+  }
+
+  .count-badge {
+    font-size: 12px;
+    color: #6b7280;
+    background: #f3f4f6;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-weight: 500;
+  }
+
+  .btn-clean {
+    height: 38px;
+    padding: 0 14px;
+    border-radius: 9px;
+    font-size: 13px;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border: 1px solid transparent;
+    transition: all 0.15s ease;
+    cursor: pointer;
+    text-decoration: none;
+  }
+
+  .btn-ghost {
+    background: #fff;
+    border-color: #e5e7eb;
+    color: #374151;
+  }
+  .btn-ghost:hover {
+    background: #f9fafb;
+    border-color: #d1d5db;
+  }
+  .btn-ghost.active {
+    background: #eff6ff;
+    border-color: #bfdbfe;
+    color: #1d4ed8;
+  }
+
+  .btn-primary-soft {
+    background: #16a34a;
+    color: #fff;
+  }
+  .btn-primary-soft:hover {
+    background: #15803d;
+    color: #fff;
+  }
+
+  .btn-outline {
+    background: #fff;
+    border-color: #e5e7eb;
+    color: #374151;
+  }
+  .btn-outline:hover {
+    background: #f9fafb;
+    border-color: #d1d5db;
+  }
+
+  /* Alert feedback */
+  .alert-feedback {
+    display: none;
+    margin-bottom: 12px;
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-size: 13.5px;
+    font-weight: 500;
+  }
+  .alert-warning-custom {
+    background: #fff7ed;
+    color: #c2410c;
+    border: 1px solid #fed7aa;
+  }
+
+  /* ========== MOBILE ========== */
+  @media (max-width: 640px) {
+    .toolbar {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 6px;
+      margin-bottom: 12px;
+    }
+
+    .search-box {
+      max-width: 100%;
+      flex: none;
+    }
+
+    .actions {
+      margin-left: 0;
+      width: 100%;
+      justify-content: flex-end;
+      gap: 6px;
+    }
+
+    .btn-clean {
+      height: 36px;
+      padding: 0 11px;
+      font-size: 12.5px;
+    }
+
+    .btn-text {
+      display: none;
+    }
+    .btn-text-excel {
+      display: inline;
+    }
+
+    .count-badge {
+      font-size: 11.5px;
+      padding: 3px 8px;
+      margin-right: auto;
+    }
+  }
+
+  @media (min-width: 641px) {
+    .btn-text-excel {
+      display: inline;
+    }
+  }
+</style>
 {% endblock %}
 
 {% block title %}
@@ -15,58 +184,58 @@ Data Calon Siswa
 {% block content %}
 <div class="content-card">
 
-  <!-- HEADER -->
-  <div class="d-flex justify-content-between align-items-center mb-4">
-    <h3 class="mb-0 fw-bold">
-      Data Calon Siswa
-    </h3>
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h3 class="mb-0 fw-bold">Data Calon Siswa</h3>
   </div>
 
-  <!-- SEARCH BAR -->
-  <div class="search-wrapper mb-4">
-    <div class="input-group">
-      <span class="input-group-text bg-white">
-        <i class="bi bi-search"></i>
-      </span>
-      <input type="text"
-             id="searchInput"
-             class="form-control"
-             placeholder="Cari nama siswa, NISN, atau sekolah...">
+  <!-- Alert Feedback -->
+  <div id="alertFeedback" class="alert-feedback alert-warning-custom">
+    <i class="bi bi-exclamation-triangle-fill me-1"></i>
+    <span id="alertMessage">Silakan pilih minimal 1 siswa terlebih dahulu.</span>
+  </div>
+
+  <!-- TOOLBAR -->
+  <div class="toolbar">
+
+    <div class="search-box">
+      <i class="bi bi-search"></i>
+      <input type="text" id="searchInput" placeholder="Cari nama, NISN, atau sekolah...">
     </div>
-  </div>
 
-  <!-- TOOLBAR UNDUH FORMULIR -->
-  <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
-    <div>
-      <button type="button" id="btnPilihSemua" class="btn btn-outline-secondary btn-sm">
-        <i class="bi bi-check2-square"></i> Pilih Semua
+    <div class="actions">
+      <span class="count-badge" id="selectedCount">0 dipilih</span>
+
+      <button type="button" id="btnPilihSemua" class="btn-clean btn-ghost">
+        <i class="bi bi-check2-square"></i>
+        <span class="btn-text">Pilih Semua</span>
       </button>
-      <button type="submit" form="bulkDownloadForm" class="btn btn-success btn-sm">
-        <i class="bi bi-file-earmark-zip-fill"></i> Unduh Terpilih (ZIP)
+
+      <button type="button" id="btnDownloadZip" class="btn-clean btn-primary-soft">
+        <i class="bi bi-download"></i>
+        <span class="btn-text">Unduh ZIP</span>
       </button>
+
+      <a href="{{ url_for('formulir.export_excel') }}" class="btn-clean btn-outline">
+        <i class="bi bi-file-earmark-excel"></i>
+        <span class="btn-text btn-text-excel">Export Excel</span>
+      </a>
     </div>
-    <a href="{{ url_for('formulir.export_excel') }}" class="btn btn-outline-primary btn-sm">
-      <i class="bi bi-file-earmark-excel-fill"></i> Export Semua ke Excel
-    </a>
+
   </div>
 
-  <!-- FORM PEMBUNGKUS UNTUK BULK DOWNLOAD -->
   <form id="bulkDownloadForm" method="POST" action="{{ url_for('formulir.bulk_download') }}">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
-    <!-- TABLE -->
     <div class="table-responsive">
       <table class="spmb-table" id="siswaTable">
         <thead>
           <tr>
-            <th width="40">
-              <input type="checkbox" id="checkAllHeader">
-            </th>
-            <th width="60">No</th>
+            <th width="40"><input type="checkbox" id="checkAllHeader"></th>
+            <th width="50">No</th>
             <th>Nama Calon Siswa</th>
             <th>Asal Sekolah</th>
             <th>Status</th>
-            <th width="240" class="text-center">Aksi</th>
+            <th width="220" class="text-center">Aksi</th>
           </tr>
         </thead>
         <tbody>
@@ -90,30 +259,23 @@ Data Calon Siswa
             </td>
             <td class="text-center">
               <div class="action-buttons">
-                <a href="{{ url_for('admin.detail_siswa', id=siswa.id) }}"
-                   class="btn btn-outline-primary btn-sm" title="Detail">
+                <a href="{{ url_for('admin.detail_siswa', id=siswa.id) }}" class="btn btn-outline-primary btn-sm" title="Detail">
                   <i class="bi bi-eye-fill"></i>
                 </a>
-                <a href="{{ url_for('admin.edit_siswa', id=siswa.id) }}"
-                   class="btn btn-outline-warning btn-sm" title="Edit">
+                <a href="{{ url_for('admin.edit_siswa', id=siswa.id) }}" class="btn btn-outline-warning btn-sm" title="Edit">
                   <i class="bi bi-pencil-fill"></i>
                 </a>
-                <a href="{{ url_for('formulir.download_single', id=siswa.id) }}"
-                   class="btn btn-outline-success btn-sm" title="Unduh Formulir PDF">
+                <a href="{{ url_for('formulir.download_single', id=siswa.id) }}" class="btn btn-outline-success btn-sm" title="Unduh PDF">
                   <i class="bi bi-file-earmark-pdf-fill"></i>
                 </a>
                 {% if siswa.status_verifikasi != 'Diverifikasi' %}
-                <button type="submit"
-                        formaction="{{ url_for('admin.verifikasi_siswa', id=siswa.id) }}"
-                        formmethod="POST"
-                        class="btn btn-outline-success btn-sm" title="Verifikasi">
+                <button type="submit" formaction="{{ url_for('admin.verifikasi_siswa', id=siswa.id) }}"
+                        formmethod="POST" class="btn btn-outline-success btn-sm" title="Verifikasi">
                   <i class="bi bi-check-lg"></i>
                 </button>
                 {% endif %}
-                <button type="submit"
-                        formaction="{{ url_for('admin.hapus_siswa', id=siswa.id) }}"
-                        formmethod="POST"
-                        class="btn btn-outline-danger btn-sm"
+                <button type="submit" formaction="{{ url_for('admin.hapus_siswa', id=siswa.id) }}"
+                        formmethod="POST" class="btn btn-outline-danger btn-sm"
                         data-confirm="Yakin ingin menghapus data ini?"
                         data-confirm-title="Hapus Data Calon Siswa?"
                         data-confirm-variant="danger">
@@ -124,46 +286,105 @@ Data Calon Siswa
           </tr>
           {% else %}
           <tr>
-            <td colspan="6" class="text-center py-5 text-muted">
-              Belum ada data pendaftar
-            </td>
+            <td colspan="6" class="text-center py-5 text-muted">Belum ada data pendaftar</td>
           </tr>
           {% endfor %}
         </tbody>
       </table>
     </div>
   </form>
-
 </div>
 
-<!-- CLIENT SIDE SEARCH + CHECKBOX HANDLER -->
 <script>
-  document.getElementById("searchInput").addEventListener("keyup", function () {
+  const searchInput = document.getElementById("searchInput");
+  const checkAllHeader = document.getElementById("checkAllHeader");
+  const btnPilihSemua = document.getElementById("btnPilihSemua");
+  const btnDownloadZip = document.getElementById("btnDownloadZip");
+  const selectedCountEl = document.getElementById("selectedCount");
+  const alertFeedback = document.getElementById("alertFeedback");
+  const bulkForm = document.getElementById("bulkDownloadForm");
+
+  // Search
+  searchInput.addEventListener("keyup", function () {
     const filter = this.value.toLowerCase().trim();
-    const rows = document.querySelectorAll("#siswaTable tbody tr");
-    rows.forEach(row => {
+    document.querySelectorAll("#siswaTable tbody tr").forEach(row => {
       if (row.cells.length === 1) return;
-      const text = row.textContent.toLowerCase();
-      row.style.display = text.includes(filter) ? "" : "none";
+      row.style.display = row.textContent.toLowerCase().includes(filter) ? "" : "none";
     });
   });
 
-  function toggleAll(checked) {
-    document.querySelectorAll(".chk-siswa").forEach(c => c.checked = checked);
+  function updateCount() {
+    const count = document.querySelectorAll(".chk-siswa:checked").length;
+    selectedCountEl.textContent = count + " dipilih";
   }
 
-  document.getElementById("checkAllHeader").addEventListener("change", function () {
+  function toggleAll(checked) {
+    document.querySelectorAll(".chk-siswa").forEach(c => c.checked = checked);
+    updateCount();
+    hideAlert();
+  }
+
+  function showAlert(message) {
+    document.getElementById("alertMessage").textContent = message;
+    alertFeedback.style.display = "block";
+    // Auto hide setelah 4 detik
+    setTimeout(hideAlert, 4000);
+  }
+
+  function hideAlert() {
+    alertFeedback.style.display = "none";
+  }
+
+  // Header checkbox
+  checkAllHeader.addEventListener("change", function () {
     toggleAll(this.checked);
+    updateBtn(this.checked);
   });
 
-  let semuaTerpilih = false;
-  document.getElementById("btnPilihSemua").addEventListener("click", function () {
-    semuaTerpilih = !semuaTerpilih;
-    toggleAll(semuaTerpilih);
-    document.getElementById("checkAllHeader").checked = semuaTerpilih;
-    this.innerHTML = semuaTerpilih
-      ? '<i class="bi bi-x-square"></i> Batal Pilih Semua'
-      : '<i class="bi bi-check2-square"></i> Pilih Semua';
+  // Tombol Pilih Semua
+  let selected = false;
+  btnPilihSemua.addEventListener("click", function () {
+    selected = !selected;
+    toggleAll(selected);
+    checkAllHeader.checked = selected;
+    updateBtn(selected);
   });
+
+  function updateBtn(active) {
+    btnPilihSemua.classList.toggle("active", active);
+    btnPilihSemua.innerHTML = active
+      ? '<i class="bi bi-x-square"></i><span class="btn-text">Batal</span>'
+      : '<i class="bi bi-check2-square"></i><span class="btn-text">Pilih Semua</span>';
+  }
+
+  // ===== VALIDASI UNDUH ZIP =====
+  btnDownloadZip.addEventListener("click", function (e) {
+    e.preventDefault();
+
+    const checked = document.querySelectorAll(".chk-siswa:checked");
+
+    if (checked.length === 0) {
+      showAlert("Silakan pilih minimal 1 siswa terlebih dahulu sebelum mengunduh.");
+      return;
+    }
+
+    // Jika sudah ada yang dipilih → submit form
+    hideAlert();
+    bulkForm.submit();
+  });
+
+  // Update count saat checkbox berubah
+  document.addEventListener("change", function (e) {
+    if (e.target.classList.contains("chk-siswa")) {
+      updateCount();
+      hideAlert();
+
+      const all = document.querySelectorAll(".chk-siswa");
+      const checked = document.querySelectorAll(".chk-siswa:checked");
+      checkAllHeader.checked = all.length > 0 && all.length === checked.length;
+    }
+  });
+
+  updateCount();
 </script>
 {% endblock %}

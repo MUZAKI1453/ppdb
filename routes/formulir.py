@@ -10,163 +10,26 @@ berkas.py, user.py).
 id di sini = CalonSiswa.id (bukan User.id).
 """
 import io
-import re
 import zipfile
+from pathlib import Path
 from datetime import datetime
 
 import pandas as pd
-from flask import Blueprint, render_template, send_file, request, abort, flash, redirect, url_for
+from flask import Blueprint, send_file, request, abort, flash, redirect, url_for, current_app
 from flask_login import login_required, current_user
 
-from xhtml2pdf import pisa
 from models.calon_siswa import CalonSiswa
+from utils.formulir_reportlab import build_formulir_pdf
 
 formulir_bp = Blueprint("formulir", __name__)
 
-SEKOLAH = {
-    "nama": "SMA ISLAM PLUS BAITUSSALAM KUNINGAN",
-    "alamat": "Jl. Ir. Soekarno (Jalan Baru), Blok Cikedung Rt.02 Rw.01 Kel. Cirendang Kec. Kuningan - Kuningan",
-}
-LOGO_KIRI = "static/img/logo.png"
-LOGO_KANAN = "static/img/logo_yayasan.png"
-
-# Mapping teks bebas di database -> kode angka seperti di form kertas asli.
-AGAMA_KODE = {
-    "islam": "01", "kristen": "02", "protestan": "02", "kristen protestan": "02",
-    "katolik": "03", "katholik": "03", "hindu": "04", "budha": "05", "buddha": "05",
-    "khonghucu": "06", "konghucu": "06", "khong hu chu": "06",
-}
-STATUS_TINGGAL_KODE = {
-    "bersama orang tua": "1", "wali": "2", "kos": "3", "asrama": "4",
-    "panti asuhan": "5", "pesantren": "6", "lainnya": "9",
-}
-MODA_KODE = {
-    "jalan kaki": "01", "kendaraan umum": "02", "angkutan umum": "02",
-    "kendaraan pribadi": "03",
-}
-PENDIDIKAN_KODE = {
-    "sd": "01", "sd/sederajat": "01", "smp": "02", "smp/sederajat": "02",
-    "sma": "03", "sma/sederajat": "03", "d1": "04", "d2": "05", "d3": "06",
-    "s1": "07", "s2": "08", "s3": "09",
-}
-
-
-def _kode(mapping, value):
-    if not value:
-        return ""
-    return mapping.get(str(value).strip().lower(), "")
-
-
-def _angka(value):
-    """Ambil digit pertama dari string seperti '4 km' atau '24 menit' -> '4' / '24'."""
-    if not value:
-        return ""
-    match = re.search(r"\d+", str(value))
-    return match.group() if match else ""
-
-
-def _extract_waktu(waktu_str):
-    """Extract jam dan menit dari string seperti '2 jam 30 menit'."""
-    if not waktu_str:
-        return "", ""
-
-    waktu_str = str(waktu_str).strip()
-    jam = ""
-    menit = ""
-
-    jam_match = re.search(r'(\d+)\s*[jJ]am', waktu_str)
-    if jam_match:
-        jam = jam_match.group(1)
-
-    menit_match = re.search(r'(\d+)\s*[mM]enit', waktu_str)
-    if menit_match:
-        menit = menit_match.group(1)
-
-    if not jam and not menit:
-        digit_match = re.search(r'\d+', waktu_str)
-        if digit_match:
-            menit = digit_match.group()
-
-    return jam, menit
-
-
-def _tanggal_parts(d):
-    """Pecah date object jadi (dd, mm, yyyy) string, atau ('','','') kalau kosong."""
-    if not d:
-        return "", "", ""
-    return f"{d.day:02d}", f"{d.month:02d}", f"{d.year:04d}"
-
-
-def _resolve_local_path(uri, rel):
-    """Menerjemahkan path 'static/img/logo.png' jadi path absolut di disk."""
-    import os
-    from flask import current_app
-
-    if uri.startswith("http://") or uri.startswith("https://"):
-        return uri
-
-    path = os.path.join(current_app.root_path, uri.lstrip("/"))
-    return path
+FORMULIR_TEMPLATE = "static/pdf/formulir_ppdb_template.pdf"
 
 
 def _build_pdf_bytes(siswa: CalonSiswa) -> bytes:
-    """Render formulir 1 siswa (pakai relationship bawaan model)."""
-    tgl_lahir_dd, tgl_lahir_mm, tgl_lahir_yyyy = _tanggal_parts(getattr(siswa, 'tanggal_lahir', None))
-    tanggal_now = datetime.now()
-
-    # Safe extraction data ORTU
-    ayah_obj = getattr(siswa, 'ayah', None)
-    ibu_obj = getattr(siswa, 'ibu', None)
-    wali_obj = getattr(siswa, 'wali', None)
-
-    ayah_tgl_dd, ayah_tgl_mm, ayah_tgl_yyyy = _tanggal_parts(getattr(ayah_obj, 'tanggal_lahir', None))
-    ibu_tgl_dd, ibu_tgl_mm, ibu_tgl_yyyy = _tanggal_parts(getattr(ibu_obj, 'tanggal_lahir', None))
-    wali_tgl_dd, wali_tgl_mm, wali_tgl_yyyy = _tanggal_parts(getattr(wali_obj, 'tanggal_lahir', None))
-
-    waktu_jam, waktu_menit = _extract_waktu(getattr(siswa, 'waktu_tempuh', ''))
-
-    html_str = render_template(
-        "formulir_pdf.html",
-        siswa=siswa,
-        alamat=getattr(siswa, 'alamat', None),
-        ayah=ayah_obj,
-        ibu=ibu_obj,
-        wali=wali_obj,
-        berkas=getattr(siswa, 'berkas', None),
-        sekolah=SEKOLAH,
-        logo_kiri=LOGO_KIRI,
-        logo_kanan=LOGO_KANAN,
-        tanggal_cetak=tanggal_now.strftime("%d / %m / %Y"),
-        tanggal_cetak_dd=f"{tanggal_now.day:02d}",
-        tanggal_cetak_mm=f"{tanggal_now.month:02d}",
-        tanggal_cetak_yyyy=f"{tanggal_now.year:04d}",
-        tgl_lahir_dd=tgl_lahir_dd,
-        tgl_lahir_mm=tgl_lahir_mm,
-        tgl_lahir_yyyy=tgl_lahir_yyyy,
-        ayah_tgl_dd=ayah_tgl_dd, ayah_tgl_mm=ayah_tgl_mm, ayah_tgl_yyyy=ayah_tgl_yyyy,
-        ibu_tgl_dd=ibu_tgl_dd, ibu_tgl_mm=ibu_tgl_mm, ibu_tgl_yyyy=ibu_tgl_yyyy,
-        wali_tgl_dd=wali_tgl_dd, wali_tgl_mm=wali_tgl_mm, wali_tgl_yyyy=wali_tgl_yyyy,
-        agama_kode=_kode(AGAMA_KODE, getattr(siswa, 'agama', '')),
-        status_tinggal_kode=_kode(STATUS_TINGGAL_KODE, getattr(siswa, 'status_tinggal', '')),
-        moda_kode=_kode(MODA_KODE, getattr(siswa, 'moda_transportasi', '')),
-        jarak_angka=_angka(getattr(siswa, 'jarak_ke_sekolah', '')),
-        waktu_jam=waktu_jam,
-        waktu_menit=waktu_menit,
-        pendidikan_ayah_kode=_kode(PENDIDIKAN_KODE, getattr(ayah_obj, 'pendidikan', '') if ayah_obj else ''),
-        pendidikan_ibu_kode=_kode(PENDIDIKAN_KODE, getattr(ibu_obj, 'pendidikan', '') if ibu_obj else ''),
-        pendidikan_wali_kode=_kode(PENDIDIKAN_KODE, getattr(wali_obj, 'pendidikan', '') if wali_obj else ''),
-    )
-
-    output = io.BytesIO()
-    pisa_status = pisa.CreatePDF(
-        src=html_str,
-        dest=output,
-        link_callback=_resolve_local_path,
-    )
-    if pisa_status.err:
-        raise RuntimeError(f"Gagal membuat PDF untuk siswa id={siswa.id}")
-
-    return output.getvalue()
+    """Isi PDF formulir resmi memakai overlay ReportLab."""
+    template_path = Path(current_app.root_path) / FORMULIR_TEMPLATE
+    return build_formulir_pdf(siswa, template_path)
 
 
 # ---------- 1) SISWA & ADMIN: unduh 1 formulir ----------
